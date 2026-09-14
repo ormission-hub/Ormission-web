@@ -47,12 +47,13 @@ export interface DbCategoryItem {
 
 const defaultHeroData: HeroData = {
   badge_text: "🔥 নতুন একাডেমিক ও এডমিশন ব্যাচে ভর্তি চলছে",
-  title_line_1: "Learn Today.",
-  title_line_2: "Lead Tomorrow.",
-  subtitle: "আজ শিখুন। আগামীকাল নেতৃত্ব দিন।",
-  primary_cta_text: "Start Learning",
+  title_line_1: "স্বপ্ন যেখানে শীর্ষ বিশ্ববিদ্যালয় ও মেডিকেল",
+  title_line_2: "প্রস্তুতি হোক শতভাগ নিখুঁত ও আত্মবিশ্বাসী",
+  subtitle:
+    "অভিজ্ঞ মেন্টরদের লাইভ ক্লাস, বিগত ২০ বছরের প্রশ্নব্যাংক সলভিং ও সার্বক্ষণিক ডাউট সলভিং নিয়ে ঘরে বসেই নিন সেরা প্রস্তুতি।",
+  primary_cta_text: "কোর্সগুলো এক্সপ্লোর করুন",
   primary_cta_url: "/courses",
-  secondary_cta_text: "Browse Courses",
+  secondary_cta_text: "ফ্রি নোট ও প্রশ্নব্যাংক",
   secondary_cta_url: "/courses",
   active_image_url:
     "https://oorovtqwyfrfjfwuufyi.supabase.co/storage/v1/object/public/hero_images/hero_1789356392635_x4rpk6.webp",
@@ -65,6 +66,13 @@ const defaultHeroData: HeroData = {
     },
   ],
 };
+
+const defaultCategoryList: DbCategoryItem[] = [
+  { id: 1, name: "SSC Board Full Preparation", name_bn: "এসএসসি প্রস্তুতি", slug: "ssc-prep", icon_name: "graduation" },
+  { id: 2, name: "HSC Humanities & Business Studies", name_bn: "এইচএসসি", slug: "hsc-arts", icon_name: "rocket" },
+  { id: 3, name: "HSC Science (Physics, Chem, Math, Bio)", name_bn: "এইচএসসি সায়েন্স", slug: "hsc-science", icon_name: "flask" },
+  { id: 4, name: "University Admission (A & B Unit)", name_bn: "বিশ্ববিদ্যালয় ভর্তি", slug: "university-admission", icon_name: "building" },
+];
 
 function resolveCategoryIcon(slug: string, iconName?: string | null): LucideIcon {
   if (slug.includes("ssc")) return GraduationCap;
@@ -157,9 +165,13 @@ export function HeroSection({
     }
     return defaultHeroData;
   });
-  const [categories, setCategories] = useState<DbCategoryItem[]>(() =>
-    sortCategories(initialCategories)
-  );
+  const [categories, setCategories] = useState<DbCategoryItem[]>(() => {
+    const list =
+      initialCategories && initialCategories.length > 0
+        ? initialCategories
+        : defaultCategoryList;
+    return sortCategories(list);
+  });
   const [activeSlug, setActiveSlug] = useState<string>(
     initialCategories[0]?.slug || "ssc-prep"
   );
