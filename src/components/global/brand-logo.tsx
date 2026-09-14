@@ -54,11 +54,11 @@ export function BrandLogo({
         <div className="flex items-center">
           <span
             className={cn(
-              "font-extrabold tracking-tight text-text",
+              "font-black tracking-tight uppercase text-primary transition-colors",
               textSizes[size]
             )}
           >
-            Orm<span className="text-primary">ission</span>
+            ORMISSION
           </span>
         </div>
         {showTagline && (

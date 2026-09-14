@@ -4,9 +4,6 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
-  ArrowRight,
-  Play,
-  Flame,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -56,7 +53,7 @@ export function HeroSection() {
     async function loadDynamicHero() {
       try {
         const supabase = createClient();
-        const { data, error } = await supabase
+        const { data } = await supabase
           .from("site_settings")
           .select("value")
           .eq("key", "hero_settings")
@@ -69,14 +66,13 @@ export function HeroSection() {
           }));
         }
       } catch (err) {
-        // Fallback to default if offline or Supabase fails
+        // Silent fallback
       }
     }
 
     loadDynamicHero();
   }, []);
 
-  // Compute slides: active photos from gallery, or all photos, or fallback to active_image_url
   const activePhotos = (heroData.photos || []).filter((p) => p.is_active);
   const slides: HeroPhoto[] =
     activePhotos.length > 0
@@ -91,50 +87,33 @@ export function HeroSection() {
           },
         ];
 
-  // Auto-play interval for multi-photo carousel
+  const nextSlide = () => setCurrentIndex((prev) => (prev + 1) % slides.length);
+  const prevSlide = () => setCurrentIndex((prev) => (prev - 1 + slides.length) % slides.length);
+
   useEffect(() => {
     if (slides.length <= 1 || isPaused) return;
-
     const timer = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % slides.length);
-    }, 4500);
-
+    }, 5000);
     return () => clearInterval(timer);
   }, [slides.length, isPaused]);
 
-  // Keep index within bounds if slide count changes
-  useEffect(() => {
-    if (currentIndex >= slides.length) {
-      setCurrentIndex(0);
-    }
-  }, [slides.length, currentIndex]);
-
   const currentSlide = slides[currentIndex] || slides[0];
 
-  const nextSlide = () => {
-    setCurrentIndex((prev) => (prev + 1) % slides.length);
-  };
-
-  const prevSlide = () => {
-    setCurrentIndex((prev) => (prev - 1 + slides.length) % slides.length);
-  };
-
   return (
-    <section className="relative min-h-[90vh] flex items-center bg-background overflow-hidden pt-20 pb-16 lg:py-24">
-      {/* Ambient background glow mesh */}
+    <section className="relative min-h-[85vh] flex flex-col justify-center bg-background overflow-hidden pt-24 pb-12 lg:pt-28 lg:pb-16">
+      {/* Ambient background soft glow */}
       <div
-        className="absolute top-10 right-0 w-[550px] h-[550px] rounded-full opacity-20 dark:opacity-25 pointer-events-none blur-3xl"
+        className="absolute top-12 left-1/4 w-[500px] h-[500px] rounded-full opacity-30 dark:opacity-15 pointer-events-none blur-3xl"
         style={{
-          background:
-            "radial-gradient(circle, var(--primary) 0%, transparent 70%)",
+          background: "radial-gradient(circle, rgba(255,95,0,0.18) 0%, transparent 70%)",
         }}
         aria-hidden="true"
       />
       <div
-        className="absolute -bottom-10 left-10 w-[450px] h-[450px] rounded-full opacity-15 dark:opacity-20 pointer-events-none blur-3xl"
+        className="absolute bottom-10 right-10 w-[450px] h-[450px] rounded-full opacity-20 dark:opacity-10 pointer-events-none blur-3xl"
         style={{
-          background:
-            "radial-gradient(circle, var(--secondary) 0%, transparent 70%)",
+          background: "radial-gradient(circle, rgba(124,58,237,0.15) 0%, transparent 70%)",
         }}
         aria-hidden="true"
       />
@@ -143,72 +122,64 @@ export function HeroSection() {
         <div className="grid lg:grid-cols-12 gap-10 lg:gap-8 items-center">
           {/* Left Column: Copy & Actions (6 cols) */}
           <div className="lg:col-span-6 max-w-2xl">
-            {/* Top pill badge */}
+            {/* Top punchy badge */}
             <motion.div
-              initial={{ opacity: 0, y: 16 }}
+              initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4 }}
+              className="mb-4"
             >
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold mb-6 shadow-xs backdrop-blur-xs font-bengali">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold font-bengali shadow-xs">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
                 </span>
-                <Flame className="w-3.5 h-3.5 text-accent fill-accent" />
                 <span>{heroData.badge_text}</span>
               </div>
             </motion.div>
 
             {/* Headline */}
             <motion.h1
-              className="heading-display text-text font-bengali mb-5 tracking-tight"
-              initial={{ opacity: 0, y: 18 }}
+              className="text-4xl sm:text-5xl lg:text-[54px] font-black text-text tracking-tight leading-[1.18] mb-4 font-bengali"
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
             >
               {heroData.title_line_1} <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-blue-600 to-secondary dark:from-primary dark:via-blue-400 dark:to-secondary">
-                {heroData.title_line_2}
-              </span>
+              <span className="text-primary">{heroData.title_line_2}</span>
             </motion.h1>
 
             {/* Subtitle */}
             <motion.p
-              className="body-large text-text-muted font-bengali mb-8 max-w-xl leading-relaxed"
-              initial={{ opacity: 0, y: 18 }}
+              className="text-base sm:text-lg text-text-muted font-bengali mb-8 max-w-xl leading-relaxed"
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
+              transition={{ duration: 0.5, delay: 0.18 }}
             >
               {heroData.subtitle}
             </motion.p>
 
-            {/* CTA Buttons with vibrant gradients & shimmer */}
+            {/* CTA Buttons: Start Learning & Browse Courses */}
             <motion.div
-              className="flex flex-wrap items-center gap-3.5 sm:gap-4 mb-10"
-              initial={{ opacity: 0, y: 18 }}
+              className="flex flex-wrap items-center gap-4"
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
+              transition={{ duration: 0.5, delay: 0.26 }}
             >
               <Link
                 href={heroData.primary_cta_url || "/courses"}
-                className="group inline-flex items-center gap-2.5 px-6 py-3.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-primary via-blue-600 to-primary-hover shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 btn-shimmer font-bengali"
+                className="inline-flex items-center justify-center px-8 py-3.5 rounded-full text-sm sm:text-base font-bold text-white bg-primary hover:bg-primary-hover shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/35 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 font-bengali"
               >
                 <span>{heroData.primary_cta_text || "কোর্সগুলো এক্সপ্লোর করুন"}</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Link>
 
               <Link
                 href={heroData.secondary_cta_url || "/free-resources"}
-                className="group inline-flex items-center gap-2 px-5 py-3.5 rounded-xl text-sm font-semibold text-text bg-surface hover:bg-surface-secondary border border-border hover:border-primary/40 shadow-xs hover:shadow-sm hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 font-bengali"
+                className="inline-flex items-center justify-center px-8 py-3.5 rounded-full text-sm sm:text-base font-bold text-primary bg-surface border-2 border-primary hover:bg-primary/5 shadow-xs hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 font-bengali"
               >
-                <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Play className="w-3 h-3 fill-primary ml-0.5" />
-                </div>
-                <span>{heroData.secondary_cta_text || "ফ্রি রিসোর্স ও গাইড"}</span>
+                <span>{heroData.secondary_cta_text || "ফ্রি নোট ও প্রশ্নব্যাংক"}</span>
               </Link>
             </motion.div>
-
-
           </div>
 
           {/* Right Column: 100% Focused Hero Visual in 16:9 Ratio with Auto Carousel (6 cols) */}
@@ -232,7 +203,7 @@ export function HeroSection() {
                     >
                       <Image
                         src={currentSlide.url}
-                        alt={currentSlide.title || "Ormission Learning Hero"}
+                        alt={currentSlide.title || "Ormission Hero Banner"}
                         fill
                         priority
                         unoptimized={Boolean(currentSlide.url?.startsWith("http"))}

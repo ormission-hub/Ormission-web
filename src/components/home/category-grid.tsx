@@ -11,7 +11,7 @@ import {
   Globe,
   Briefcase,
   GraduationCap,
-  ArrowUpRight,
+  Check,
   Code,
   Atom,
   Microscope,
@@ -52,47 +52,47 @@ const ICON_MAP: Record<string, LucideIcon> = {
   layers: Layers,
 };
 
-// Curated 8 Themes matching original brand aesthetics
-const COLOR_THEMES = [
+// Gradient CTA button themes — each card gets a unique pill color
+const BUTTON_THEMES = [
   {
-    iconColor: "text-blue-600 dark:text-blue-400",
-    bgClass: "bg-blue-500/10 border-blue-500/20 group-hover:bg-blue-500/20 group-hover:border-blue-500/40",
-    glowClass: "group-hover:shadow-blue-500/10",
+    gradient: "from-blue-500 to-blue-600",
+    hoverGradient: "hover:from-blue-600 hover:to-blue-700",
+    shadow: "shadow-blue-500/25",
   },
   {
-    iconColor: "text-emerald-600 dark:text-emerald-400",
-    bgClass: "bg-emerald-500/10 border-emerald-500/20 group-hover:bg-emerald-500/20 group-hover:border-emerald-500/40",
-    glowClass: "group-hover:shadow-emerald-500/10",
+    gradient: "from-teal-500 to-cyan-500",
+    hoverGradient: "hover:from-teal-600 hover:to-cyan-600",
+    shadow: "shadow-teal-500/25",
   },
   {
-    iconColor: "text-amber-600 dark:text-amber-400",
-    bgClass: "bg-accent/10 border-accent/20 group-hover:bg-accent/20 group-hover:border-accent/40",
-    glowClass: "group-hover:shadow-amber-500/10",
+    gradient: "from-rose-400 to-pink-500",
+    hoverGradient: "hover:from-rose-500 hover:to-pink-600",
+    shadow: "shadow-rose-500/25",
   },
   {
-    iconColor: "text-indigo-600 dark:text-indigo-400",
-    bgClass: "bg-indigo-500/10 border-indigo-500/20 group-hover:bg-indigo-500/20 group-hover:border-indigo-500/40",
-    glowClass: "group-hover:shadow-indigo-500/10",
+    gradient: "from-violet-500 to-purple-600",
+    hoverGradient: "hover:from-violet-600 hover:to-purple-700",
+    shadow: "shadow-violet-500/25",
   },
   {
-    iconColor: "text-sky-600 dark:text-sky-400",
-    bgClass: "bg-sky-500/10 border-sky-500/20 group-hover:bg-sky-500/20 group-hover:border-sky-500/40",
-    glowClass: "group-hover:shadow-sky-500/10",
+    gradient: "from-amber-400 to-orange-500",
+    hoverGradient: "hover:from-amber-500 hover:to-orange-600",
+    shadow: "shadow-amber-500/25",
   },
   {
-    iconColor: "text-rose-600 dark:text-rose-400",
-    bgClass: "bg-rose-500/10 border-rose-500/20 group-hover:bg-rose-500/20 group-hover:border-rose-500/40",
-    glowClass: "group-hover:shadow-rose-500/10",
+    gradient: "from-emerald-500 to-green-600",
+    hoverGradient: "hover:from-emerald-600 hover:to-green-700",
+    shadow: "shadow-emerald-500/25",
   },
   {
-    iconColor: "text-purple-600 dark:text-purple-400",
-    bgClass: "bg-purple-500/10 border-purple-500/20 group-hover:bg-purple-500/20 group-hover:border-purple-500/40",
-    glowClass: "group-hover:shadow-purple-500/10",
+    gradient: "from-sky-400 to-blue-500",
+    hoverGradient: "hover:from-sky-500 hover:to-blue-600",
+    shadow: "shadow-sky-500/25",
   },
   {
-    iconColor: "text-teal-600 dark:text-teal-400",
-    bgClass: "bg-secondary/10 border-secondary/20 group-hover:bg-secondary/20 group-hover:border-secondary/40",
-    glowClass: "group-hover:shadow-teal-500/10",
+    gradient: "from-fuchsia-500 to-pink-500",
+    hoverGradient: "hover:from-fuchsia-600 hover:to-pink-600",
+    shadow: "shadow-fuchsia-500/25",
   },
 ];
 
@@ -101,97 +101,82 @@ interface CategoryItem {
   name: string;
   slug: string;
   icon: LucideIcon;
-  count?: number;
-  iconColor: string;
-  bgClass: string;
-  glowClass: string;
+  subtitle: string;
+  buttonTheme: (typeof BUTTON_THEMES)[number];
 }
 
-// Fallback presets matching official screenshot exactly
+// Fallback presets
 const defaultCategories: CategoryItem[] = [
   {
     id: 1,
-    name: "এইচএসসি সায়েন্স (Physics, Chem, Math, Bio)",
+    name: "এইচএসসি সায়েন্স",
+    subtitle: "Physics, Chemistry, Math, Biology",
     icon: FlaskConical,
     slug: "hsc-science",
-    count: 25,
-    ...COLOR_THEMES[0],
+    buttonTheme: BUTTON_THEMES[0],
   },
   {
     id: 2,
-    name: "মেডিকেল ভর্তি স্পেশাল (Bio, GK & English)",
+    name: "মেডিকেল ভর্তি",
+    subtitle: "Bio, GK & English স্পেশাল",
     icon: Stethoscope,
     slug: "medical-admission",
-    count: 12,
-    ...COLOR_THEMES[1],
+    buttonTheme: BUTTON_THEMES[1],
   },
   {
     id: 3,
-    name: "ইঞ্জিনিয়ারিং ভর্তি (BUET, RUET, KUET, CKET)",
+    name: "ইঞ্জিনিয়ারিং ভর্তি",
+    subtitle: "BUET, RUET, KUET, CKET",
     icon: Calculator,
     slug: "engineering-admission",
-    count: 15,
-    ...COLOR_THEMES[2],
+    buttonTheme: BUTTON_THEMES[2],
   },
   {
     id: 4,
-    name: "বিশ্ববিদ্যালয় 'ক' ও 'খ' ইউনিট ভর্তি",
+    name: "বিশ্ববিদ্যালয় ভর্তি",
+    subtitle: "'ক' ও 'খ' ইউনিট",
     icon: Building2,
     slug: "university-admission",
-    count: 20,
-    ...COLOR_THEMES[3],
+    buttonTheme: BUTTON_THEMES[3],
   },
   {
     id: 5,
-    name: "এসএসসি বোর্ড পূর্ণাঙ্গ প্রস্তুতি",
+    name: "এসএসসি প্রস্তুতি",
+    subtitle: "বোর্ড পূর্ণাঙ্গ প্রস্তুতি",
     icon: GraduationCap,
     slug: "ssc-prep",
-    count: 22,
-    ...COLOR_THEMES[4],
+    buttonTheme: BUTTON_THEMES[4],
   },
   {
     id: 6,
-    name: "এইচএসসি মানবিক ও ব্যবসায় শিক্ষা",
+    name: "এইচএসসি মানবিক",
+    subtitle: "মানবিক ও ব্যবসায় শিক্ষা",
     icon: BookOpen,
     slug: "hsc-arts",
-    count: 18,
-    ...COLOR_THEMES[5],
+    buttonTheme: BUTTON_THEMES[5],
   },
   {
     id: 7,
-    name: "স্কিল ও টেক ক্যারিয়ার (Web, AI, Python)",
+    name: "স্কিল ও টেক",
+    subtitle: "Web, AI, Python ক্যারিয়ার",
     icon: Briefcase,
     slug: "job-preparation",
-    count: 10,
-    ...COLOR_THEMES[6],
+    buttonTheme: BUTTON_THEMES[6],
   },
   {
     id: 8,
-    name: "ইংলিশ ভার্সন ও প্রফেশনাল কোর্স",
+    name: "ইংলিশ ভার্সন",
+    subtitle: "প্রফেশনাল কোর্স",
     icon: Globe,
     slug: "english-version",
-    count: 8,
-    ...COLOR_THEMES[7],
+    buttonTheme: BUTTON_THEMES[7],
   },
 ];
-
-// Resolves responsive width so cards always fit beautifully regardless of count
-function getResponsiveCardWidth(total: number): string {
-  if (total <= 1) return "w-full max-w-md";
-  if (total === 2) return "w-full sm:w-[calc(50%-10px)] max-w-lg";
-  if (total === 3) return "w-[calc(50%-8px)] sm:w-[calc(33.333%-12px)] lg:w-[calc(33.333%-14px)]";
-  if (total === 4) return "w-[calc(50%-8px)] sm:w-[calc(50%-10px)] lg:w-[calc(25%-15px)]";
-  // 5 or 6 items: 3-column rows (e.g. 3 in row 1, 3 in row 2 OR 3 in row 1, 2 centered in row 2)
-  if (total === 5 || total === 6) return "w-[calc(50%-8px)] sm:w-[calc(33.333%-12px)] lg:w-[calc(33.333%-14px)]";
-  // 7, 8 or more items: 4-column balanced rows with centered overflow
-  return "w-[calc(50%-8px)] sm:w-[calc(33.333%-12px)] lg:w-[calc(25%-15px)]";
-}
 
 function resolveIcon(iconName?: string | null, slug?: string): LucideIcon {
   if (iconName && ICON_MAP[iconName.toLowerCase().trim()]) {
     return ICON_MAP[iconName.toLowerCase().trim()];
   }
-  // Fallback by slug
   if (slug?.includes("science")) return FlaskConical;
   if (slug?.includes("medical")) return Stethoscope;
   if (slug?.includes("engineering")) return Calculator;
@@ -216,17 +201,16 @@ export interface DbCategoryRaw {
 
 export function mapDbToCategories(data: DbCategoryRaw[]): CategoryItem[] {
   return data.map((item, idx) => {
-    const theme = COLOR_THEMES[idx % COLOR_THEMES.length];
+    const theme = BUTTON_THEMES[idx % BUTTON_THEMES.length];
     const defaultMatch = defaultCategories.find((d) => d.slug === item.slug);
-    const count = defaultMatch ? defaultMatch.count : 10 + ((idx * 3) % 15);
 
     return {
       id: item.id,
       name: item.name_bn || item.name || "",
       slug: item.slug,
       icon: resolveIcon(item.icon_name, item.slug),
-      count,
-      ...theme,
+      subtitle: item.description || defaultMatch?.subtitle || "",
+      buttonTheme: theme,
     };
   });
 }
@@ -281,66 +265,75 @@ export function CategoryGrid({ initialCategories }: { initialCategories?: DbCate
     };
   }, []);
 
-  const totalCards = categories.length;
-  const cardWidthClass = getResponsiveCardWidth(totalCards);
-
   return (
-    <SectionWrapper>
+    <SectionWrapper className="!pt-6 lg:!pt-8 !pb-16 lg:!pb-24">
       <SectionHeading
-        title="আপনার লক্ষ্য অনুযায়ী কোর্স ক্যাটাগরি"
-        subtitle="এসএসসি, এইচএসসি কিংবা স্বপ্নের বিশ্ববিদ্যালয় ও ক্যারিয়ার প্রস্তুতি — বেছে নিন আপনার প্রয়োজনীয় কোর্স"
+        title="আপনার লক্ষ্য অনুযায়ী কোর্স ক্যাটাগরি"
+        subtitle="এসএসসি, এইচএসসি কিংবা স্বপ্নের বিশ্ববিদ্যালয় ও ক্যারিয়ার প্রস্তুতি — বেছে নিন আপনার প্রয়োজনীয় কোর্স"
       />
 
-      {/* Dynamic Adaptive Centered Flex Grid (Cards gracefully rebalance if any are deleted) */}
-      <div className="flex flex-wrap justify-center gap-3.5 sm:gap-4 lg:gap-5 w-full">
+      {/* Neumorphic Category Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 w-full">
         <AnimatePresence>
-          {categories.map((cat) => {
-            const Icon = cat.icon;
-            return (
-              <motion.div
-                key={cat.slug}
-                layout
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.25 }}
-                className={cardWidthClass}
+          {categories.map((cat, idx) => (
+            <motion.div
+              key={cat.slug}
+              layout
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ duration: 0.35, delay: idx * 0.06 }}
+            >
+              <Link
+                href={`/category/${cat.slug}`}
+                className={cn(
+                  "group relative flex flex-col items-center text-center h-full",
+                  "rounded-2xl p-7 pb-6",
+                  // Neumorphic surface
+                  "bg-surface",
+                  // Light mode: soft outer shadow + subtle inset highlight
+                  "shadow-[6px_6px_16px_rgba(0,0,0,0.06),-6px_-6px_16px_rgba(255,255,255,0.8)]",
+                  "dark:shadow-[6px_6px_16px_rgba(0,0,0,0.35),-6px_-6px_16px_rgba(255,255,255,0.03)]",
+                  // Border
+                  "border border-border/50",
+                  // Hover lift
+                  "hover:-translate-y-1.5 hover:shadow-[8px_8px_24px_rgba(0,0,0,0.08),-8px_-8px_24px_rgba(255,255,255,0.9)]",
+                  "dark:hover:shadow-[8px_8px_24px_rgba(0,0,0,0.45),-8px_-8px_24px_rgba(255,255,255,0.04)]",
+                  "transition-all duration-300 ease-out"
+                )}
               >
-                <Link
-                  href={`/category/${cat.slug}`}
+                {/* Category Title — Large & Bold */}
+                <h3 className="text-xl sm:text-2xl font-extrabold text-text font-bengali leading-tight mb-2 group-hover:text-primary transition-colors duration-200">
+                  {cat.name}
+                </h3>
+
+                {/* Subtitle */}
+                <p className="text-sm text-text-muted font-bengali leading-relaxed mb-5">
+                  {cat.subtitle}
+                </p>
+
+                {/* Spacer pushes button to bottom */}
+                <div className="mt-auto" />
+
+                {/* Gradient CTA Button */}
+                <span
                   className={cn(
-                    "group relative flex flex-col items-center text-center p-5 rounded-2xl transition-all duration-300 h-full",
-                    "bg-surface border border-border/80 hover:border-primary/40",
-                    "hover:-translate-y-1 hover:shadow-lg",
-                    cat.glowClass
+                    "inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full text-sm font-semibold text-white",
+                    "bg-gradient-to-r",
+                    cat.buttonTheme.gradient,
+                    cat.buttonTheme.hoverGradient,
+                    "shadow-md",
+                    cat.buttonTheme.shadow,
+                    "group-hover:shadow-lg group-hover:scale-[1.03]",
+                    "transition-all duration-300 ease-out"
                   )}
                 >
-                  {/* Top right arrow indicator */}
-                  <div className="absolute top-3 right-3 text-text-muted/40 group-hover:text-primary group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all">
-                    <ArrowUpRight className="w-4 h-4" />
-                  </div>
-
-                  {/* Premium Dual-tone SVG Icon */}
-                  <div
-                    className={cn(
-                      "w-12 h-12 rounded-2xl border flex items-center justify-center mb-3.5 transition-all duration-300 shadow-xs",
-                      "group-hover:scale-110",
-                      cat.bgClass
-                    )}
-                  >
-                    <Icon className={cn("w-6 h-6 transition-transform duration-300", cat.iconColor)} />
-                  </div>
-
-                  <span className="text-sm font-bold text-text font-bengali group-hover:text-primary transition-colors leading-snug">
-                    {cat.name}
-                  </span>
-                  <span className="text-xs text-text-muted mt-1 font-bengali">
-                    {cat.count}টি সক্রিয় কোর্স
-                  </span>
-                </Link>
-              </motion.div>
-            );
-          })}
+                  <Check className="w-4 h-4" strokeWidth={2.5} />
+                  <span className="font-bengali">প্রস্তুত হও এখন</span>
+                </span>
+              </Link>
+            </motion.div>
+          ))}
         </AnimatePresence>
       </div>
     </SectionWrapper>

@@ -69,22 +69,30 @@
    LIGHT MODE TOKENS (Default)
    ============================================================ */
 :root {
-  --primary: #2563EB;
-  --primary-hover: #1D4ED8;
-  --primary-light: #DBEAFE;
+  --primary: #FF5F00;
+  --primary-hover: #EA580C;
+  --primary-light: #FFF7ED;
 
-  --secondary: #0F766E;
-  --secondary-light: #CCFBF1;
+  --secondary: #7C3AED;
+  --secondary-hover: #6D28D9;
+  --secondary-light: #F5F3FF;
 
-  --accent: #E9A23B;
-  --accent-light: #FEF3C7;
+  --accent: #0D9488;
+  --accent-hover: #0F766E;
+  --accent-light: #CCFBF1;
 
-  --background: #F8FAFC;
+  --purple: #7C3AED;
+  --purple-light: #F3E8FF;
+
+  --emerald: #0D9488;
+  --emerald-light: #CCFBF1;
+
+  --background: #FAFAFC;
   --surface: #FFFFFF;
-  --surface-secondary: #F1F5F9;
-  --text: #172033;
-  --text-muted: #64748B;
-  --border: #E2E8F0;
+  --surface-secondary: #F3F4F6;
+  --text: #111827;
+  --text-muted: #6B7280;
+  --border: #E5E7EB;
 
   --success: #16805C;
   --warning: #B7791F;
@@ -98,22 +106,30 @@
    Exact human-designed academic dark palette
    ============================================================ */
 .dark {
-  --primary: #5B8DEF;
-  --primary-hover: #7AA2F7;
-  --primary-light: #1E3A5F;
+  --primary: #FF7315;
+  --primary-hover: #FF8A3D;
+  --primary-light: #3D1C06;
 
-  --secondary: #2DD4BF;
-  --secondary-light: #134E4A;
+  --secondary: #A78BFA;
+  --secondary-hover: #C4B5FD;
+  --secondary-light: #2E1065;
 
-  --accent: #F4B942;
-  --accent-light: #422006;
+  --accent: #2DD4BF;
+  --accent-hover: #5EEAD4;
+  --accent-light: #134E4A;
+
+  --purple: #A78BFA;
+  --purple-light: #2E1065;
+
+  --emerald: #2DD4BF;
+  --emerald-light: #134E4A;
 
   --background: #0F172A;
-  --surface: #172033;
-  --surface-secondary: #1E293B;
-  --text: #F1F5F9;
-  --text-muted: #94A3B8;
-  --border: #2D3A4F;
+  --surface: #1E293B;
+  --surface-secondary: #0F172A;
+  --text: #F9FAFB;
+  --text-muted: #9CA3AF;
+  --border: #334155;
 
   --success: #34D399;
   --warning: #FBBF24;
@@ -225,6 +241,17 @@ h1, h2, h3, h4, h5, h6, p, span, a, button, input, select, textarea {
 
 .btn-shimmer:hover::before {
   transform: translateX(150%);
+}
+
+/* Card & Capsule Shadows (Modern EdTech Style) */
+.shadow-soft-card {
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
+}
+.shadow-capsule {
+  box-shadow: 0 8px 30px -4px rgba(0, 0, 0, 0.06), 0 4px 10px -2px rgba(0, 0, 0, 0.03);
+}
+.shadow-floating {
+  box-shadow: 0 12px 36px -4px rgba(0, 0, 0, 0.08), 0 6px 16px -2px rgba(0, 0, 0, 0.04);
 }
 
 /* Hero & Section Container */

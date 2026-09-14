@@ -2,7 +2,7 @@ import { HeroSection } from "@/components/home/hero-section";
 import { StatsBar } from "@/components/home/stats-bar";
 import { CategoryGrid } from "@/components/home/category-grid";
 import { FeaturedCourses } from "@/components/home/featured-courses";
-import { WhyChooseUs } from "@/components/home/why-choose-us";
+import { AboutPreview } from "@/components/home/about-preview";
 import { FreeResourcesPreview } from "@/components/home/free-resources-preview";
 import { Testimonials } from "@/components/home/testimonials";
 import { BlogPreview } from "@/components/home/blog-preview";
@@ -40,7 +40,6 @@ export default async function Home() {
           instructors:instructor_id (id, name, name_bn, institution)
         `)
         .eq("status", "published")
-        .eq("is_featured", true)
         .order("created_at", { ascending: false }),
     ]);
 
@@ -56,13 +55,11 @@ export default async function Home() {
       <StatsBar />
       <CategoryGrid initialCategories={categories} />
       <FeaturedCourses initialCourses={featuredCourses} />
-      <WhyChooseUs />
-      <FreeResourcesPreview />
+      <AboutPreview />
       <Testimonials />
+      <FreeResourcesPreview />
       <BlogPreview />
       <FinalCTA />
     </>
   );
 }
-
-
