@@ -1,1 +1,305 @@
 @import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ============================================================
+   ORMISSION DESIGN SYSTEM
+   Calm, academic, human-designed color system with full Dark Mode
+   60% neutral · 30% supporting · 10% brand
+   ============================================================ */
+
+@theme {
+  /* ---- Primary (Blue — brand identity) ---- */
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-light: var(--primary-light);
+
+  /* ---- Secondary (Teal — learning & progress) ---- */
+  --color-secondary: var(--secondary);
+  --color-secondary-light: var(--secondary-light);
+
+  /* ---- Accent (Amber — attention & highlights only) ---- */
+  --color-accent: var(--accent);
+  --color-accent-light: var(--accent-light);
+
+  /* ---- Neutrals ---- */
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-secondary: var(--surface-secondary);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-border: var(--border);
+
+  /* ---- Status ---- */
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+
+  /* ---- Shadows (restrained, no excessive depth) ---- */
+  --shadow-xs: 0 1px 2px rgba(23, 32, 51, 0.05);
+  --shadow-sm: 0 1px 3px rgba(23, 32, 51, 0.08), 0 1px 2px rgba(23, 32, 51, 0.04);
+  --shadow-md: 0 4px 6px rgba(23, 32, 51, 0.06), 0 2px 4px rgba(23, 32, 51, 0.04);
+  --shadow-lg: 0 10px 15px rgba(23, 32, 51, 0.06), 0 4px 6px rgba(23, 32, 51, 0.03);
+
+  /* ---- Border Radius ---- */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+
+  /* ---- Spacing ---- */
+  --section-padding-y: 4rem;
+  --section-padding-y-lg: 5rem;
+  --container-max-width: 1200px;
+  --container-padding: 1rem;
+
+  /* ---- Transitions ---- */
+  --transition-fast: 150ms ease;
+  --transition-base: 200ms ease;
+  --transition-slow: 300ms ease;
+
+  /* ---- Font families ---- */
+  --font-sans: var(--font-hind-siliguri), "Hind Siliguri", var(--font-inter), "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-bengali: var(--font-hind-siliguri), "Hind Siliguri", var(--font-inter), "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-base: var(--font-hind-siliguri), "Hind Siliguri", var(--font-inter), "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* ============================================================
+   LIGHT MODE TOKENS (Default)
+   ============================================================ */
+:root {
+  --primary: #2563EB;
+  --primary-hover: #1D4ED8;
+  --primary-light: #DBEAFE;
+
+  --secondary: #0F766E;
+  --secondary-light: #CCFBF1;
+
+  --accent: #E9A23B;
+  --accent-light: #FEF3C7;
+
+  --background: #F8FAFC;
+  --surface: #FFFFFF;
+  --surface-secondary: #F1F5F9;
+  --text: #172033;
+  --text-muted: #64748B;
+  --border: #E2E8F0;
+
+  --success: #16805C;
+  --warning: #B7791F;
+  --error: #C2413B;
+
+  --font-base: var(--font-hind-siliguri), "Hind Siliguri", var(--font-inter), "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* ============================================================
+   DARK MODE TOKENS
+   Exact human-designed academic dark palette
+   ============================================================ */
+.dark {
+  --primary: #5B8DEF;
+  --primary-hover: #7AA2F7;
+  --primary-light: #1E3A5F;
+
+  --secondary: #2DD4BF;
+  --secondary-light: #134E4A;
+
+  --accent: #F4B942;
+  --accent-light: #422006;
+
+  --background: #0F172A;
+  --surface: #172033;
+  --surface-secondary: #1E293B;
+  --text: #F1F5F9;
+  --text-muted: #94A3B8;
+  --border: #2D3A4F;
+
+  --success: #34D399;
+  --warning: #FBBF24;
+  --error: #F87171;
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.35), 0 2px 4px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.45), 0 4px 6px rgba(0, 0, 0, 0.25);
+}
+
+/* ============================================================
+   BASE STYLES
+   ============================================================ */
+html, body {
+  font-family: var(--font-base);
+  color: var(--text);
+  background-color: var(--background);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  scroll-behavior: smooth;
+  transition: background-color 200ms ease, color 200ms ease;
+}
+
+body {
+  min-height: 100vh;
+  line-height: 1.65;
+}
+
+h1, h2, h3, h4, h5, h6, p, span, a, button, input, select, textarea {
+  font-family: inherit;
+}
+
+.font-bengali {
+  font-family: var(--font-base);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+*:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+::selection {
+  background-color: var(--primary-light);
+  color: var(--text);
+}
+
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: var(--surface-secondary);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* ============================================================
+   ANIMATED BUTTONS & SHIMMER EFFECTS
+   ============================================================ */
+@keyframes shimmerSweep {
+  0% {
+    transform: translateX(-150%);
+  }
+  100% {
+    transform: translateX(150%);
+  }
+}
+
+.btn-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-shimmer::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.25) 50%,
+    transparent 100%
+  );
+  transform: translateX(-150%);
+  transition: transform 0.6s ease;
+}
+
+.btn-shimmer:hover::before {
+  transform: translateX(150%);
+}
+
+/* Hero & Section Container */
+.container-main {
+  width: 100%;
+  max-width: var(--container-max-width);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--container-padding);
+  padding-right: var(--container-padding);
+}
+
+@media (min-width: 640px) {
+  .container-main {
+    --container-padding: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container-main {
+    --container-padding: 2rem;
+  }
+}
+
+.section {
+  padding-top: var(--section-padding-y);
+  padding-bottom: var(--section-padding-y);
+}
+
+@media (min-width: 1024px) {
+  .section {
+    padding-top: var(--section-padding-y-lg);
+    padding-bottom: var(--section-padding-y-lg);
+  }
+}
+
+/* Typography scale */
+.heading-display {
+  font-size: clamp(2.25rem, 5.5vw, 3.5rem);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.heading-1 {
+  font-size: clamp(1.85rem, 4vw, 2.5rem);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+}
+
+.heading-2 {
+  font-size: clamp(1.375rem, 3vw, 1.75rem);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.heading-3 {
+  font-size: clamp(1.125rem, 2.5vw, 1.375rem);
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.body-large {
+  font-size: 1.0625rem;
+  line-height: 1.65;
+}
+
+.body-base {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+.body-small {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
