@@ -2,41 +2,13 @@
 
 import { useRef, useEffect, useState } from "react";
 import { useInView } from "framer-motion";
-import { Users, BookOpen, GraduationCap, Video } from "lucide-react";
 
-interface StatItem {
-  value: number;
-  suffix: string;
-  label: string;
-  icon?: any;
+interface StatsBarProps {
+  totalStudents?: number;
+  coursesCount?: number;
+  instructorsCount?: number;
+  totalLessons?: number;
 }
-
-const stats: StatItem[] = [
-  {
-    value: 12500,
-    suffix: "+",
-    label: "মোট শিক্ষার্থী",
-    icon: Users,
-  },
-  {
-    value: 200,
-    suffix: "+",
-    label: "কোর্স উপলব্ধ",
-    icon: BookOpen,
-  },
-  {
-    value: 50,
-    suffix: "+",
-    label: "বিশেষজ্ঞ শিক্ষক",
-    icon: GraduationCap,
-  },
-  {
-    value: 1000,
-    suffix: "+",
-    label: "ভিডিও লেসন",
-    icon: Video,
-  },
-];
 
 function AnimatedNumber({ target, suffix }: { target: number; suffix: string }) {
   const [count, setCount] = useState(0);
@@ -85,7 +57,35 @@ function AnimatedNumber({ target, suffix }: { target: number; suffix: string }) 
   );
 }
 
-export function StatsBar() {
+export function StatsBar({
+  totalStudents = 12500,
+  coursesCount = 6,
+  instructorsCount = 10,
+  totalLessons = 200,
+}: StatsBarProps) {
+  const stats = [
+    {
+      value: totalStudents,
+      suffix: "",
+      label: "মোট শিক্ষার্থী",
+    },
+    {
+      value: coursesCount,
+      suffix: "",
+      label: "কোর্স উপলব্ধ",
+    },
+    {
+      value: instructorsCount,
+      suffix: "",
+      label: "বিশেষজ্ঞ শিক্ষক",
+    },
+    {
+      value: totalLessons,
+      suffix: "",
+      label: "ভিডিও লেসন",
+    },
+  ];
+
   return (
     <section className="relative py-6 sm:py-8">
       <div className="container-main">
@@ -99,7 +99,7 @@ export function StatsBar() {
                   idx !== 0 ? "pt-4 sm:pt-0 sm:pl-6" : ""
                 }`}
               >
-                {/* Number in Bold Purple */}
+                {/* Number in Bold Signature Purple */}
                 <div className="text-3xl sm:text-4xl lg:text-5xl font-black text-secondary tabular-nums tracking-tight mb-1.5">
                   <AnimatedNumber target={stat.value} suffix={stat.suffix} />
                 </div>

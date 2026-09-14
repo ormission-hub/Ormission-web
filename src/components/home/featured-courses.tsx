@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, ChevronLeft, ChevronRight, Star, Sparkles } from "lucide-react";
+import { ChevronLeft, ChevronRight, Star, Sparkles, BookOpen } from "lucide-react";
 import { SectionWrapper } from "@/components/global/section-wrapper";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
@@ -21,54 +21,9 @@ export interface DbFeaturedCourse {
   thumbnail_url?: string | null;
   categories?: any;
   instructors?: any;
+  short_description?: string | null;
+  description?: string | null;
 }
-
-const fallbackCourses: DbFeaturedCourse[] = [
-  {
-    id: 1,
-    slug: "ssc-math-crash-course",
-    title: "SSC Math Crash Course",
-    title_bn: "SSC Math Crash Course — ১০০% কমন সাজেশন ও শর্টকাট",
-    price: 750,
-    original_price: 900,
-    enrollment_count: 3450,
-    categories: { name_bn: "এসএসসি প্রস্তুতি", slug: "ssc-prep" },
-    instructors: { name_bn: "ওহিদ রাশেদ ও মেন্টর প্যানেল" },
-  },
-  {
-    id: 2,
-    slug: "cu-du-admission-english-masterclass",
-    title: "CU, DU & GST Admission English",
-    title_bn: "CU, DU ও গুচ্ছ এডমিশন English: ১৫ মার্ক নিশ্চিতকরণ কোর্স",
-    price: 1450,
-    original_price: 1800,
-    enrollment_count: 4210,
-    categories: { name_bn: "এডমিশন ইংলিশ", slug: "university-admission" },
-    instructors: { name_bn: "ওহিদ রাশেদ (CU Law)" },
-  },
-  {
-    id: 3,
-    slug: "hsc-science-physics-chemistry-bundle",
-    title: "HSC Science Concept Masterclass",
-    title_bn: "HSC Science — পদার্থ ও রসায়ন পূর্ণাঙ্গ কনসেপ্ট ব্যাচ",
-    price: 1250,
-    original_price: 1600,
-    enrollment_count: 2890,
-    categories: { name_bn: "এইচএসসি সায়েন্স", slug: "hsc-science" },
-    instructors: { name_bn: "ইঞ্জি. সাইফুল আলম (BUET)" },
-  },
-  {
-    id: 4,
-    slug: "medical-admission-biology-special",
-    title: "Medical Admission Biology Special",
-    title_bn: "মেডিকেল ভর্তি — পূর্ণাঙ্গ জীববিজ্ঞান ও নেমোনিক ট্রিকস",
-    price: 1550,
-    original_price: 1950,
-    enrollment_count: 3120,
-    categories: { name_bn: "মেডিকেল ভর্তি", slug: "medical-admission" },
-    instructors: { name_bn: "ডা. ফারহানা ইসলাম (DMC)" },
-  },
-];
 
 function CourseCard({ course }: { course: DbFeaturedCourse }) {
   const price = course.price;
@@ -76,7 +31,12 @@ function CourseCard({ course }: { course: DbFeaturedCourse }) {
   const title = course.title_bn || course.title;
   const categoryName = Array.isArray(course.categories)
     ? course.categories[0]?.name_bn || course.categories[0]?.name
-    : course.categories?.name_bn || course.categories?.name || "স্পেশাল কোর্স";
+    : course.categories?.name_bn || course.categories?.name || "কোর্স";
+
+  const description =
+    course.short_description ||
+    course.description ||
+    "সেরা মেন্টরদের লাইভ ক্লাস, বিগত ২০ বছরের প্রশ্নব্যাংক সলভিং ও সার্বক্ষণিক ডাউট সলভিং।";
 
   return (
     <div
@@ -115,10 +75,10 @@ function CourseCard({ course }: { course: DbFeaturedCourse }) {
           </h3>
         </Link>
         <p className="text-xs text-text-muted line-clamp-2 mb-3 font-bengali leading-relaxed">
-          সেরা মেন্টরদের লাইভ ক্লাস, বিগত ২০ বছরের প্রশ্নব্যাংক সলভিং ও সার্বক্ষণিক ডাউট সলভিং।
+          {description}
         </p>
 
-        {/* 5-Star Rating */}
+        {/* 5-Star Rating (Reference Mockup Style) */}
         <div className="flex items-center gap-1 mb-4">
           {[...Array(5)].map((_, i) => (
             <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
@@ -126,7 +86,7 @@ function CourseCard({ course }: { course: DbFeaturedCourse }) {
           <span className="text-xs font-bold text-text ml-1">5.0</span>
         </div>
 
-        {/* Bottom Pricing & Enroll Action (Matching Reference Mockup) */}
+        {/* Bottom Pricing & Enroll Action */}
         <div className="mt-auto pt-3 border-t border-border/60 flex items-center justify-between">
           <div className="flex items-baseline gap-2">
             <span className="text-lg font-black text-text tabular-nums">
@@ -139,7 +99,7 @@ function CourseCard({ course }: { course: DbFeaturedCourse }) {
             )}
           </div>
 
-          {/* Deep Forest Green / Teal "Enroll" Button */}
+          {/* Deep Forest Green / Teal "Enroll" Button (Matching Reference Mockup) */}
           <Link
             href={`/course/${course.slug}`}
             className="inline-flex items-center justify-center px-5 py-2 rounded-full text-xs sm:text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-sm hover:shadow-md hover:scale-[1.03] active:scale-[0.98] transition-all duration-200"
@@ -153,9 +113,7 @@ function CourseCard({ course }: { course: DbFeaturedCourse }) {
 }
 
 export function FeaturedCourses({ initialCourses = [] }: { initialCourses?: DbFeaturedCourse[] }) {
-  const [courses, setCourses] = useState<DbFeaturedCourse[]>(
-    initialCourses.length > 0 ? initialCourses : fallbackCourses
-  );
+  const [courses, setCourses] = useState<DbFeaturedCourse[]>(initialCourses);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -175,17 +133,19 @@ export function FeaturedCourses({ initialCourses = [] }: { initialCourses?: DbFe
             is_featured,
             status,
             thumbnail_url,
+            short_description,
+            description,
             categories:category_id (id, name, name_bn, slug),
             instructors:instructor_id (id, name, name_bn, institution)
           `)
           .eq("status", "published")
           .order("created_at", { ascending: false });
 
-        if (!error && data && data.length > 0) {
+        if (!error && data) {
           setCourses(data);
         }
       } catch (err) {
-        // Fallback silently
+        // Silent fallback
       }
     }
 
@@ -204,6 +164,10 @@ export function FeaturedCourses({ initialCourses = [] }: { initialCourses?: DbFe
     }
   };
 
+  if (courses.length === 0) {
+    return null;
+  }
+
   return (
     <SectionWrapper className="py-12 lg:py-16">
       {/* Header with Navigation Arrows (Reference Mockup Style) */}
@@ -217,48 +181,60 @@ export function FeaturedCourses({ initialCourses = [] }: { initialCourses?: DbFe
           </p>
         </div>
 
-        {/* Carousel Arrow Controls */}
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={scrollLeft}
-            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-border bg-surface text-text-muted hover:text-text hover:border-primary/40 hover:bg-surface-secondary flex items-center justify-center transition-all shadow-xs active:scale-95 cursor-pointer"
-            aria-label="Previous courses"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-          <button
-            type="button"
-            onClick={scrollRight}
-            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-border bg-surface text-text-muted hover:text-text hover:border-primary/40 hover:bg-surface-secondary flex items-center justify-center transition-all shadow-xs active:scale-95 cursor-pointer"
-            aria-label="Next courses"
-          >
-            <ChevronRight className="w-5 h-5" />
-          </button>
-        </div>
+        {/* Carousel Arrow Controls (Only show if multiple courses exist) */}
+        {courses.length > 1 && (
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={scrollLeft}
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-border bg-surface text-text-muted hover:text-text hover:border-primary/40 hover:bg-surface-secondary flex items-center justify-center transition-all shadow-xs active:scale-95 cursor-pointer"
+              aria-label="Previous courses"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <button
+              type="button"
+              onClick={scrollRight}
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-border bg-surface text-text-muted hover:text-text hover:border-primary/40 hover:bg-surface-secondary flex items-center justify-center transition-all shadow-xs active:scale-95 cursor-pointer"
+              aria-label="Next courses"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Course Cards Carousel Grid */}
+      {/* Course Cards Grid / Carousel */}
       <div
         ref={scrollRef}
-        className="flex gap-6 overflow-x-auto pb-4 pt-1 scroll-smooth no-scrollbar snap-x snap-mandatory"
+        className={cn(
+          "flex gap-6 overflow-x-auto pb-4 pt-1 scroll-smooth no-scrollbar snap-x snap-mandatory",
+          courses.length <= 3 ? "flex-wrap lg:grid lg:grid-cols-3" : ""
+        )}
       >
         {courses.map((course) => (
           <div
             key={course.id || course.slug}
-            className="w-[280px] sm:w-[320px] lg:w-[350px] shrink-0 snap-start"
+            className={cn(
+              "snap-start",
+              courses.length <= 3
+                ? "w-full sm:w-[320px] lg:w-auto"
+                : "w-[280px] sm:w-[320px] lg:w-[350px] shrink-0"
+            )}
           >
             <CourseCard course={course} />
           </div>
         ))}
       </div>
 
-      {/* Carousel Dot Indicators */}
-      <div className="flex items-center justify-center gap-2 mt-6">
-        <span className="w-6 h-2 rounded-full bg-primary" />
-        <span className="w-2 h-2 rounded-full bg-border" />
-        <span className="w-2 h-2 rounded-full bg-border" />
-      </div>
+      {/* Carousel Dot Indicators (if more than 3 courses) */}
+      {courses.length > 3 && (
+        <div className="flex items-center justify-center gap-2 mt-6">
+          <span className="w-6 h-2 rounded-full bg-primary" />
+          <span className="w-2 h-2 rounded-full bg-border" />
+          <span className="w-2 h-2 rounded-full bg-border" />
+        </div>
+      )}
     </SectionWrapper>
   );
 }

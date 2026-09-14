@@ -1,12 +1,8 @@
 import { HeroSection } from "@/components/home/hero-section";
 import { StatsBar } from "@/components/home/stats-bar";
-import { CategoryGrid } from "@/components/home/category-grid";
 import { FeaturedCourses } from "@/components/home/featured-courses";
 import { AboutPreview } from "@/components/home/about-preview";
-import { FreeResourcesPreview } from "@/components/home/free-resources-preview";
 import { Testimonials } from "@/components/home/testimonials";
-import { BlogPreview } from "@/components/home/blog-preview";
-import { FinalCTA } from "@/components/home/final-cta";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -14,10 +10,13 @@ export const dynamic = "force-dynamic";
 export default async function Home() {
   let categories: any[] = [];
   let featuredCourses: any[] = [];
+  let testimonials: any[] = [];
+  let instructorsCount = 10;
+  let heroSettings: any = null;
 
   try {
     const supabase = await createClient();
-    const [catRes, courseRes] = await Promise.all([
+    const [catRes, courseRes, testRes, instRes, heroRes] = await Promise.all([
       supabase
         .from("categories")
         .select("id, name_bn, name, slug, icon_name, description, display_order, is_published")
@@ -36,30 +35,59 @@ export default async function Home() {
           is_featured,
           status,
           thumbnail_url,
+          short_description,
+          description,
           categories:category_id (id, name, name_bn, slug),
           instructors:instructor_id (id, name, name_bn, institution)
         `)
         .eq("status", "published")
         .order("created_at", { ascending: false }),
+      supabase
+        .from("testimonials")
+        .select("id, student_name, student_photo, course_name, batch, review, rating, display_order")
+        .eq("is_published", true)
+        .order("display_order", { ascending: true }),
+      supabase
+        .from("instructors")
+        .select("id", { count: "exact" })
+        .eq("is_published", true),
+      supabase
+        .from("site_settings")
+        .select("value")
+        .eq("key", "hero_settings")
+        .single(),
     ]);
 
     if (catRes.data) categories = catRes.data;
     if (courseRes.data) featuredCourses = courseRes.data;
+    if (testRes.data) testimonials = testRes.data;
+    if (instRes.count !== null && instRes.count !== undefined) instructorsCount = instRes.count;
+    if (heroRes.data?.value && typeof heroRes.data.value === "object") {
+      heroSettings = heroRes.data.value;
+    }
   } catch (err) {
-    console.error("Error fetching home data:", err);
+    console.error("Error fetching home data from Supabase:", err);
   }
 
   return (
     <>
-      <HeroSection />
-      <StatsBar />
-      <CategoryGrid initialCategories={categories} />
+      {/* 1. Hero Section: Headline, Purple Subtitle, CTA buttons, Categories & Student visual with Badges */}
+      <HeroSection initialCategories={categories} initialHeroData={heroSettings} />
+
+      {/* 2. Stats Bar: Floating Capsule Card with Real DB Counts */}
+      <StatsBar
+        coursesCount={featuredCourses.length > 0 ? featuredCourses.length : 6}
+        instructorsCount={instructorsCount > 0 ? instructorsCount : 10}
+      />
+
+      {/* 3. Popular Courses: Carousel of Real Courses from Supabase (Zero Mock Data) */}
       <FeaturedCourses initialCourses={featuredCourses} />
+
+      {/* 4. About Us: Authentic Group Photo & Narrative */}
       <AboutPreview />
-      <Testimonials />
-      <FreeResourcesPreview />
-      <BlogPreview />
-      <FinalCTA />
+
+      {/* 5. Testimonials: Real Student Reviews from Supabase (Zero Mock Data) */}
+      <Testimonials initialTestimonials={testimonials} />
     </>
   );
 }

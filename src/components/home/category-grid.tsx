@@ -52,7 +52,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   layers: Layers,
 };
 
-// Gradient CTA button themes — each card gets a unique pill color
+// Gradient CTA button themes
 const BUTTON_THEMES = [
   {
     gradient: "from-blue-500 to-blue-600",
@@ -84,16 +84,6 @@ const BUTTON_THEMES = [
     hoverGradient: "hover:from-emerald-600 hover:to-green-700",
     shadow: "shadow-emerald-500/25",
   },
-  {
-    gradient: "from-sky-400 to-blue-500",
-    hoverGradient: "hover:from-sky-500 hover:to-blue-600",
-    shadow: "shadow-sky-500/25",
-  },
-  {
-    gradient: "from-fuchsia-500 to-pink-500",
-    hoverGradient: "hover:from-fuchsia-600 hover:to-pink-600",
-    shadow: "shadow-fuchsia-500/25",
-  },
 ];
 
 interface CategoryItem {
@@ -105,74 +95,6 @@ interface CategoryItem {
   buttonTheme: (typeof BUTTON_THEMES)[number];
 }
 
-// Fallback presets
-const defaultCategories: CategoryItem[] = [
-  {
-    id: 1,
-    name: "এইচএসসি সায়েন্স",
-    subtitle: "Physics, Chemistry, Math, Biology",
-    icon: FlaskConical,
-    slug: "hsc-science",
-    buttonTheme: BUTTON_THEMES[0],
-  },
-  {
-    id: 2,
-    name: "মেডিকেল ভর্তি",
-    subtitle: "Bio, GK & English স্পেশাল",
-    icon: Stethoscope,
-    slug: "medical-admission",
-    buttonTheme: BUTTON_THEMES[1],
-  },
-  {
-    id: 3,
-    name: "ইঞ্জিনিয়ারিং ভর্তি",
-    subtitle: "BUET, RUET, KUET, CKET",
-    icon: Calculator,
-    slug: "engineering-admission",
-    buttonTheme: BUTTON_THEMES[2],
-  },
-  {
-    id: 4,
-    name: "বিশ্ববিদ্যালয় ভর্তি",
-    subtitle: "'ক' ও 'খ' ইউনিট",
-    icon: Building2,
-    slug: "university-admission",
-    buttonTheme: BUTTON_THEMES[3],
-  },
-  {
-    id: 5,
-    name: "এসএসসি প্রস্তুতি",
-    subtitle: "বোর্ড পূর্ণাঙ্গ প্রস্তুতি",
-    icon: GraduationCap,
-    slug: "ssc-prep",
-    buttonTheme: BUTTON_THEMES[4],
-  },
-  {
-    id: 6,
-    name: "এইচএসসি মানবিক",
-    subtitle: "মানবিক ও ব্যবসায় শিক্ষা",
-    icon: BookOpen,
-    slug: "hsc-arts",
-    buttonTheme: BUTTON_THEMES[5],
-  },
-  {
-    id: 7,
-    name: "স্কিল ও টেক",
-    subtitle: "Web, AI, Python ক্যারিয়ার",
-    icon: Briefcase,
-    slug: "job-preparation",
-    buttonTheme: BUTTON_THEMES[6],
-  },
-  {
-    id: 8,
-    name: "ইংলিশ ভার্সন",
-    subtitle: "প্রফেশনাল কোর্স",
-    icon: Globe,
-    slug: "english-version",
-    buttonTheme: BUTTON_THEMES[7],
-  },
-];
-
 function resolveIcon(iconName?: string | null, slug?: string): LucideIcon {
   if (iconName && ICON_MAP[iconName.toLowerCase().trim()]) {
     return ICON_MAP[iconName.toLowerCase().trim()];
@@ -180,11 +102,9 @@ function resolveIcon(iconName?: string | null, slug?: string): LucideIcon {
   if (slug?.includes("science")) return FlaskConical;
   if (slug?.includes("medical")) return Stethoscope;
   if (slug?.includes("engineering")) return Calculator;
-  if (slug?.includes("university")) return Building2;
+  if (slug?.includes("university") || slug?.includes("admission")) return Building2;
   if (slug?.includes("ssc")) return GraduationCap;
   if (slug?.includes("arts")) return BookOpen;
-  if (slug?.includes("job") || slug?.includes("tech") || slug?.includes("career")) return Briefcase;
-  if (slug?.includes("english")) return Globe;
   return BookOpen;
 }
 
@@ -202,14 +122,12 @@ export interface DbCategoryRaw {
 export function mapDbToCategories(data: DbCategoryRaw[]): CategoryItem[] {
   return data.map((item, idx) => {
     const theme = BUTTON_THEMES[idx % BUTTON_THEMES.length];
-    const defaultMatch = defaultCategories.find((d) => d.slug === item.slug);
-
     return {
       id: item.id,
       name: item.name_bn || item.name || "",
       slug: item.slug,
       icon: resolveIcon(item.icon_name, item.slug),
-      subtitle: item.description || defaultMatch?.subtitle || "",
+      subtitle: item.description || "মানসম্মত প্রস্তুতি ও সেরা মেন্টরদের গাইডলাইন",
       buttonTheme: theme,
     };
   });
@@ -235,20 +153,15 @@ export function CategoryGrid({ initialCategories }: { initialCategories?: DbCate
           .order("display_order", { ascending: true });
 
         if (!error && data) {
-          if (data.length > 0) {
-            setCategories(mapDbToCategories(data));
-          } else {
-            setCategories([]);
-          }
+          setCategories(mapDbToCategories(data));
         }
       } catch (e) {
-        console.error("Error loading categories:", e);
+        // Silent fallback
       }
     }
 
     loadDbCategories();
 
-    // Listen for real-time category updates, creates and deletes
     const channel = supabase
       .channel("categories-changes")
       .on(
@@ -265,6 +178,10 @@ export function CategoryGrid({ initialCategories }: { initialCategories?: DbCate
     };
   }, []);
 
+  if (categories.length === 0) {
+    return null;
+  }
+
   return (
     <SectionWrapper className="!pt-6 lg:!pt-8 !pb-16 lg:!pb-24">
       <SectionHeading
@@ -272,7 +189,6 @@ export function CategoryGrid({ initialCategories }: { initialCategories?: DbCate
         subtitle="এসএসসি, এইচএসসি কিংবা স্বপ্নের বিশ্ববিদ্যালয় ও ক্যারিয়ার প্রস্তুতি — বেছে নিন আপনার প্রয়োজনীয় কোর্স"
       />
 
-      {/* Neumorphic Category Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 w-full">
         <AnimatePresence>
           {categories.map((cat, idx) => (
@@ -288,34 +204,25 @@ export function CategoryGrid({ initialCategories }: { initialCategories?: DbCate
                 href={`/category/${cat.slug}`}
                 className={cn(
                   "group relative flex flex-col items-center text-center h-full",
-                  "rounded-2xl p-7 pb-6",
-                  // Neumorphic surface
-                  "bg-surface",
-                  // Light mode: soft outer shadow + subtle inset highlight
-                  "shadow-[6px_6px_16px_rgba(0,0,0,0.06),-6px_-6px_16px_rgba(255,255,255,0.8)]",
-                  "dark:shadow-[6px_6px_16px_rgba(0,0,0,0.35),-6px_-6px_16px_rgba(255,255,255,0.03)]",
-                  // Border
-                  "border border-border/50",
-                  // Hover lift
-                  "hover:-translate-y-1.5 hover:shadow-[8px_8px_24px_rgba(0,0,0,0.08),-8px_-8px_24px_rgba(255,255,255,0.9)]",
-                  "dark:hover:shadow-[8px_8px_24px_rgba(0,0,0,0.45),-8px_-8px_24px_rgba(255,255,255,0.04)]",
-                  "transition-all duration-300 ease-out"
+                  "rounded-2xl p-7 pb-6 bg-surface",
+                  "shadow-soft-card hover:shadow-floating border border-border/80 hover:border-primary/40",
+                  "hover:-translate-y-1.5 transition-all duration-300 ease-out"
                 )}
               >
-                {/* Category Title — Large & Bold */}
-                <h3 className="text-xl sm:text-2xl font-extrabold text-text font-bengali leading-tight mb-2 group-hover:text-primary transition-colors duration-200">
+                <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <cat.icon className="w-6 h-6" />
+                </div>
+
+                <h3 className="text-xl font-extrabold text-text font-bengali leading-tight mb-2 group-hover:text-primary transition-colors duration-200">
                   {cat.name}
                 </h3>
 
-                {/* Subtitle */}
                 <p className="text-sm text-text-muted font-bengali leading-relaxed mb-5">
                   {cat.subtitle}
                 </p>
 
-                {/* Spacer pushes button to bottom */}
                 <div className="mt-auto" />
 
-                {/* Gradient CTA Button */}
                 <span
                   className={cn(
                     "inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full text-sm font-semibold text-white",
