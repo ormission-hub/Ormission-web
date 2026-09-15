@@ -16,6 +16,8 @@ interface HeroPhoto {
   title: string;
   url: string;
   is_active?: boolean;
+  order?: number;
+  duration?: number;
   primary_cta_text?: string;
   primary_cta_url?: string;
   secondary_cta_text?: string;
@@ -32,6 +34,7 @@ interface HeroData {
   secondary_cta_text: string;
   secondary_cta_url: string;
   active_image_url: string;
+  autoplay_interval?: number;
   photos?: HeroPhoto[];
 }
 
@@ -170,7 +173,7 @@ export function HeroSection({
 
   const realPhotos = filterRealPhotos(heroData.photos);
   const activePhotos = realPhotos.filter((p) => p.is_active !== false);
-  const slides: HeroPhoto[] =
+  const rawSlides: HeroPhoto[] =
     activePhotos.length > 0
       ? activePhotos
       : realPhotos.length > 0
@@ -182,24 +185,32 @@ export function HeroSection({
             url:
               heroData.active_image_url ||
               "https://oorovtqwyfrfjfwuufyi.supabase.co/storage/v1/object/public/hero_images/hero_1789356392635_x4rpk6.webp",
+            order: 1,
+            duration: 5,
           },
         ];
+
+  // Strictly sort by serial order configured in admin panel
+  const slides = [...rawSlides].sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
 
   const nextSlide = () => setCurrentIndex((prev) => (prev + 1) % slides.length);
   const prevSlide = () => setCurrentIndex((prev) => (prev - 1 + slides.length) % slides.length);
 
+  // Dynamic autoplay duration per slide
   useEffect(() => {
     if (slides.length <= 1 || isPaused) return;
-    const timer = setInterval(() => {
+    const curSlide = slides[currentIndex] || slides[0];
+    const durationSeconds = curSlide?.duration || heroData.autoplay_interval || 5;
+    const timer = setTimeout(() => {
       setCurrentIndex((prev) => (prev + 1) % slides.length);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, [slides.length, isPaused]);
+    }, durationSeconds * 1000);
+    return () => clearTimeout(timer);
+  }, [currentIndex, slides, isPaused, heroData.autoplay_interval]);
 
   const currentSlide = slides[currentIndex] || slides[0];
 
   return (
-    <section className="relative bg-background overflow-hidden pt-16 sm:pt-20 lg:pt-24 pb-8 sm:pb-12">
+    <section className="relative bg-background overflow-hidden pt-16 pb-6 sm:pb-8">
       {/* Ambient background soft glow */}
       <div
         className="absolute top-12 left-1/2 -translate-x-1/2 w-[800px] h-[500px] rounded-full opacity-25 dark:opacity-15 pointer-events-none blur-3xl"
@@ -209,15 +220,12 @@ export function HeroSection({
         aria-hidden="true"
       />
 
-      {/* 1. Full-Bleed Edge-to-Edge Banner Slider (Zero side white gaps on mobile) */}
-      <div className="w-full sm:container-main sm:max-w-6xl lg:max-w-7xl sm:px-6 mx-auto relative z-10">
-        <div className="relative w-full mx-auto">
-          {/* Ambient circular glow behind the banner (desktop) */}
-          <div className="hidden sm:block absolute inset-0 m-auto w-4/5 h-4/5 rounded-3xl bg-gradient-to-tr from-primary/20 via-secondary/15 to-primary/10 blur-3xl -z-10" />
-
-          {/* Banner Container: 100% edge-to-edge on mobile, rounded on desktop */}
+      {/* 1. Full-Bleed Edge-to-Edge Banner Slider (Zero side gaps on all screens) */}
+      <div className="w-full relative z-10">
+        <div className="relative w-full">
+          {/* Banner Container: 100% full-width edge-to-edge */}
           <div
-            className="relative w-full aspect-video overflow-hidden bg-surface rounded-none sm:rounded-3xl border-y sm:border border-border/80 shadow-2xl group select-none"
+            className="relative w-full aspect-video sm:aspect-[21/9] lg:aspect-[2.35/1] max-h-[640px] overflow-hidden bg-surface rounded-none border-b border-border/80 shadow-md group select-none"
             onMouseEnter={() => setIsPaused(true)}
             onMouseLeave={() => setIsPaused(false)}
           >
@@ -237,7 +245,7 @@ export function HeroSection({
                     fill
                     priority
                     unoptimized={Boolean(currentSlide.url?.startsWith("http"))}
-                    sizes="(max-width: 1280px) 100vw, 1200px"
+                    sizes="100vw"
                     className="object-cover object-center group-hover:scale-[1.015] transition-transform duration-500"
                   />
 
@@ -245,7 +253,7 @@ export function HeroSection({
                   <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent pointer-events-none" />
 
                   {/* Over-Image CTA Buttons (Bottom-Left) */}
-                  <div className="absolute bottom-3 sm:bottom-6 left-3 sm:left-6 z-20 flex items-center gap-2 sm:gap-3.5 max-w-[calc(100%-85px)] sm:max-w-none">
+                  <div className="absolute bottom-3 sm:bottom-6 md:bottom-8 left-4 sm:left-8 md:left-12 lg:left-16 z-20 flex items-center gap-2 sm:gap-3.5 max-w-[calc(100%-85px)] sm:max-w-none">
                     <Link
                       href={currentSlide.primary_cta_url || heroData.primary_cta_url || "/courses"}
                       className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-1.5 sm:py-3 rounded-full text-[11px] sm:text-sm font-bold text-white bg-primary hover:bg-primary-hover shadow-lg shadow-primary/35 hover:shadow-xl hover:shadow-primary/45 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer shrink-0"
@@ -280,7 +288,7 @@ export function HeroSection({
                     e.stopPropagation();
                     prevSlide();
                   }}
-                  className="absolute left-1.5 sm:left-6 top-1/2 -translate-y-1/2 z-20 w-7 h-7 sm:w-12 sm:h-12 rounded-full bg-black/45 hover:bg-black/80 text-white backdrop-blur-md flex items-center justify-center opacity-85 sm:opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 shadow-xl border border-white/20 cursor-pointer"
+                  className="absolute left-2 sm:left-6 md:left-8 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-12 sm:h-12 rounded-full bg-black/45 hover:bg-black/80 text-white backdrop-blur-md flex items-center justify-center opacity-85 sm:opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 shadow-xl border border-white/20 cursor-pointer"
                   aria-label="Previous Slide"
                 >
                   <ChevronLeft className="w-4 h-4 sm:w-6 sm:h-6" />
@@ -292,14 +300,14 @@ export function HeroSection({
                     e.stopPropagation();
                     nextSlide();
                   }}
-                  className="absolute right-1.5 sm:right-6 top-1/2 -translate-y-1/2 z-20 w-7 h-7 sm:w-12 sm:h-12 rounded-full bg-black/45 hover:bg-black/80 text-white backdrop-blur-md flex items-center justify-center opacity-85 sm:opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 shadow-xl border border-white/20 cursor-pointer"
+                  className="absolute right-2 sm:right-6 md:right-8 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-12 sm:h-12 rounded-full bg-black/45 hover:bg-black/80 text-white backdrop-blur-md flex items-center justify-center opacity-85 sm:opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 shadow-xl border border-white/20 cursor-pointer"
                   aria-label="Next Slide"
                 >
                   <ChevronRight className="w-4 h-4 sm:w-6 sm:h-6" />
                 </button>
 
                 {/* Netflix-Style Progress Bar / Dot Indicators on bottom right */}
-                <div className="absolute bottom-3 sm:bottom-6 right-3 sm:right-6 z-20 flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/20 shadow-lg">
+                <div className="absolute bottom-3 sm:bottom-6 md:bottom-8 right-4 sm:right-8 md:right-12 lg:right-16 z-20 flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/20 shadow-lg">
                   {slides.map((_, idx) => (
                     <button
                       key={idx}
