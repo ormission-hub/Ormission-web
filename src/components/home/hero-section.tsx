@@ -22,6 +22,10 @@ interface HeroPhoto {
   title: string;
   url: string;
   is_active?: boolean;
+  primary_cta_text?: string;
+  primary_cta_url?: string;
+  secondary_cta_text?: string;
+  secondary_cta_url?: string;
 }
 
 interface HeroData {
@@ -51,10 +55,10 @@ const defaultHeroData: HeroData = {
   title_line_2: "প্রস্তুতি হোক শতভাগ নিখুঁত ও আত্মবিশ্বাসী",
   subtitle:
     "অভিজ্ঞ মেন্টরদের লাইভ ক্লাস, বিগত ২০ বছরের প্রশ্নব্যাংক সলভিং ও সার্বক্ষণিক ডাউট সলভিং নিয়ে ঘরে বসেই নিন সেরা প্রস্তুতি।",
-  primary_cta_text: "কোর্সগুলো এক্সপ্লোর করুন",
+  primary_cta_text: "Start Courses",
   primary_cta_url: "/courses",
-  secondary_cta_text: "ফ্রি নোট ও প্রশ্নব্যাংক",
-  secondary_cta_url: "/courses",
+  secondary_cta_text: "Free Learning",
+  secondary_cta_url: "/free-resources",
   active_image_url:
     "https://oorovtqwyfrfjfwuufyi.supabase.co/storage/v1/object/public/hero_images/hero_1789356392635_x4rpk6.webp",
   photos: [
@@ -63,6 +67,10 @@ const defaultHeroData: HeroData = {
       title: "Admission 2026 Premium Batch",
       url: "https://oorovtqwyfrfjfwuufyi.supabase.co/storage/v1/object/public/hero_images/hero_1789356392635_x4rpk6.webp",
       is_active: true,
+      primary_cta_text: "Start Courses",
+      primary_cta_url: "/courses",
+      secondary_cta_text: "Free Learning",
+      secondary_cta_url: "/free-resources",
     },
   ],
 };
@@ -273,10 +281,7 @@ export function HeroSection({
                 transition={{ duration: 0.5, ease: "easeInOut" }}
                 className="absolute inset-0 w-full h-full"
               >
-                <Link
-                  href={heroData.primary_cta_url || "/courses"}
-                  className="block relative w-full h-full cursor-pointer"
-                >
+                <div className="relative w-full h-full">
                   <Image
                     src={currentSlide.url}
                     alt={currentSlide.title || "Ormission Hero Banner"}
@@ -286,7 +291,29 @@ export function HeroSection({
                     sizes="(max-width: 1280px) 100vw, 1200px"
                     className="object-cover object-center group-hover:scale-[1.015] transition-transform duration-500"
                   />
-                </Link>
+
+                  {/* Cinematic Dark Gradient Overlay for optimal button contrast */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent pointer-events-none" />
+
+                  {/* Over-Image CTA Buttons (Netflix Style: Start Courses & Free Learning) */}
+                  <div className="absolute bottom-4 sm:bottom-8 left-4 sm:left-8 z-20 flex flex-wrap items-center gap-2.5 sm:gap-4">
+                    <Link
+                      href={currentSlide.primary_cta_url || heroData.primary_cta_url || "/courses"}
+                      className="inline-flex items-center gap-2 px-5 sm:px-7 py-2.5 sm:py-3.5 rounded-full text-xs sm:text-sm font-bold text-white bg-primary hover:bg-primary-hover shadow-lg shadow-primary/35 hover:shadow-xl hover:shadow-primary/45 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer"
+                    >
+                      <Sparkles className="w-4 h-4 text-white" />
+                      <span>{currentSlide.primary_cta_text || heroData.primary_cta_text || "Start Courses"}</span>
+                    </Link>
+
+                    <Link
+                      href={currentSlide.secondary_cta_url || heroData.secondary_cta_url || "/free-resources"}
+                      className="inline-flex items-center gap-2 px-5 sm:px-7 py-2.5 sm:py-3.5 rounded-full text-xs sm:text-sm font-bold text-white bg-black/40 hover:bg-black/60 border border-white/30 hover:border-white/60 backdrop-blur-md shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer"
+                    >
+                      <BookOpen className="w-4 h-4 text-white" />
+                      <span>{currentSlide.secondary_cta_text || heroData.secondary_cta_text || "Free Learning"}</span>
+                    </Link>
+                  </div>
+                </div>
               </motion.div>
             </AnimatePresence>
 
@@ -318,8 +345,8 @@ export function HeroSection({
                   <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
                 </button>
 
-                {/* Netflix-Style Progress Bar / Dot Indicators */}
-                <div className="absolute bottom-3 sm:bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/50 backdrop-blur-md border border-white/20 shadow-lg">
+                {/* Netflix-Style Progress Bar / Dot Indicators on bottom right */}
+                <div className="absolute bottom-4 sm:bottom-8 right-4 sm:right-8 z-20 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-md border border-white/20 shadow-lg">
                   {slides.map((_, idx) => (
                     <button
                       key={idx}
@@ -331,7 +358,7 @@ export function HeroSection({
                       }}
                       className={`transition-all duration-300 rounded-full cursor-pointer ${
                         idx === currentIndex
-                          ? "w-7 sm:w-9 h-2 bg-primary shadow-sm shadow-primary/60"
+                          ? "w-6 sm:w-8 h-2 bg-primary shadow-sm shadow-primary/60"
                           : "w-2 sm:w-2.5 h-2 bg-white/40 hover:bg-white/70"
                       }`}
                       aria-label={`Slide ${idx + 1}`}
