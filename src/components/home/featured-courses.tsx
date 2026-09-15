@@ -21,6 +21,7 @@ export interface DbFeaturedCourse {
   thumbnail_url?: string | null;
   categories?: any;
   instructors?: any;
+  category_id?: number | string | null;
   short_description?: string | null;
   description?: string | null;
 }

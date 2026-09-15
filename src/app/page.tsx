@@ -36,7 +36,7 @@ export default async function Home() {
           status,
           thumbnail_url,
           short_description,
-          description,
+          category_id,
           categories:category_id (id, name, name_bn, slug),
           instructors:instructor_id (id, name, name_bn, institution)
         `)

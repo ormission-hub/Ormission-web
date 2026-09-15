@@ -6,6 +6,15 @@ import Image from "next/image";
 import { ArrowRight, Sparkles, Star, Clock, Users } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { DbFeaturedCourse } from "./featured-courses";
+import {
+  staggerContainer,
+  scrollReveal,
+  zoomIn,
+  zoomInUp,
+  flipLeft,
+  flipRight,
+  hoverLiftProps,
+} from "@/lib/animations";
 
 // ==========================================
 // Bondi Pathshala 3D Illustration Icons
@@ -133,107 +142,149 @@ function FreeCourseIllustration() {
 }
 
 // ==========================================
-// Category Item Model & Data
+// Category Item Model & Dynamic Illustration Resolver
 // ==========================================
 
-interface ShowcaseCategory {
-  id: string;
+export interface DbCategoryShowcaseItem {
+  id: number | string;
   name: string;
-  name_bn: string;
+  name_bn?: string | null;
   slug: string;
-  subtitle: string;
-  illustration: React.ReactNode;
+  icon_name?: string | null;
+  description?: string | null;
+  display_order?: number | null;
+  is_published?: boolean | null;
 }
 
-const BONDI_CATEGORIES: ShowcaseCategory[] = [
-  {
-    id: "school",
-    name: "School",
-    name_bn: "স্কুল / এসএসসি",
-    slug: "ssc-prep",
-    subtitle: "৯ম, ১০ম ও এসএসসি প্রস্তুতি",
-    illustration: <SchoolIllustration />,
-  },
-  {
-    id: "hsc",
-    name: "HSC",
-    name_bn: "এইচএসসি",
-    slug: "hsc",
-    subtitle: "এইচএসসি সকল বিভাগ",
-    illustration: <HscIllustration />,
-  },
-  {
-    id: "admission",
-    name: "Admission",
-    name_bn: "এডমিশন",
-    slug: "university-admission",
-    subtitle: "বিশ্ববিদ্যালয় ও মেডিকেল ভর্তি",
-    illustration: <AdmissionIllustration />,
-  },
-  {
-    id: "nursing",
-    name: "Nursing",
-    name_bn: "নার্সিং",
-    slug: "nursing",
-    subtitle: "নার্সিং ও সায়েন্স ড্রিমার্স",
-    illustration: <ScienceNursingIllustration />,
-  },
-  {
-    id: "arts-commerce",
-    name: "Arts & Commerce",
-    name_bn: "আর্টস ও কমার্স",
-    slug: "hsc-arts",
-    subtitle: "মানবিক ও ব্যবসায় শিক্ষা",
-    illustration: <ArtsCommerceIllustration />,
-  },
-  {
-    id: "free-course",
-    name: "Free Course",
-    name_bn: "ফ্রি কোর্স",
-    slug: "free-resources",
-    subtitle: "প্রশ্নব্যাংক ও ফ্রি রিসোর্স",
-    illustration: <FreeCourseIllustration />,
-  },
-];
+function getCategoryIllustration(cat: {
+  icon_name?: string | null;
+  slug?: string | null;
+  name?: string | null;
+}) {
+  const icon = (cat.icon_name || "").toLowerCase().trim();
+  const slug = (cat.slug || "").toLowerCase().trim();
+  const name = (cat.name || "").toLowerCase().trim();
+
+  // 1. School / SSC
+  if (
+    icon === "graduation" ||
+    slug.includes("school") ||
+    slug.includes("ssc") ||
+    name.includes("school") ||
+    name.includes("ssc")
+  ) {
+    return <SchoolIllustration />;
+  }
+  // 2. HSC
+  if (
+    icon === "atom" ||
+    icon === "rocket" ||
+    slug.includes("hsc") ||
+    name.includes("hsc")
+  ) {
+    return <HscIllustration />;
+  }
+  // 3. Admission / University
+  if (
+    icon === "building" ||
+    slug.includes("admission") ||
+    slug.includes("university") ||
+    name.includes("admission")
+  ) {
+    return <AdmissionIllustration />;
+  }
+  // 4. Nursing / Medical / Science
+  if (
+    icon === "stethoscope" ||
+    icon === "flask" ||
+    slug.includes("nursing") ||
+    name.includes("nursing") ||
+    slug.includes("medical")
+  ) {
+    return <ScienceNursingIllustration />;
+  }
+  // 5. Arts & Commerce / Business
+  if (
+    icon === "book" ||
+    icon === "briefcase" ||
+    slug.includes("arts") ||
+    slug.includes("commerce") ||
+    name.includes("arts") ||
+    name.includes("commerce")
+  ) {
+    return <ArtsCommerceIllustration />;
+  }
+  // 6. Free Courses / Resources
+  if (
+    icon === "sparkles" ||
+    icon === "award" ||
+    slug.includes("free") ||
+    name.includes("free")
+  ) {
+    return <FreeCourseIllustration />;
+  }
+  // Default fallback
+  return <SchoolIllustration />;
+}
 
 export function CategoryCoursesShowcase({
+  categories = [],
   courses = [],
 }: {
-  categories?: any[];
+  categories?: DbCategoryShowcaseItem[];
   courses?: DbFeaturedCourse[];
 }) {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
-  // Filter courses based on the selected Bondi Pathshala category card
+  // Real categories from Supabase DB, filtered by is_published and sorted by display_order
+  const displayCategories = useMemo(() => {
+    if (categories && categories.length > 0) {
+      return [...categories]
+        .filter((c) => c.is_published !== false)
+        .sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+    }
+    return [];
+  }, [categories]);
+
+  // Filter courses dynamically based on the active DB category
   const filteredCourses = useMemo(() => {
     if (selectedCategory === "all") return courses;
-    if (selectedCategory === "free-resources") {
-      return courses.filter((c) => c.price === 0);
+
+    const currentCat = displayCategories.find((c) => c.slug === selectedCategory);
+    const catId = currentCat?.id;
+
+    // Free Courses Filter
+    if (selectedCategory === "free-course" || selectedCategory.includes("free")) {
+      return courses.filter(
+        (c) => c.price === 0 || (catId && c.category_id === catId)
+      );
     }
+
     return courses.filter((c) => {
-      const slug = (
+      // 1. Direct Category ID match
+      if (
+        catId &&
+        (c.category_id === catId ||
+          (Array.isArray(c.categories) && c.categories[0]?.id === catId) ||
+          (c.categories && !Array.isArray(c.categories) && (c.categories as any).id === catId))
+      ) {
+        return true;
+      }
+      // 2. Slug match
+      const cSlug = (
         Array.isArray(c.categories) ? c.categories[0]?.slug : c.categories?.slug || ""
       ).toLowerCase();
-      const title = ((c.title || "") + " " + (c.title_bn || "")).toLowerCase();
-      const target = selectedCategory.toLowerCase();
-      if (target === "hsc") {
-        return slug.includes("hsc") || slug.includes("arts") || slug.includes("science") || title.includes("hsc") || title.includes("এইচএসসি");
+      if (
+        cSlug &&
+        (cSlug === selectedCategory ||
+          cSlug.includes(selectedCategory) ||
+          selectedCategory.includes(cSlug))
+      ) {
+        return true;
       }
-      if (target === "ssc-prep") {
-        return slug.includes("ssc") || slug.includes("school") || title.includes("ssc") || title.includes("এসএসসি") || title.includes("স্কুল");
-      }
-      if (target === "university-admission") {
-        return slug.includes("admission") || slug.includes("university") || title.includes("ভর্তি") || title.includes("এডমিশন");
-      }
-      if (target === "nursing") {
-        return slug.includes("nursing") || slug.includes("science") || title.includes("নার্সিং") || title.includes("মেডিকেল");
-      }
-      if (target === "hsc-arts") {
-        return slug.includes("arts") || slug.includes("commerce") || title.includes("আর্টস") || title.includes("কমার্স");
-      }
-      return slug.includes(target) || target.includes(slug);
+      return false;
     });
-  }, [courses, selectedCategory]);
+  }, [courses, selectedCategory, displayCategories]);
 
   return (
     <section id="category-courses-section" className="relative py-16 sm:py-20 lg:py-24 bg-background overflow-hidden">
@@ -249,21 +300,23 @@ export function CategoryCoursesShowcase({
       <div className="container-main relative z-10">
         {/* Bondi Pathshala Inspired Header */}
         <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-14">
+          {/* 1. Scroll Reveal Animation on Title */}
           <motion.h2
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
+            variants={scrollReveal}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-50px" }}
             className="text-3xl sm:text-4xl lg:text-[44px] font-black text-text tracking-tight font-bengali mb-4"
           >
             ক্লাস অনুযায়ী কোর্স দেখুন
           </motion.h2>
 
+          {/* 2. Zoom In Up Animation on Description */}
           <motion.p
-            initial={{ opacity: 0, y: 14 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.1 }}
+            variants={zoomInUp}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-50px" }}
             className="text-sm sm:text-base text-slate-600 dark:text-slate-300 font-medium font-bengali leading-relaxed"
           >
             ওরমিশন বাংলাদেশের সকল শিক্ষার্থীদের জন্য SSC, HSC, এবং এডমিশন প্রস্তুতিতে কাজ করছে।
@@ -271,8 +324,14 @@ export function CategoryCoursesShowcase({
             প্রোগ্রাম। একই সাথে আর্টস ও কমার্স এবং নার্সিংয়ের জন্য রয়েছে পূর্ণাঙ্গ অনলাইন প্ল্যাটফর্ম...
           </motion.p>
 
-          {/* Quick Filter Pill: All Courses toggle */}
-          <div className="flex justify-center mt-6">
+          {/* 3. Zoom In Animation on Filter Pill */}
+          <motion.div
+            variants={zoomIn}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="flex justify-center mt-6"
+          >
             <button
               type="button"
               onClick={() => setSelectedCategory("all")}
@@ -284,38 +343,46 @@ export function CategoryCoursesShowcase({
             >
               <span>সকল কোর্স ({courses.length})</span>
             </button>
-          </div>
+          </motion.div>
         </div>
 
-        {/* 6 Category Cards Grid (Exact Bondi Pathshala Layout) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-14 sm:mb-16">
-          {BONDI_CATEGORIES.map((cat, idx) => {
+        {/* 4. Staggered Animation Container + 3D Perspective */}
+        <motion.div
+          variants={staggerContainer}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.15 }}
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-14 sm:mb-16 perspective-1000"
+        >
+          {displayCategories.map((cat, idx) => {
             const isSelected = selectedCategory === cat.slug;
+            const illustration = getCategoryIllustration(cat);
+            // 5 & 6. Flip Left (even) & Flip Right (odd) 3D Entrance
+            const flipVariant = idx % 2 === 0 ? flipLeft : flipRight;
 
             return (
               <motion.div
-                key={cat.id}
-                initial={{ opacity: 0, y: 18 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: idx * 0.05 }}
+                key={cat.id || cat.slug}
+                variants={flipVariant}
+                whileHover={hoverLiftProps.whileHover}
+                whileTap={hoverLiftProps.whileTap}
                 onClick={() => {
                   setSelectedCategory((prev) => (prev === cat.slug ? "all" : cat.slug));
                 }}
-                className={`group relative flex items-center justify-between p-4 sm:p-5 rounded-2xl cursor-pointer transition-all duration-300 select-none border ${
+                className={`group relative flex items-center justify-between p-4 sm:p-5 rounded-2xl cursor-pointer select-none border anim-hover-lift ${
                   isSelected
-                    ? "bg-surface text-primary border-2 border-primary ring-4 ring-primary/15 shadow-xl scale-[1.02]"
-                    : "bg-surface/90 hover:bg-surface text-slate-900 dark:text-slate-100 border-border/80 hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1.5"
+                    ? "bg-surface text-primary border-2 border-primary ring-4 ring-primary/15 shadow-2xl scale-[1.02]"
+                    : "bg-surface/95 hover:bg-surface text-slate-900 dark:text-slate-100 border-border/80 hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/15"
                 }`}
               >
-                {/* Left Illustration + Title */}
+                {/* Left Illustration + Title (Zoom In Icon on Hover) */}
                 <div className="flex items-center gap-3.5 sm:gap-4 min-w-0">
-                  <div className="transition-transform duration-300 group-hover:scale-110">
-                    {cat.illustration}
+                  <div className="transition-transform duration-300 group-hover:scale-115 group-hover:rotate-2">
+                    {illustration}
                   </div>
                   <div className="flex flex-col min-w-0">
                     <h3 className="text-base sm:text-lg font-black tracking-tight group-hover:text-primary transition-colors truncate">
-                      {cat.name}
+                      {cat.name || cat.name_bn}
                     </h3>
                   </div>
                 </div>
@@ -331,18 +398,26 @@ export function CategoryCoursesShowcase({
               </motion.div>
             );
           })}
-        </div>
+        </motion.div>
 
         {/* Dynamic Course Section (Animated with Framer Motion) */}
         <div>
-          <div className="flex items-center justify-between mb-8 pb-3 border-b border-border/60">
+          <motion.div
+            variants={scrollReveal}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="flex items-center justify-between mb-8 pb-3 border-b border-border/60"
+          >
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse" />
               <h3 className="text-lg sm:text-xl font-black text-text font-bengali">
                 {selectedCategory === "all"
                   ? "সকল রানিং ও স্পেশাল কোর্সসমূহ"
                   : `${
-                      BONDI_CATEGORIES.find((c) => c.slug === selectedCategory)?.name_bn || "নির্বাচিত"
+                      displayCategories.find((c) => c.slug === selectedCategory)?.name_bn ||
+                      displayCategories.find((c) => c.slug === selectedCategory)?.name ||
+                      "নির্বাচিত"
                     } কোর্সসমূহ`}
               </h3>
             </div>
@@ -354,31 +429,32 @@ export function CategoryCoursesShowcase({
               <span>সকল কোর্স দেখুন</span>
               <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
             </Link>
-          </div>
+          </motion.div>
 
           <AnimatePresence mode="wait">
             {filteredCourses.length > 0 ? (
               <motion.div
                 key={selectedCategory}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.35 }}
+                variants={staggerContainer}
+                initial="hidden"
+                animate="visible"
+                exit={{ opacity: 0, y: -10, transition: { duration: 0.25 } }}
                 className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8"
               >
-                {filteredCourses.map((course, idx) => {
+                {filteredCourses.map((course) => {
                   const title = course.title_bn || course.title;
                   const categoryName = Array.isArray(course.categories)
                     ? course.categories[0]?.name_bn || course.categories[0]?.name
                     : course.categories?.name_bn || course.categories?.name || "কোর্স";
 
                   return (
+                    /* Zoom In Up entrance + Hover Lift Effect */
                     <motion.div
                       key={course.id || course.slug}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: idx * 0.06 }}
-                      className="group flex flex-col bg-surface border border-border/80 rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-primary/10 hover:border-primary/50 hover:-translate-y-2 transition-all duration-300 h-full"
+                      variants={zoomInUp}
+                      whileHover={hoverLiftProps.whileHover}
+                      whileTap={hoverLiftProps.whileTap}
+                      className="group flex flex-col bg-surface border border-border/80 rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-primary/15 hover:border-primary/50 transition-all duration-300 h-full anim-hover-lift"
                     >
                       {/* Image Thumbnail with zoom hover */}
                       <Link

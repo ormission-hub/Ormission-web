@@ -330,3 +330,93 @@ h1, h2, h3, h4, h5, h6, p, span, a, button, input, select, textarea {
   font-size: 0.8125rem;
   line-height: 1.5;
 }
+
+/* ============================================================
+   7 CORE ANIMATION UTILITIES (AOS / Modern Motion Style)
+   (Scroll Reveal, Zoom In, Zoom In Up, Flip Left, Flip Right, Hover Lift, Staggered)
+   ============================================================ */
+
+.perspective-1000 {
+  perspective: 1000px;
+  transform-style: preserve-3d;
+}
+
+.anim-hover-lift {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, box-shadow;
+}
+.anim-hover-lift:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 35px -10px rgba(255, 95, 0, 0.15), 0 10px 20px -5px rgba(0, 0, 0, 0.08);
+}
+
+@keyframes animZoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.anim-zoom-in {
+  animation: animZoomIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes animZoomInUp {
+  from {
+    opacity: 0;
+    transform: scale(0.88) translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+.anim-zoom-in-up {
+  animation: animZoomInUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes animFlipLeft {
+  from {
+    opacity: 0;
+    transform: perspective(1000px) rotateY(-50deg) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: perspective(1000px) rotateY(0deg) scale(1);
+  }
+}
+.anim-flip-left {
+  animation: animFlipLeft 0.65s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+}
+
+@keyframes animFlipRight {
+  from {
+    opacity: 0;
+    transform: perspective(1000px) rotateY(50deg) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: perspective(1000px) rotateY(0deg) scale(1);
+  }
+}
+.anim-flip-right {
+  animation: animFlipRight 0.65s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+}
+
+@keyframes animScrollReveal {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.anim-scroll-reveal {
+  animation: animScrollReveal 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
