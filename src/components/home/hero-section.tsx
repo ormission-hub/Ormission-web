@@ -8,12 +8,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Sparkles,
-  Video,
-  FileText,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
-
 interface HeroPhoto {
   id: string;
   title: string;
@@ -55,12 +52,23 @@ const defaultHeroData: HeroData = {
   primary_cta_url: "/courses",
   secondary_cta_text: "Buy Book",
   secondary_cta_url: "/courses",
-  active_image_url: "/images/hero-student-model.jpg",
+  active_image_url:
+    "https://oorovtqwyfrfjfwuufyi.supabase.co/storage/v1/object/public/hero_images/hero_1789478404991_a7wl8n.jpg",
   photos: [
     {
-      id: "hero-model-student",
-      title: "Learn Today. Lead Tomorrow.",
-      url: "/images/hero-student-model.jpg",
+      id: "hero-user-uploaded",
+      title: "নতুন আপলোড করা ব্যানার",
+      url: "https://oorovtqwyfrfjfwuufyi.supabase.co/storage/v1/object/public/hero_images/hero_1789478404991_a7wl8n.jpg",
+      is_active: true,
+      primary_cta_text: "Browse Course",
+      primary_cta_url: "/courses",
+      secondary_cta_text: "Buy Book",
+      secondary_cta_url: "/courses",
+    },
+    {
+      id: "hero-admission-2026",
+      title: "Admission 2026 Premium Batch",
+      url: "https://oorovtqwyfrfjfwuufyi.supabase.co/storage/v1/object/public/hero_images/hero_1789356392635_x4rpk6.webp",
       is_active: true,
       primary_cta_text: "Browse Course",
       primary_cta_url: "/courses",
@@ -70,6 +78,7 @@ const defaultHeroData: HeroData = {
   ],
 };
 
+// Helper to filter out known mock/test photos
 function filterRealPhotos(photos?: HeroPhoto[]): HeroPhoto[] {
   if (!photos || photos.length === 0) return [];
   return photos.filter((p) => Boolean(p.url));
@@ -93,9 +102,21 @@ export function HeroSection({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
+  // Sync if server data changes
   useEffect(() => {
+    if (initialHeroData) {
+      setHeroData({
+        ...initialHeroData,
+        photos: filterRealPhotos(initialHeroData.photos),
+      });
+    }
+  }, [initialHeroData]);
+
+  // Client load & Realtime sync with Supabase
+  useEffect(() => {
+    const supabase = createClient();
+
     async function loadData() {
-      const supabase = createClient();
       try {
         const heroRes = await supabase
           .from("site_settings")
@@ -117,6 +138,34 @@ export function HeroSection({
     }
 
     loadData();
+
+    // Instant Realtime updates whenever admin saves or adds photos
+    const channel = supabase
+      .channel("realtime-hero-settings")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "site_settings",
+          filter: "key=eq.hero_settings",
+        },
+        (payload: any) => {
+          if (payload?.new?.value && typeof payload.new.value === "object") {
+            const val = payload.new.value;
+            setHeroData((prev) => ({
+              ...prev,
+              ...val,
+              photos: filterRealPhotos(val.photos),
+            }));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const realPhotos = filterRealPhotos(heroData.photos);
@@ -125,12 +174,14 @@ export function HeroSection({
     activePhotos.length > 0
       ? activePhotos
       : realPhotos.length > 0
-      ? realPhotos
-      : [
+        ? realPhotos
+        : [
           {
             id: "default-hero-slide",
-            title: "Learn Today. Lead Tomorrow.",
-            url: heroData.active_image_url || "/images/hero-student-model.jpg",
+            title: "Ormission Hero Banner",
+            url:
+              heroData.active_image_url ||
+              "https://oorovtqwyfrfjfwuufyi.supabase.co/storage/v1/object/public/hero_images/hero_1789356392635_x4rpk6.webp",
           },
         ];
 
@@ -141,219 +192,137 @@ export function HeroSection({
     if (slides.length <= 1 || isPaused) return;
     const timer = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % slides.length);
-    }, 6000);
+    }, 5000);
     return () => clearInterval(timer);
   }, [slides.length, isPaused]);
 
   const currentSlide = slides[currentIndex] || slides[0];
 
   return (
-    <section className="relative bg-background overflow-hidden pt-20 sm:pt-24 lg:pt-28 pb-10 sm:pb-14">
+    <section className="relative bg-background overflow-hidden pt-16 sm:pt-20 lg:pt-24 pb-8 sm:pb-12">
       {/* Ambient background soft glow */}
       <div
-        className="absolute top-12 left-1/2 -translate-x-1/2 w-[900px] h-[550px] rounded-full opacity-35 dark:opacity-15 pointer-events-none blur-3xl"
+        className="absolute top-12 left-1/2 -translate-x-1/2 w-[800px] h-[500px] rounded-full opacity-25 dark:opacity-15 pointer-events-none blur-3xl"
         style={{
-          background:
-            "radial-gradient(circle, rgba(168, 85, 247, 0.14) 0%, rgba(255, 95, 0, 0.08) 50%, transparent 70%)",
+          background: "radial-gradient(circle, rgba(255,95,0,0.16) 0%, transparent 70%)",
         }}
         aria-hidden="true"
       />
 
-      {/* Decorative ambient vector curves matching the photo */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
-        <svg
-          className="absolute -left-16 top-1/4 w-80 h-80 text-purple-500/15 dark:text-purple-400/10"
-          viewBox="0 0 200 200"
-          fill="none"
-        >
-          <path
-            d="M 20,100 C 60,30 140,170 180,100"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeDasharray="4 4"
-          />
-          <circle cx="100" cy="100" r="3.5" fill="currentColor" />
-        </svg>
+      {/* 1. Full-Bleed Edge-to-Edge Banner Slider (Zero side white gaps on mobile) */}
+      <div className="w-full sm:container-main sm:max-w-6xl lg:max-w-7xl sm:px-6 mx-auto relative z-10">
+        <div className="relative w-full mx-auto">
+          {/* Ambient circular glow behind the banner (desktop) */}
+          <div className="hidden sm:block absolute inset-0 m-auto w-4/5 h-4/5 rounded-3xl bg-gradient-to-tr from-primary/20 via-secondary/15 to-primary/10 blur-3xl -z-10" />
 
-        <svg
-          className="absolute -right-12 top-16 w-96 h-96 text-purple-500/15 dark:text-purple-400/10"
-          viewBox="0 0 200 200"
-          fill="none"
-        >
-          <path
-            d="M 30,60 C 110,20 130,180 180,120"
-            stroke="currentColor"
-            strokeWidth="1.5"
-          />
-          <circle cx="160" cy="125" r="4" fill="currentColor" />
-        </svg>
-      </div>
-
-      <div className="container-main max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-          {/* Left Column: Headlines & Action Buttons */}
-          <div className="lg:col-span-6 flex flex-col justify-center text-left">
-            {/* Top Announcement Pill */}
-            {heroData.badge_text && (
-              <div className="inline-flex items-center gap-2 self-start px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs sm:text-sm font-semibold mb-4 sm:mb-6 shadow-2xs font-bengali">
-                <Sparkles className="w-3.5 h-3.5 shrink-0" />
-                <span>{heroData.badge_text}</span>
-              </div>
-            )}
-
-            {/* Main Headline */}
-            <h1 className="text-4xl sm:text-5xl lg:text-[56px] font-black tracking-tight text-slate-950 dark:text-white leading-[1.12]">
-              <span className="block font-sans">{heroData.title_line_1 || "Learn Today."}</span>
-              <span className="block mt-1 sm:mt-1.5 font-sans text-slate-900 dark:text-slate-100">
-                {heroData.title_line_2 || "Lead Tomorrow."}
-              </span>
-            </h1>
-
-            {/* Subtitle in Bengali */}
-            <p className="mt-3 sm:mt-4 text-lg sm:text-xl lg:text-2xl font-bold font-bengali text-purple-600 dark:text-purple-400">
-              {heroData.subtitle || "আজ শিখুন। আগামীকাল নেতৃত্ব দিন।"}
-            </p>
-
-            {/* Action Buttons: Browse Course & Buy Book */}
-            <div className="mt-6 sm:mt-8 flex flex-wrap items-center gap-3.5 sm:gap-4">
-              {/* Primary Button: Browse Course */}
-              <Link
-                href={currentSlide.primary_cta_url || heroData.primary_cta_url || "/courses"}
-                className="inline-flex items-center justify-center px-7 sm:px-9 py-3 sm:py-3.5 rounded-full text-sm sm:text-base font-bold text-white bg-[#ff5f00] hover:bg-[#e05300] shadow-lg shadow-[#ff5f00]/30 hover:shadow-xl hover:shadow-[#ff5f00]/45 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all duration-200 cursor-pointer"
-              >
-                <span>{currentSlide.primary_cta_text || heroData.primary_cta_text || "Browse Course"}</span>
-              </Link>
-
-              {/* Secondary Button: Buy Book */}
-              <Link
-                href={currentSlide.secondary_cta_url || heroData.secondary_cta_url || "/courses"}
-                className="inline-flex items-center justify-center px-7 sm:px-9 py-3 sm:py-3.5 rounded-full text-sm sm:text-base font-bold text-[#ff5f00] dark:text-white border-2 border-[#ff5f00] hover:bg-[#ff5f00]/10 dark:hover:bg-white/10 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all duration-200 cursor-pointer"
-              >
-                <span>{currentSlide.secondary_cta_text || heroData.secondary_cta_text || "Buy Book"}</span>
-              </Link>
-            </div>
-          </div>
-
-          {/* Right Column: Student Model Photo & Floating Badges */}
+          {/* Banner Container: 100% edge-to-edge on mobile, rounded on desktop */}
           <div
-            className="lg:col-span-6 relative flex items-center justify-center pt-2 lg:pt-0"
+            className="relative w-full aspect-video overflow-hidden bg-surface rounded-none sm:rounded-3xl border-y sm:border border-border/80 shadow-2xl group select-none"
             onMouseEnter={() => setIsPaused(true)}
             onMouseLeave={() => setIsPaused(false)}
           >
-            {/* Ambient circular glow behind the student */}
-            <div className="absolute inset-0 m-auto w-4/5 h-4/5 rounded-full bg-gradient-to-tr from-purple-500/25 via-primary/15 to-indigo-500/10 blur-3xl -z-10" />
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentSlide.id || currentIndex}
+                initial={{ opacity: 0, scale: 1.01 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.99 }}
+                transition={{ duration: 0.5, ease: "easeInOut" }}
+                className="absolute inset-0 w-full h-full"
+              >
+                <div className="relative w-full h-full">
+                  <Image
+                    src={currentSlide.url}
+                    alt={currentSlide.title || "Ormission Hero Banner"}
+                    fill
+                    priority
+                    unoptimized={Boolean(currentSlide.url?.startsWith("http"))}
+                    sizes="(max-width: 1280px) 100vw, 1200px"
+                    className="object-cover object-center group-hover:scale-[1.015] transition-transform duration-500"
+                  />
 
-            <div className="relative w-full max-w-[360px] sm:max-w-[420px] lg:max-w-[450px] mx-auto">
-              {/* Main Student Portrait Card */}
-              <div className="relative aspect-[3/4] w-full rounded-3xl overflow-hidden shadow-2xl border border-border/60 bg-gradient-to-b from-purple-50/50 via-white to-purple-50/30 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 group">
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={currentSlide.id || currentIndex}
-                    initial={{ opacity: 0, scale: 1.01 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.99 }}
-                    transition={{ duration: 0.45, ease: "easeInOut" }}
-                    className="absolute inset-0 w-full h-full"
-                  >
-                    <Image
-                      src={currentSlide.url || heroData.active_image_url || "/images/hero-student-model.jpg"}
-                      alt={currentSlide.title || "Learn Today. Lead Tomorrow."}
-                      fill
-                      priority
-                      unoptimized={Boolean(currentSlide.url?.startsWith("http"))}
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 450px"
-                      className="object-cover object-top transition-transform duration-700 group-hover:scale-[1.02]"
+                  {/* Cinematic Dark Gradient Overlay for optimal button contrast */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent pointer-events-none" />
+
+                  {/* Over-Image CTA Buttons (Bottom-Left) */}
+                  <div className="absolute bottom-3 sm:bottom-6 left-3 sm:left-6 z-20 flex items-center gap-2 sm:gap-3.5 max-w-[calc(100%-85px)] sm:max-w-none">
+                    <Link
+                      href={currentSlide.primary_cta_url || heroData.primary_cta_url || "/courses"}
+                      className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-1.5 sm:py-3 rounded-full text-[11px] sm:text-sm font-bold text-white bg-primary hover:bg-primary-hover shadow-lg shadow-primary/35 hover:shadow-xl hover:shadow-primary/45 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer shrink-0"
+                    >
+                      <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-white shrink-0" />
+                      <span className="truncate max-w-[110px] sm:max-w-none">
+                        {currentSlide.primary_cta_text || heroData.primary_cta_text || "Browse Course"}
+                      </span>
+                    </Link>
+
+                    <Link
+                      href={currentSlide.secondary_cta_url || heroData.secondary_cta_url || "/courses"}
+                      className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-1.5 sm:py-3 rounded-full text-[11px] sm:text-sm font-bold text-white bg-black/45 hover:bg-black/65 border border-white/30 hover:border-white/60 backdrop-blur-md shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer shrink-0"
+                    >
+                      <BookOpen className="w-3 h-3 sm:w-4 sm:h-4 text-white shrink-0" />
+                      <span className="truncate max-w-[110px] sm:max-w-none">
+                        {currentSlide.secondary_cta_text || heroData.secondary_cta_text || "Buy Book"}
+                      </span>
+                    </Link>
+                  </div>
+                </div>
+              </motion.div>
+            </AnimatePresence>
+
+            {/* Netflix-Style Prev / Next Navigation Arrows */}
+            {slides.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    prevSlide();
+                  }}
+                  className="absolute left-1.5 sm:left-6 top-1/2 -translate-y-1/2 z-20 w-7 h-7 sm:w-12 sm:h-12 rounded-full bg-black/45 hover:bg-black/80 text-white backdrop-blur-md flex items-center justify-center opacity-85 sm:opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 shadow-xl border border-white/20 cursor-pointer"
+                  aria-label="Previous Slide"
+                >
+                  <ChevronLeft className="w-4 h-4 sm:w-6 sm:h-6" />
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    nextSlide();
+                  }}
+                  className="absolute right-1.5 sm:right-6 top-1/2 -translate-y-1/2 z-20 w-7 h-7 sm:w-12 sm:h-12 rounded-full bg-black/45 hover:bg-black/80 text-white backdrop-blur-md flex items-center justify-center opacity-85 sm:opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 shadow-xl border border-white/20 cursor-pointer"
+                  aria-label="Next Slide"
+                >
+                  <ChevronRight className="w-4 h-4 sm:w-6 sm:h-6" />
+                </button>
+
+                {/* Netflix-Style Progress Bar / Dot Indicators on bottom right */}
+                <div className="absolute bottom-3 sm:bottom-6 right-3 sm:right-6 z-20 flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/20 shadow-lg">
+                  {slides.map((_, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setCurrentIndex(idx);
+                      }}
+                      className={`transition-all duration-300 rounded-full cursor-pointer ${idx === currentIndex
+                          ? "w-4 sm:w-7 h-1.5 sm:h-2 bg-primary shadow-sm shadow-primary/60"
+                          : "w-1.5 sm:w-2 h-1.5 sm:h-2 bg-white/40 hover:bg-white/70"
+                        }`}
+                      aria-label={`Slide ${idx + 1}`}
                     />
-                  </motion.div>
-                </AnimatePresence>
-
-                {/* Optional slide navigation controls if multiple active slides exist */}
-                {slides.length > 1 && (
-                  <>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        prevSlide();
-                      }}
-                      className="absolute left-2.5 top-1/2 -translate-y-1/2 z-30 w-8 h-8 rounded-full bg-black/45 hover:bg-black/75 text-white flex items-center justify-center backdrop-blur-xs opacity-0 group-hover:opacity-100 transition-opacity"
-                      aria-label="Previous"
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        nextSlide();
-                      }}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 z-30 w-8 h-8 rounded-full bg-black/45 hover:bg-black/75 text-white flex items-center justify-center backdrop-blur-xs opacity-0 group-hover:opacity-100 transition-opacity"
-                      aria-label="Next"
-                    >
-                      <ChevronRight className="w-4 h-4" />
-                    </button>
-
-                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/50 backdrop-blur-xs">
-                      {slides.map((_, idx) => (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() => setCurrentIndex(idx)}
-                          className={`rounded-full transition-all ${
-                            idx === currentIndex
-                              ? "w-4 h-1.5 bg-primary"
-                              : "w-1.5 h-1.5 bg-white/50"
-                          }`}
-                          aria-label={`Slide ${idx + 1}`}
-                        />
-                      ))}
-                    </div>
-                  </>
-                )}
-              </div>
-
-              {/* Floating Badge 1: Live Classes */}
-              <motion.div
-                animate={{ y: [0, -6, 0] }}
-                transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute top-6 sm:top-10 -right-2 sm:-right-4 z-20 flex items-center gap-2.5 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-white/80 dark:border-slate-700/80 shadow-xl shadow-purple-900/10"
-              >
-                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-tr from-rose-500 to-amber-500 flex items-center justify-center text-white shadow-xs shrink-0">
-                  <Video className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  ))}
                 </div>
-                <div className="flex flex-col text-left">
-                  <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white leading-tight font-sans">
-                    Live Classes
-                  </span>
-                  <span className="text-[10px] text-emerald-500 font-semibold flex items-center gap-1 font-bengali">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    ইন্টারেক্টিভ ক্লাস
-                  </span>
-                </div>
-              </motion.div>
-
-              {/* Floating Badge 2: PDF Notes */}
-              <motion.div
-                animate={{ y: [0, 6, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.6 }}
-                className="absolute top-24 sm:top-32 -right-3 sm:-right-6 z-20 flex items-center gap-2.5 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-white/80 dark:border-slate-700/80 shadow-xl shadow-purple-900/10"
-              >
-                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-xs shrink-0">
-                  <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                </div>
-                <div className="flex flex-col text-left">
-                  <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white leading-tight font-sans">
-                    PDF Notes
-                  </span>
-                  <span className="text-[10px] text-text-muted font-medium font-bengali">
-                    হ্যান্ডনোট ও প্রশ্নব্যাংক
-                  </span>
-                </div>
-              </motion.div>
-            </div>
+              </>
+            )}
           </div>
         </div>
       </div>
+
     </section>
   );
 }

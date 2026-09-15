@@ -6,11 +6,16 @@ import * as THREE from "three";
 import { Sparkles, ArrowRight, CheckCircle2 } from "lucide-react";
 
 export function SplashScreen() {
+  const [mounted, setMounted] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [progress, setProgress] = useState(0);
   const [loadingText, setLoadingText] = useState("কনসেপ্ট ক্লিয়ারিং ক্লাস লোড হচ্ছে...");
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const progressRef = useRef(0);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Sync progressRef for 60fps Three.js animation loop
   useEffect(() => {
@@ -273,6 +278,8 @@ export function SplashScreen() {
     setIsVisible(false);
   };
 
+  if (!mounted) return null;
+
   return (
     <AnimatePresence>
       {isVisible && (
@@ -370,14 +377,16 @@ export function SplashScreen() {
 
               {/* Status text & percentage */}
               <div className="flex items-center justify-between text-xs text-slate-300 font-bengali">
-                <span className="truncate pr-2 font-medium flex items-center gap-1">
-                  {progress === 100 ? (
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 inline" />
-                  ) : (
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-ping inline-block mr-1" />
-                  )}
-                  {loadingText}
-                </span>
+                <div className="truncate pr-2 font-medium flex items-center gap-1.5">
+                  <span className="shrink-0 inline-flex items-center justify-center w-4 h-4">
+                    {progress === 100 ? (
+                      <CheckCircle2 key="done-icon" className="w-3.5 h-3.5 text-emerald-400" />
+                    ) : (
+                      <span key="pending-dot" className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-ping" />
+                    )}
+                  </span>
+                  <span className="truncate">{loadingText}</span>
+                </div>
                 <span className="font-mono font-bold text-sky-400 tabular-nums shrink-0">
                   {progress}%
                 </span>
