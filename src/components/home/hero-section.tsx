@@ -4,19 +4,13 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
-  GraduationCap,
-  Rocket,
-  Landmark,
   BookOpen,
-  FlaskConical,
-  LucideIcon,
   ChevronLeft,
   ChevronRight,
   Sparkles,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
-
 interface HeroPhoto {
   id: string;
   title: string;
@@ -75,75 +69,6 @@ const defaultHeroData: HeroData = {
   ],
 };
 
-const defaultCategoryList: DbCategoryItem[] = [
-  { id: 1, name: "SSC Board Full Preparation", name_bn: "এসএসসি প্রস্তুতি", slug: "ssc-prep", icon_name: "graduation" },
-  { id: 2, name: "HSC Humanities & Business Studies", name_bn: "এইচএসসি", slug: "hsc-arts", icon_name: "rocket" },
-  { id: 3, name: "HSC Science (Physics, Chem, Math, Bio)", name_bn: "এইচএসসি সায়েন্স", slug: "hsc-science", icon_name: "flask" },
-  { id: 4, name: "University Admission (A & B Unit)", name_bn: "বিশ্ববিদ্যালয় ভর্তি", slug: "university-admission", icon_name: "building" },
-];
-
-function resolveCategoryIcon(slug: string, iconName?: string | null): LucideIcon {
-  if (slug.includes("ssc")) return GraduationCap;
-  if (slug.includes("hsc-science") || slug.includes("science")) return FlaskConical;
-  if (slug.includes("hsc")) return Rocket;
-  if (slug.includes("admission") || slug.includes("university")) return Landmark;
-  return BookOpen;
-}
-
-function getCategoryShortLabel(cat: DbCategoryItem): string {
-  const s = cat.slug.toLowerCase();
-  if (s.includes("ssc")) return "SSC";
-  if (s.includes("hsc-science")) return "HSC Science";
-  if (s.includes("hsc") || s.includes("arts")) return "HSC";
-  if (s.includes("admission") || s.includes("university")) return "Admission";
-  return cat.name_bn || cat.name;
-}
-
-function getCategoryBadgeTheme(slug: string) {
-  const s = slug.toLowerCase();
-  if (s.includes("ssc")) {
-    return {
-      bg: "bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/25",
-      accentDot: "bg-orange-500",
-    };
-  }
-  if (s === "hsc" || (s.includes("hsc") && !s.includes("science")) || s.includes("arts")) {
-    return {
-      bg: "bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/25",
-      accentDot: "bg-purple-500",
-    };
-  }
-  if (s.includes("science")) {
-    return {
-      bg: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/25",
-      accentDot: "bg-emerald-500",
-    };
-  }
-  if (s.includes("admission") || s.includes("university")) {
-    return {
-      bg: "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/25",
-      accentDot: "bg-blue-500",
-    };
-  }
-  return {
-    bg: "bg-primary/15 text-primary border-primary/25",
-    accentDot: "bg-primary",
-  };
-}
-
-// Ensure SSC & HSC are at top (row 1), and HSC Science & Admission are at bottom (row 2)
-function sortCategories(list: DbCategoryItem[]): DbCategoryItem[] {
-  const getRank = (cat: DbCategoryItem) => {
-    const s = cat.slug.toLowerCase();
-    if (s.includes("ssc")) return 1;
-    if (s === "hsc" || s.includes("hsc-arts") || (s.includes("hsc") && !s.includes("science"))) return 2;
-    if (s.includes("science")) return 3;
-    if (s.includes("admission") || s.includes("university")) return 4;
-    return 5;
-  };
-  return [...list].sort((a, b) => getRank(a) - getRank(b));
-}
-
 // Helper to filter out known mock/test photos
 function filterRealPhotos(photos?: HeroPhoto[]): HeroPhoto[] {
   if (!photos || photos.length === 0) return [];
@@ -151,10 +76,9 @@ function filterRealPhotos(photos?: HeroPhoto[]): HeroPhoto[] {
 }
 
 export function HeroSection({
-  initialCategories = [],
   initialHeroData,
 }: {
-  initialCategories?: DbCategoryItem[];
+  initialCategories?: any[];
   initialHeroData?: HeroData;
 }) {
   const [heroData, setHeroData] = useState<HeroData>(() => {
@@ -166,16 +90,6 @@ export function HeroSection({
     }
     return defaultHeroData;
   });
-  const [categories, setCategories] = useState<DbCategoryItem[]>(() => {
-    const list =
-      initialCategories && initialCategories.length > 0
-        ? initialCategories
-        : defaultCategoryList;
-    return sortCategories(list);
-  });
-  const [activeSlug, setActiveSlug] = useState<string>(
-    initialCategories[0]?.slug || "ssc-prep"
-  );
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
@@ -183,18 +97,11 @@ export function HeroSection({
     async function loadData() {
       const supabase = createClient();
       try {
-        const [heroRes, catRes] = await Promise.all([
-          supabase
-            .from("site_settings")
-            .select("value")
-            .eq("key", "hero_settings")
-            .single(),
-          supabase
-            .from("categories")
-            .select("id, name, name_bn, slug, icon_name")
-            .eq("is_published", true)
-            .order("display_order", { ascending: true }),
-        ]);
+        const heroRes = await supabase
+          .from("site_settings")
+          .select("value")
+          .eq("key", "hero_settings")
+          .single();
 
         if (heroRes.data?.value && typeof heroRes.data.value === "object") {
           const val = heroRes.data.value;
@@ -203,12 +110,6 @@ export function HeroSection({
             ...val,
             photos: filterRealPhotos(val.photos),
           }));
-        }
-
-        if (catRes.data && catRes.data.length > 0) {
-          const sorted = sortCategories(catRes.data);
-          setCategories(sorted);
-          setActiveSlug(sorted[0].slug);
         }
       } catch (err) {
         // Silent fallback
@@ -247,7 +148,6 @@ export function HeroSection({
   }, [slides.length, isPaused]);
 
   const currentSlide = slides[currentIndex] || slides[0];
-  const sortedCategories = sortCategories(categories);
 
   return (
     <section className="relative bg-background overflow-hidden pt-16 sm:pt-20 lg:pt-24 pb-8 sm:pb-12">
@@ -375,56 +275,6 @@ export function HeroSection({
         </div>
       </div>
 
-      {/* 2. Highlighted Category Quick Selector Bar */}
-      {sortedCategories.length > 0 && (
-        <div className="container-main relative z-10 px-4 sm:px-6">
-          <motion.div
-            className="mt-6 sm:mt-8 max-w-5xl mx-auto w-full"
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-          >
-            <div className="flex items-center justify-center gap-2 mb-3 sm:mb-4 text-xs sm:text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bengali">
-              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              <span>আপনার পছন্দের বিভাগ বেছে নিন</span>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4 w-full">
-              {sortedCategories.slice(0, 4).map((cat) => {
-                const Icon = resolveCategoryIcon(cat.slug, cat.icon_name);
-                const label = getCategoryShortLabel(cat);
-                const isActive = activeSlug === cat.slug;
-                const theme = getCategoryBadgeTheme(cat.slug);
-
-                return (
-                  <Link
-                    key={cat.id || cat.slug}
-                    href={`/category/${cat.slug}`}
-                    onClick={() => setActiveSlug(cat.slug)}
-                    className={`group relative flex items-center gap-3 p-3 sm:p-3.5 rounded-2xl font-bold transition-all duration-300 cursor-pointer shadow-sm hover:shadow-md ${
-                      isActive
-                        ? "bg-surface text-primary border-2 border-primary ring-2 ring-primary/20 shadow-md scale-[1.02]"
-                        : "bg-surface text-slate-800 dark:text-slate-200 border-2 border-slate-200/90 dark:border-slate-800 hover:border-primary/50 hover:bg-surface-secondary hover:scale-[1.01]"
-                    }`}
-                  >
-                    <div
-                      className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${theme.bg} transition-transform group-hover:scale-110 shadow-xs`}
-                    >
-                      <Icon className="w-5 h-5" />
-                    </div>
-                    <div className="flex flex-col min-w-0">
-                      <span className="text-sm sm:text-base font-black truncate">{label}</span>
-                      <span className="text-[10px] text-slate-400 font-medium font-bengali truncate">
-                        কোর্সসমূহ দেখুন
-                      </span>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          </motion.div>
-        </div>
-      )}
     </section>
   );
 }

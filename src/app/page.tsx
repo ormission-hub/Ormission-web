@@ -1,6 +1,6 @@
 import { HeroSection } from "@/components/home/hero-section";
 import { StatsBar } from "@/components/home/stats-bar";
-import { FeaturedCourses } from "@/components/home/featured-courses";
+import { CategoryCoursesShowcase } from "@/components/home/category-courses-showcase";
 import { AboutPreview } from "@/components/home/about-preview";
 import { Testimonials } from "@/components/home/testimonials";
 import { createClient } from "@/lib/supabase/server";
@@ -71,7 +71,7 @@ export default async function Home() {
 
   return (
     <>
-      {/* 1. Hero Section: Headline, Purple Subtitle, CTA buttons, Categories & Student visual with Badges */}
+      {/* 1. Hero Section: Full-Width Billboard Slider with editable CTA buttons */}
       <HeroSection initialCategories={categories} initialHeroData={heroSettings} />
 
       {/* 2. Stats Bar: Floating Capsule Card with Real DB Counts */}
@@ -80,8 +80,8 @@ export default async function Home() {
         instructorsCount={instructorsCount > 0 ? instructorsCount : 10}
       />
 
-      {/* 3. Popular Courses: Carousel of Real Courses from Supabase (Zero Mock Data) */}
-      <FeaturedCourses initialCourses={featuredCourses} />
+      {/* 3. Bondi Pathshala Style Category & Course Animation Showcase */}
+      <CategoryCoursesShowcase courses={featuredCourses} categories={categories} />
 
       {/* 4. About Us: Authentic Group Photo & Narrative */}
       <AboutPreview />
