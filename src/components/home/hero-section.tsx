@@ -250,7 +250,7 @@ export function HeroSection({
   const sortedCategories = sortCategories(categories);
 
   return (
-    <section className="relative bg-background overflow-hidden pt-20 sm:pt-24 pb-8 sm:pb-12">
+    <section className="relative bg-background overflow-hidden pt-16 sm:pt-20 lg:pt-24 pb-8 sm:pb-12">
       {/* Ambient background soft glow */}
       <div
         className="absolute top-12 left-1/2 -translate-x-1/2 w-[800px] h-[500px] rounded-full opacity-25 dark:opacity-15 pointer-events-none blur-3xl"
@@ -260,15 +260,15 @@ export function HeroSection({
         aria-hidden="true"
       />
 
-      <div className="container-main relative z-10">
-        {/* Full Image Banner Slider (Netflix Billboard Style) */}
-        <div className="relative w-full max-w-6xl mx-auto">
-          {/* Ambient circular glow behind the banner */}
-          <div className="absolute inset-0 m-auto w-4/5 h-4/5 rounded-3xl bg-gradient-to-tr from-primary/20 via-secondary/15 to-primary/10 blur-3xl -z-10" />
+      {/* 1. Full-Bleed Edge-to-Edge Banner Slider (Zero side white gaps on mobile) */}
+      <div className="w-full sm:container-main sm:max-w-6xl lg:max-w-7xl sm:px-6 mx-auto relative z-10">
+        <div className="relative w-full mx-auto">
+          {/* Ambient circular glow behind the banner (desktop) */}
+          <div className="hidden sm:block absolute inset-0 m-auto w-4/5 h-4/5 rounded-3xl bg-gradient-to-tr from-primary/20 via-secondary/15 to-primary/10 blur-3xl -z-10" />
 
-          {/* Banner Container: 16:9 ratio to fit all admission posters without any cropping */}
+          {/* Banner Container: 100% edge-to-edge on mobile, rounded on desktop */}
           <div
-            className="relative rounded-2xl sm:rounded-3xl overflow-hidden bg-surface aspect-video w-full shadow-2xl border border-border/80 group select-none"
+            className="relative w-full aspect-video overflow-hidden bg-surface rounded-none sm:rounded-3xl border-y sm:border border-border/80 shadow-2xl group select-none"
             onMouseEnter={() => setIsPaused(true)}
             onMouseLeave={() => setIsPaused(false)}
           >
@@ -295,22 +295,26 @@ export function HeroSection({
                   {/* Cinematic Dark Gradient Overlay for optimal button contrast */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent pointer-events-none" />
 
-                  {/* Over-Image CTA Buttons (Netflix Style: Start Courses & Free Learning) */}
-                  <div className="absolute bottom-4 sm:bottom-8 left-4 sm:left-8 z-20 flex flex-wrap items-center gap-2.5 sm:gap-4">
+                  {/* Over-Image CTA Buttons (Bottom-Left) */}
+                  <div className="absolute bottom-3 sm:bottom-6 left-3 sm:left-6 z-20 flex items-center gap-2 sm:gap-3.5 max-w-[calc(100%-85px)] sm:max-w-none">
                     <Link
                       href={currentSlide.primary_cta_url || heroData.primary_cta_url || "/courses"}
-                      className="inline-flex items-center gap-2 px-5 sm:px-7 py-2.5 sm:py-3.5 rounded-full text-xs sm:text-sm font-bold text-white bg-primary hover:bg-primary-hover shadow-lg shadow-primary/35 hover:shadow-xl hover:shadow-primary/45 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer"
+                      className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-1.5 sm:py-3 rounded-full text-[11px] sm:text-sm font-bold text-white bg-primary hover:bg-primary-hover shadow-lg shadow-primary/35 hover:shadow-xl hover:shadow-primary/45 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer shrink-0"
                     >
-                      <Sparkles className="w-4 h-4 text-white" />
-                      <span>{currentSlide.primary_cta_text || heroData.primary_cta_text || "Start Courses"}</span>
+                      <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-white shrink-0" />
+                      <span className="truncate max-w-[110px] sm:max-w-none">
+                        {currentSlide.primary_cta_text || heroData.primary_cta_text || "Start Courses"}
+                      </span>
                     </Link>
 
                     <Link
                       href={currentSlide.secondary_cta_url || heroData.secondary_cta_url || "/free-resources"}
-                      className="inline-flex items-center gap-2 px-5 sm:px-7 py-2.5 sm:py-3.5 rounded-full text-xs sm:text-sm font-bold text-white bg-black/40 hover:bg-black/60 border border-white/30 hover:border-white/60 backdrop-blur-md shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer"
+                      className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-1.5 sm:py-3 rounded-full text-[11px] sm:text-sm font-bold text-white bg-black/45 hover:bg-black/65 border border-white/30 hover:border-white/60 backdrop-blur-md shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer shrink-0"
                     >
-                      <BookOpen className="w-4 h-4 text-white" />
-                      <span>{currentSlide.secondary_cta_text || heroData.secondary_cta_text || "Free Learning"}</span>
+                      <BookOpen className="w-3 h-3 sm:w-4 sm:h-4 text-white shrink-0" />
+                      <span className="truncate max-w-[110px] sm:max-w-none">
+                        {currentSlide.secondary_cta_text || heroData.secondary_cta_text || "Free Learning"}
+                      </span>
                     </Link>
                   </div>
                 </div>
@@ -327,10 +331,10 @@ export function HeroSection({
                     e.stopPropagation();
                     prevSlide();
                   }}
-                  className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-black/45 hover:bg-black/80 text-white backdrop-blur-md flex items-center justify-center opacity-85 sm:opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 shadow-xl border border-white/20 cursor-pointer"
+                  className="absolute left-1.5 sm:left-6 top-1/2 -translate-y-1/2 z-20 w-7 h-7 sm:w-12 sm:h-12 rounded-full bg-black/45 hover:bg-black/80 text-white backdrop-blur-md flex items-center justify-center opacity-85 sm:opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 shadow-xl border border-white/20 cursor-pointer"
                   aria-label="Previous Slide"
                 >
-                  <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+                  <ChevronLeft className="w-4 h-4 sm:w-6 sm:h-6" />
                 </button>
                 <button
                   type="button"
@@ -339,14 +343,14 @@ export function HeroSection({
                     e.stopPropagation();
                     nextSlide();
                   }}
-                  className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-black/45 hover:bg-black/80 text-white backdrop-blur-md flex items-center justify-center opacity-85 sm:opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 shadow-xl border border-white/20 cursor-pointer"
+                  className="absolute right-1.5 sm:right-6 top-1/2 -translate-y-1/2 z-20 w-7 h-7 sm:w-12 sm:h-12 rounded-full bg-black/45 hover:bg-black/80 text-white backdrop-blur-md flex items-center justify-center opacity-85 sm:opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 shadow-xl border border-white/20 cursor-pointer"
                   aria-label="Next Slide"
                 >
-                  <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
+                  <ChevronRight className="w-4 h-4 sm:w-6 sm:h-6" />
                 </button>
 
                 {/* Netflix-Style Progress Bar / Dot Indicators on bottom right */}
-                <div className="absolute bottom-4 sm:bottom-8 right-4 sm:right-8 z-20 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-md border border-white/20 shadow-lg">
+                <div className="absolute bottom-3 sm:bottom-6 right-3 sm:right-6 z-20 flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/20 shadow-lg">
                   {slides.map((_, idx) => (
                     <button
                       key={idx}
@@ -358,8 +362,8 @@ export function HeroSection({
                       }}
                       className={`transition-all duration-300 rounded-full cursor-pointer ${
                         idx === currentIndex
-                          ? "w-6 sm:w-8 h-2 bg-primary shadow-sm shadow-primary/60"
-                          : "w-2 sm:w-2.5 h-2 bg-white/40 hover:bg-white/70"
+                          ? "w-4 sm:w-7 h-1.5 sm:h-2 bg-primary shadow-sm shadow-primary/60"
+                          : "w-1.5 sm:w-2 h-1.5 sm:h-2 bg-white/40 hover:bg-white/70"
                       }`}
                       aria-label={`Slide ${idx + 1}`}
                     />
@@ -369,9 +373,11 @@ export function HeroSection({
             )}
           </div>
         </div>
+      </div>
 
-        {/* Highlighted Category Quick Selector Bar (Directly below the Netflix slider) */}
-        {sortedCategories.length > 0 && (
+      {/* 2. Highlighted Category Quick Selector Bar */}
+      {sortedCategories.length > 0 && (
+        <div className="container-main relative z-10 px-4 sm:px-6">
           <motion.div
             className="mt-6 sm:mt-8 max-w-5xl mx-auto w-full"
             initial={{ opacity: 0, y: 14 }}
@@ -417,8 +423,8 @@ export function HeroSection({
               })}
             </div>
           </motion.div>
-        )}
-      </div>
+        </div>
+      )}
     </section>
   );
 }
