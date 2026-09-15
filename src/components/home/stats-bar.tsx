@@ -87,25 +87,23 @@ export function StatsBar({
   ];
 
   return (
-    <section className="relative py-6 sm:py-8">
+    <section className="relative py-4 sm:py-8">
       <div className="container-main">
         {/* Floating Capsule Card (Reference Mockup Style) */}
-        <div className="bg-surface rounded-3xl p-6 sm:p-8 lg:p-10 border border-border/80 shadow-capsule transition-all duration-300">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 divide-y sm:divide-y-0 sm:divide-x divide-border/60">
-            {stats.map((stat, idx) => (
+        <div className="bg-surface rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 border border-border/80 shadow-capsule transition-all duration-300">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
+            {stats.map((stat) => (
               <div
                 key={stat.label}
-                className={`flex flex-col items-center text-center ${
-                  idx !== 0 ? "pt-4 sm:pt-0 sm:pl-6" : ""
-                }`}
+                className="flex flex-col items-center justify-center text-center p-2"
               >
                 {/* Number in Bold Signature Purple */}
-                <div className="text-3xl sm:text-4xl lg:text-5xl font-black text-secondary tabular-nums tracking-tight mb-1.5">
+                <div className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-black text-secondary tabular-nums tracking-tight mb-1 whitespace-nowrap">
                   <AnimatedNumber target={stat.value} suffix={stat.suffix} />
                 </div>
 
-                {/* Clean Bengali Label */}
-                <div className="text-xs sm:text-sm font-semibold text-text-muted font-bengali">
+                {/* Clean Bengali Label (Strictly 1 line, never wraps into 2 lines) */}
+                <div className="text-xs sm:text-sm font-bold text-text-muted font-bengali whitespace-nowrap">
                   {stat.label}
                 </div>
               </div>
