@@ -300,12 +300,12 @@ export function CategoryCoursesShowcase({
       <div className="container-main relative z-10">
         {/* Bondi Pathshala Inspired Header */}
         <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-14">
-          {/* 1. Scroll Reveal Animation on Title */}
+          {/* 1. Scroll Reveal Animation on Title (Triggers when scrolled into active view) */}
           <motion.h2
             variants={scrollReveal}
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true, margin: "-50px" }}
+            viewport={{ once: false, amount: 0.5, margin: "0px 0px -60px 0px" }}
             className="text-3xl sm:text-4xl lg:text-[44px] font-black text-text tracking-tight font-bengali mb-4"
           >
             ক্লাস অনুযায়ী কোর্স দেখুন
@@ -316,7 +316,7 @@ export function CategoryCoursesShowcase({
             variants={zoomInUp}
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true, margin: "-50px" }}
+            viewport={{ once: false, amount: 0.4, margin: "0px 0px -50px 0px" }}
             className="text-sm sm:text-base text-slate-600 dark:text-slate-300 font-medium font-bengali leading-relaxed"
           >
             ওরমিশন বাংলাদেশের সকল শিক্ষার্থীদের জন্য SSC, HSC, এবং এডমিশন প্রস্তুতিতে কাজ করছে।
@@ -329,7 +329,7 @@ export function CategoryCoursesShowcase({
             variants={zoomIn}
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true }}
+            viewport={{ once: false, amount: 0.4, margin: "0px 0px -40px 0px" }}
             className="flex justify-center mt-6"
           >
             <button
@@ -346,14 +346,8 @@ export function CategoryCoursesShowcase({
           </motion.div>
         </div>
 
-        {/* 4. Staggered Animation Container + 3D Perspective */}
-        <motion.div
-          variants={staggerContainer}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.15 }}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-14 sm:mb-16 perspective-1000"
-        >
+        {/* 4. Category Cards Grid with 3D Perspective */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-14 sm:mb-16 perspective-1000">
           {displayCategories.map((cat, idx) => {
             const isSelected = selectedCategory === cat.slug;
             const illustration = getCategoryIllustration(cat);
@@ -364,6 +358,9 @@ export function CategoryCoursesShowcase({
               <motion.div
                 key={cat.id || cat.slug}
                 variants={flipVariant}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: false, amount: 0.25, margin: "0px 0px -50px 0px" }}
                 whileHover={hoverLiftProps.whileHover}
                 whileTap={hoverLiftProps.whileTap}
                 onClick={() => {
@@ -398,7 +395,7 @@ export function CategoryCoursesShowcase({
               </motion.div>
             );
           })}
-        </motion.div>
+        </div>
 
         {/* Dynamic Course Section (Animated with Framer Motion) */}
         <div>
@@ -406,7 +403,7 @@ export function CategoryCoursesShowcase({
             variants={scrollReveal}
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true }}
+            viewport={{ once: false, amount: 0.3, margin: "0px 0px -40px 0px" }}
             className="flex items-center justify-between mb-8 pb-3 border-b border-border/60"
           >
             <div className="flex items-center gap-2">
@@ -435,10 +432,9 @@ export function CategoryCoursesShowcase({
             {filteredCourses.length > 0 ? (
               <motion.div
                 key={selectedCategory}
-                variants={staggerContainer}
-                initial="hidden"
-                animate="visible"
-                exit={{ opacity: 0, y: -10, transition: { duration: 0.25 } }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0, transition: { duration: 0.2 } }}
                 className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8"
               >
                 {filteredCourses.map((course) => {
@@ -448,10 +444,13 @@ export function CategoryCoursesShowcase({
                     : course.categories?.name_bn || course.categories?.name || "কোর্স";
 
                   return (
-                    /* Zoom In Up entrance + Hover Lift Effect */
+                    /* Zoom In Up entrance when scrolled into view + Hover Lift Effect */
                     <motion.div
                       key={course.id || course.slug}
                       variants={zoomInUp}
+                      initial="hidden"
+                      whileInView="visible"
+                      viewport={{ once: false, amount: 0.2, margin: "0px 0px -50px 0px" }}
                       whileHover={hoverLiftProps.whileHover}
                       whileTap={hoverLiftProps.whileTap}
                       className="group flex flex-col bg-surface border border-border/80 rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-primary/15 hover:border-primary/50 transition-all duration-300 h-full anim-hover-lift"
