@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { Star, User, ChevronLeft, ChevronRight, Quote, Sparkles } from "lucide-react";
+import { Star, User, ChevronLeft, ChevronRight, Quote, Sparkles, ExternalLink, Image as ImageIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SectionWrapper } from "@/components/global/section-wrapper";
 import { createClient } from "@/lib/supabase/client";
@@ -169,12 +169,71 @@ export function Testimonials({
                   </span>
                 </div>
 
-                {/* Quote Text */}
-                <blockquote className="relative mb-7 sm:mb-8 max-w-xl mx-auto">
-                  <p className="text-base sm:text-lg lg:text-xl font-semibold font-bengali leading-relaxed sm:leading-loose text-text">
-                    &ldquo;{current.review}&rdquo;
-                  </p>
-                </blockquote>
+                {/* Review Content: Text or Image */}
+                {(() => {
+                  const rawReview = current.review || "";
+                  const isImageReview =
+                    rawReview.startsWith("[IMAGE]:") ||
+                    rawReview.startsWith("http://") ||
+                    rawReview.startsWith("https://") ||
+                    rawReview.startsWith("/uploads/") ||
+                    rawReview.startsWith("data:image/") ||
+                    /\.(jpg|jpeg|png|webp|gif|svg)(\?.*)?$/i.test(rawReview.split("||")[0].trim());
+
+                  const reviewImageUrl = isImageReview
+                    ? (rawReview.startsWith("[IMAGE]:")
+                        ? rawReview.replace("[IMAGE]:", "").split("||")[0].trim()
+                        : rawReview.split("||")[0].trim())
+                    : "";
+
+                  const optionalCaption = rawReview.includes("||")
+                    ? rawReview.split("||")[1].trim()
+                    : (!isImageReview ? rawReview : "");
+
+                  if (isImageReview && reviewImageUrl) {
+                    return (
+                      <div className="relative mb-6 sm:mb-8 max-w-lg sm:max-w-xl mx-auto w-full">
+                        <div className="relative rounded-2xl overflow-hidden border border-border/80 dark:border-border/60 bg-surface-secondary/40 dark:bg-slate-900/70 shadow-md group transition-all duration-300 hover:shadow-xl hover:border-primary/40">
+                          {/* Review Image / Screenshot */}
+                          <div className="relative w-full flex items-center justify-center p-2 sm:p-3.5 bg-black/5 dark:bg-black/25">
+                            <img
+                              src={reviewImageUrl}
+                              alt={`Review from ${current.student_name}`}
+                              className="w-auto h-auto max-h-[290px] sm:max-h-[390px] object-contain rounded-xl shadow-xs transition-transform duration-300 group-hover:scale-[1.01]"
+                              loading="lazy"
+                            />
+                          </div>
+
+                          {/* Lightbox / View Full-size Button */}
+                          <a
+                            href={reviewImageUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="absolute bottom-3 right-3 px-2.5 py-1 rounded-lg bg-black/75 hover:bg-black/90 text-white text-[11px] font-bold backdrop-blur-md border border-white/20 flex items-center gap-1.5 transition-all opacity-90 hover:opacity-100 shadow-md font-bengali"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                            <span>বড় করে দেখুন</span>
+                          </a>
+                        </div>
+
+                        {/* Optional Caption if provided */}
+                        {optionalCaption && (
+                          <p className="text-xs sm:text-sm font-medium text-text-muted font-bengali mt-3 italic text-center">
+                            &ldquo;{optionalCaption}&rdquo;
+                          </p>
+                        )}
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <blockquote className="relative mb-7 sm:mb-8 max-w-xl mx-auto">
+                      <p className="text-base sm:text-lg lg:text-xl font-semibold font-bengali leading-relaxed sm:leading-loose text-text">
+                        &ldquo;{current.review}&rdquo;
+                      </p>
+                    </blockquote>
+                  );
+                })()}
 
                 {/* Divider */}
                 <div className="w-12 h-0.5 bg-primary/25 rounded-full mb-5 sm:mb-6" />

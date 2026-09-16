@@ -1,20 +1,34 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
-import { Search, BookOpen } from "lucide-react";
+import { useState, useMemo, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import { Search, BookOpen, Sparkles, X } from "lucide-react";
 import { CourseCard } from "@/components/courses/course-card";
 import { COURSES, type Course } from "@/lib/data/courses";
 import { CATEGORIES } from "@/lib/data/categories";
 import { createClient } from "@/lib/supabase/client";
 import { mapDbCourseToAppCourse } from "@/lib/supabase/course-mapper";
 
-export default function CoursesPage() {
+function CoursesContent() {
+  const searchParams = useSearchParams();
+  const filterParam = searchParams.get("filter");
+  const popularParam = searchParams.get("popular");
+  const isPopularInitial = filterParam === "popular" || popularParam === "true";
+
   const [courses, setCourses] = useState<Course[]>(COURSES);
   const [categories, setCategories] = useState<{ slug: string; nameBn: string }[]>(CATEGORIES);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedLevel, setSelectedLevel] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("popular");
+  const [onlyPopular, setOnlyPopular] = useState(isPopularInitial);
+  const [dbCourseSlugs, setDbCourseSlugs] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (isPopularInitial) {
+      setOnlyPopular(true);
+    }
+  }, [isPopularInitial]);
 
   useEffect(() => {
     const supabase = createClient();
@@ -41,6 +55,7 @@ export default function CoursesPage() {
         if (courseRes.data && courseRes.data.length > 0) {
           const dbMapped = courseRes.data.map(mapDbCourseToAppCourse);
           const dbSlugs = new Set(dbMapped.map((c) => c.slug));
+          setDbCourseSlugs(dbSlugs);
           const remainingStatic = COURSES.filter((c) => !dbSlugs.has(c.slug));
           setCourses([...dbMapped, ...remainingStatic]);
         }
@@ -79,7 +94,18 @@ export default function CoursesPage() {
       const matchesLevel =
         selectedLevel === "all" || course.level === selectedLevel;
 
-      return matchesSearch && matchesCategory && matchesLevel;
+      // Popular filter (admin-marked popular courses)
+      let matchesPopular = true;
+      if (onlyPopular) {
+        const hasDbPopular = courses.some(c => c.isFeatured && dbCourseSlugs.has(c.slug));
+        if (hasDbPopular) {
+          matchesPopular = !!course.isFeatured && dbCourseSlugs.has(course.slug);
+        } else {
+          matchesPopular = !!course.isFeatured;
+        }
+      }
+
+      return matchesSearch && matchesCategory && matchesLevel && matchesPopular;
     }).sort((a, b) => {
       if (sortBy === "popular") return b.enrolledCount - a.enrolledCount;
       if (sortBy === "rating") return b.rating - a.rating;
@@ -87,7 +113,7 @@ export default function CoursesPage() {
       if (sortBy === "price-high") return b.price - a.price;
       return 0;
     });
-  }, [courses, searchQuery, selectedCategory, selectedLevel, sortBy]);
+  }, [courses, searchQuery, selectedCategory, selectedLevel, sortBy, onlyPopular, dbCourseSlugs]);
 
   return (
     <div className="bg-background min-h-screen py-10 lg:py-14">
@@ -169,7 +195,22 @@ export default function CoursesPage() {
           {/* Quick Category Chips */}
           <div className="flex items-center gap-2 overflow-x-auto pt-4 mt-4 border-t border-border no-scrollbar">
             <button
-              onClick={() => setSelectedCategory("all")}
+              onClick={() => setOnlyPopular(!onlyPopular)}
+              className={`px-3 py-1 rounded text-xs font-bold whitespace-nowrap transition-colors font-bengali flex items-center gap-1.5 ${
+                onlyPopular
+                  ? "bg-amber-500 text-white shadow-sm ring-2 ring-amber-500/30"
+                  : "bg-surface-secondary text-text-muted hover:text-text"
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>জনপ্রিয় কোর্স</span>
+              {onlyPopular && <X className="w-3 h-3 ml-0.5" />}
+            </button>
+            <button
+              onClick={() => {
+                setSelectedCategory("all");
+                setOnlyPopular(false);
+              }}
               className={`px-3 py-1 rounded text-xs font-semibold whitespace-nowrap transition-colors font-bengali ${
                 selectedCategory === "all"
                   ? "bg-primary text-white"
@@ -193,6 +234,23 @@ export default function CoursesPage() {
             ))}
           </div>
         </div>
+
+        {/* Popular Filter Active Banner */}
+        {onlyPopular && (
+          <div className="mb-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between gap-3 font-bengali">
+            <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400 font-bold text-sm">
+              <Sparkles className="w-4 h-4 shrink-0" />
+              <span>অ্যাডমিন প্যানেল থেকে জনপ্রিয় করা কোর্সসমূহ প্রদর্শিত হচ্ছে</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setOnlyPopular(false)}
+              className="text-xs px-3 py-1.5 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600 transition-colors shrink-0 shadow-xs"
+            >
+              সকল কোর্স দেখুন
+            </button>
+          </div>
+        )}
 
         {/* Results Info */}
         <div className="flex items-center justify-between text-sm text-text-muted mb-6 font-bengali">
@@ -239,5 +297,12 @@ export default function CoursesPage() {
         )}
       </div>
     </div>
+  );
+}
+export default function CoursesPage() {
+  return (
+    <Suspense fallback={<div className="container-main py-16 text-center text-text-muted font-bengali">কোর্সসমূহ লোড হচ্ছে...</div>}>
+      <CoursesContent />
+    </Suspense>
   );
 }

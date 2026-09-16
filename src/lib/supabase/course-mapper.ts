@@ -86,7 +86,7 @@ export function mapDbCourseToAppCourse(dbCourse: any): Course {
     thumbnail: thumbnail,
     previewVideoUrl: dbCourse.preview_video_url || "https://www.youtube.com/embed/dQw4w9WgXcQ",
     isFeatured: !!dbCourse.is_featured,
-    isPopular: true,
+    isPopular: !!dbCourse.is_featured,
     badge: dbCourse.is_featured ? "জনপ্রিয় কোর্স" : undefined,
     badgeColor: "primary",
     description: dbCourse.description || dbCourse.short_description || subtitleEn,

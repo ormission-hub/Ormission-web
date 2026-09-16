@@ -15,10 +15,12 @@ export default async function Home() {
   let testimonials: any[] = [];
   let instructorsCount = 10;
   let heroSettings: any = null;
+  let pinnedCourseIds: (number | string)[] = [];
+  let initialBooks: any[] = [];
 
   try {
     const supabase = await createClient();
-    const [catRes, courseRes, testRes, instRes, heroRes] = await Promise.all([
+    const [catRes, courseRes, testRes, instRes, heroRes, pinnedRes, booksRes] = await Promise.all([
       supabase
         .from("categories")
         .select("id, name_bn, name, slug, icon_name, description, display_order, is_published")
@@ -60,6 +62,16 @@ export default async function Home() {
         .select("value")
         .eq("key", "hero_settings")
         .single(),
+      supabase
+        .from("site_settings")
+        .select("value")
+        .eq("key", "homepage_pinned_courses")
+        .single(),
+      supabase
+        .from("site_settings")
+        .select("value")
+        .eq("key", "ormission_books")
+        .single(),
     ]);
 
     if (catRes.data) {
@@ -75,6 +87,12 @@ export default async function Home() {
     if (heroRes.data?.value && typeof heroRes.data.value === "object") {
       heroSettings = heroRes.data.value;
     }
+    if (pinnedRes.data?.value && Array.isArray(pinnedRes.data.value)) {
+      pinnedCourseIds = pinnedRes.data.value;
+    }
+    if (booksRes.data?.value && Array.isArray(booksRes.data.value)) {
+      initialBooks = booksRes.data.value;
+    }
   } catch (err) {
     console.error("Error fetching home data from Supabase:", err);
   }
@@ -88,6 +106,8 @@ export default async function Home() {
       <CategoryCoursesShowcase
         courses={featuredCourses}
         categories={categories}
+        pinnedCourseIds={pinnedCourseIds}
+        initialBooks={initialBooks}
         statsBar={
           <StatsBar
             embedded
