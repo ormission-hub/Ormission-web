@@ -571,7 +571,7 @@ export function CategoryCoursesShowcase({
   const topRowCategories = displayCategories.slice(0, 3);
   const bottomRowCategories = displayCategories.slice(3);
 
-  // Reusable Pill Component with Continuous Animated Rotating Border
+  // Reusable Pill Component with Continuous Animated Rotating Border (Ultra-Fast 60FPS Mobile & Desktop)
   const renderCategoryPill = (cat: DbCategoryShowcaseItem, idx: number) => {
     const isSelected = activeCategory === cat.slug;
     const flipVariant = idx % 2 === 0 ? flipLeft : flipRight;
@@ -583,64 +583,65 @@ export function CategoryCoursesShowcase({
         type="button"
         variants={flipVariant}
         onClick={() => setSelectedCategory(cat.slug)}
-        whileHover={{ y: -4, scale: 1.02, transition: { duration: 0.2 } }}
-        whileTap={{ scale: 0.97 }}
-        className={`group relative p-[2.5px] rounded-2xl cursor-pointer select-none transition-all duration-300 overflow-hidden w-full sm:w-auto min-w-[170px] sm:min-w-[210px] ${
+        whileHover={{ y: -3, scale: 1.02, transition: { duration: 0.2 } }}
+        whileTap={{ scale: 0.96 }}
+        className={`group relative p-[2px] sm:p-[2.5px] rounded-xl sm:rounded-2xl cursor-pointer select-none transition-all duration-200 overflow-hidden w-full sm:w-auto min-w-0 sm:min-w-[210px] ${
           isSelected
-            ? "shadow-[0_0_25px_rgba(255,95,0,0.45)] dark:shadow-[0_0_30px_rgba(255,115,21,0.4)] ring-2 ring-primary/40 bg-primary/20"
-            : "shadow-soft-card hover:shadow-lg bg-slate-300/80 dark:bg-slate-800/90 hover:bg-primary/20"
+            ? "shadow-[0_0_15px_rgba(255,95,0,0.4)] sm:shadow-[0_0_25px_rgba(255,95,0,0.45)] dark:shadow-[0_0_20px_rgba(255,115,21,0.35)] ring-1.5 sm:ring-2 ring-primary/40 bg-primary/20"
+            : "shadow-2xs sm:shadow-soft-card hover:shadow-lg bg-slate-300/80 dark:bg-slate-800/90 hover:bg-primary/20"
         }`}
       >
-        {/* Layer 1: Radiant Outer Glow Beam (Blurred moving halo) */}
-        <div
-          className="border-beam-glow"
-          style={{
-            background: isSelected
-              ? "conic-gradient(from 0deg, transparent 0deg, transparent 250deg, #FF5F00 300deg, #FFA048 335deg, transparent 360deg)"
-              : "conic-gradient(from 0deg, transparent 0deg, transparent 265deg, #FF5F00 310deg, #FFA048 335deg, transparent 360deg)",
-            animation: `borderRotate ${isSelected ? '3s' : '4.2s'} linear infinite`,
-            animationDelay: `${idx * -0.85}s`,
-            opacity: isSelected ? 1 : 0.85,
-          }}
-        />
+        {/* Layer 1: Radiant Outer Glow Beam (Rendered on selected pill on desktop for silky mobile scroll) */}
+        {isSelected && (
+          <div
+            className="border-beam-glow hidden sm:block"
+            style={{
+              background: "conic-gradient(from 0deg, transparent 0deg, transparent 250deg, #FF5F00 300deg, #FFA048 335deg, transparent 360deg)",
+              animation: "borderRotate 3s linear infinite",
+              opacity: 1,
+            }}
+          />
+        )}
 
-        {/* Layer 2: Sharp Luminous Laser Beam (Races directly inside the 2.5px border track) */}
+        {/* Layer 2: Sharp Luminous Laser Beam (Hardware-accelerated 60fps beam in 2.5px track) */}
         <div
           className="border-beam-sharp"
           style={{
             background: isSelected
               ? "conic-gradient(from 0deg, transparent 0deg, transparent 250deg, #FF5F00 295deg, #FFFFFF 335deg, transparent 360deg)"
-              : "conic-gradient(from 0deg, transparent 0deg, transparent 265deg, #FF5F00 310deg, #FFFFFF 335deg, transparent 360deg)",
-            animation: `borderRotate ${isSelected ? '3s' : '4.2s'} linear infinite`,
-            animationDelay: `${idx * -0.85}s`,
+              : "conic-gradient(from 0deg, transparent 0deg, transparent 270deg, rgba(255,95,0,0.55) 310deg, #FFFFFF 340deg, transparent 360deg)",
+            animation: `borderRotate ${isSelected ? '2.8s' : '4.5s'} linear infinite`,
+            animationDelay: `${idx * -0.9}s`,
+            opacity: isSelected ? 1 : 0.65,
           }}
         />
 
-        {/* Layer 3: Inner Pill Content Container (bg-surface masks center, leaving the 2.5px glowing border beam brilliantly visible!) */}
+        {/* Layer 3: Inner Pill Content Container */}
         <div
-          className={`relative z-10 w-full h-full rounded-[13.5px] flex items-center justify-center gap-3 sm:gap-4 px-6 sm:px-8 py-3.5 sm:py-4 transition-colors duration-300 overflow-hidden ${
+          className={`relative z-10 w-full h-full rounded-[10px] sm:rounded-[13.5px] flex items-center justify-center gap-1 sm:gap-3.5 px-1 py-2 sm:px-8 sm:py-4 transition-colors duration-200 overflow-hidden ${
             isSelected
               ? "bg-surface dark:bg-slate-900 text-primary"
               : "bg-surface dark:bg-slate-900/95 text-text group-hover:text-primary"
           }`}
         >
-          {/* Continuous Glass Shimmer Sweep */}
-          <span
-            className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/35 dark:via-white/[0.08] to-transparent pointer-events-none animate-glass-shimmer"
-            style={{ animationDelay: `${idx * 0.55}s` }}
-          />
+          {/* Continuous Glass Shimmer Sweep (Only on selected pill to eliminate phone lag) */}
+          {isSelected && (
+            <span
+              className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/35 dark:via-white/[0.08] to-transparent pointer-events-none animate-glass-shimmer"
+            />
+          )}
 
           {/* Top Glossy Sheen */}
-          <span className="absolute inset-x-0 top-0 h-1/2 rounded-t-[13.5px] bg-gradient-to-b from-white/60 dark:from-white/[0.06] to-transparent pointer-events-none" />
+          <span className="absolute inset-x-0 top-0 h-1/2 rounded-t-[10px] sm:rounded-t-[13.5px] bg-gradient-to-b from-white/60 dark:from-white/[0.06] to-transparent pointer-events-none" />
 
-          {/* 3D Category Illustration */}
-          <div className="relative z-10 w-9 h-9 sm:w-10 sm:h-10 shrink-0 [&>div]:!w-9 [&>div]:!h-9 sm:[&>div]:!w-10 sm:[&>div]:!h-10 transition-transform duration-300 group-hover:scale-110 drop-shadow-xs">
+          {/* 3D Category Illustration: Compact 20px on mobile, 40px on desktop */}
+          <div className="relative z-10 w-5 h-5 sm:w-10 sm:h-10 shrink-0 [&>div]:!w-5 [&>div]:!h-5 sm:[&>div]:!w-10 sm:[&>div]:!h-10 transition-transform duration-200 group-hover:scale-110 drop-shadow-xs">
             {illustration}
           </div>
 
-          {/* Category Name */}
+          {/* Category Name: Scaled smoothly for mobile and desktop */}
           <span
-            className={`relative z-10 text-base sm:text-lg tracking-tight transition-colors duration-300 whitespace-nowrap ${
+            className={`relative z-10 text-[10.5px] xs:text-xs sm:text-base lg:text-lg tracking-tight transition-colors duration-200 truncate sm:whitespace-nowrap ${
               isSelected
                 ? "text-primary font-black"
                 : "text-text group-hover:text-primary font-bold"
@@ -651,7 +652,7 @@ export function CategoryCoursesShowcase({
 
           {/* Active indicator dot */}
           {isSelected && (
-            <span className="relative z-10 w-2.5 h-2.5 rounded-full bg-primary animate-pulse shrink-0 ml-0.5 shadow-[0_0_8px_#FF5F00]" />
+            <span className="relative z-10 w-1.5 h-1.5 sm:w-2.5 sm:h-2.5 rounded-full bg-primary animate-pulse shrink-0 ml-0.5 shadow-[0_0_8px_#FF5F00]" />
           )}
         </div>
       </motion.button>
@@ -672,7 +673,7 @@ export function CategoryCoursesShowcase({
       />
       {/* Ambient background glow */}
       <div
-        className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[900px] h-[450px] rounded-full opacity-20 dark:opacity-10 pointer-events-none blur-3xl"
+        className="hidden sm:block absolute top-1/4 left-1/2 -translate-x-1/2 w-[900px] h-[450px] rounded-full opacity-20 dark:opacity-10 pointer-events-none blur-3xl"
         style={{
           background: "radial-gradient(circle, rgba(255,95,0,0.15) 0%, rgba(124,58,237,0.12) 50%, transparent 70%)",
         }}
@@ -687,7 +688,7 @@ export function CategoryCoursesShowcase({
             variants={scrollReveal}
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: false, amount: 0.5, margin: "0px 0px -60px 0px" }}
+            viewport={{ once: true, amount: 0.5, margin: "0px 0px -60px 0px" }}
             className="text-3xl sm:text-4xl lg:text-[44px] font-black text-text tracking-tight font-bengali mb-4"
           >
             ক্লাস অনুযায়ী কোর্স দেখুন
@@ -698,7 +699,7 @@ export function CategoryCoursesShowcase({
             variants={zoomInUp}
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: false, amount: 0.4, margin: "0px 0px -50px 0px" }}
+            viewport={{ once: true, amount: 0.4, margin: "0px 0px -50px 0px" }}
             className="text-sm sm:text-base text-slate-600 dark:text-slate-300 font-medium font-bengali leading-relaxed"
           >
             ওরমিশন বাংলাদেশের সকল শিক্ষার্থীদের জন্য SSC, HSC, এবং এডমিশন প্রস্তুতিতে কাজ করছে।
@@ -711,29 +712,29 @@ export function CategoryCoursesShowcase({
             variants={zoomIn}
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: false, amount: 0.4, margin: "0px 0px -40px 0px" }}
+            viewport={{ once: true, amount: 0.4, margin: "0px 0px -40px 0px" }}
             className="text-xs sm:text-sm text-text-muted font-bengali mt-5 mb-1"
           >
             {"\u0995\u09CD\u09AF\u09BE\u099F\u09BE\u0997\u09B0\u09BF \u09A8\u09BF\u09B0\u09CD\u09AC\u09BE\u099A\u09A8 \u0995\u09B0\u09C1\u09A8"}
           </motion.p>
         </div>
 
-        {/* Category Pills Grid: 3 on Top Row, 2 on Bottom Row (Matching Reference Photo) */}
+        {/* Category Pills Grid: 3 on Top Row, 2 on Bottom Row (Matching Reference Photo on BOTH Mobile & Desktop) */}
         <motion.div
           variants={staggerContainer}
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: false, amount: 0.3, margin: "0px 0px -40px 0px" }}
-          className="flex flex-col items-center justify-center gap-3 sm:gap-4 mb-14 sm:mb-16"
+          viewport={{ once: true, amount: 0.2 }}
+          className="flex flex-col items-center justify-center gap-2.5 sm:gap-4 mb-10 sm:mb-16 w-full px-1 sm:px-0"
         >
-          {/* Row 1: 3 Pills */}
-          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 w-full">
+          {/* Row 1: Exactly 3 Pills Side-by-Side on Mobile & Desktop */}
+          <div className="grid grid-cols-3 gap-1.5 sm:gap-4 w-full max-w-sm sm:max-w-none sm:flex sm:flex-wrap sm:items-center sm:justify-center">
             {topRowCategories.map((cat, idx) => renderCategoryPill(cat, idx))}
           </div>
 
-          {/* Row 2: 2 Pills (Centered below row 1) */}
+          {/* Row 2: Exactly 2 Pills Side-by-Side Centered Below Row 1 on Mobile & Desktop */}
           {bottomRowCategories.length > 0 && (
-            <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 w-full">
+            <div className="grid grid-cols-2 gap-1.5 sm:gap-4 w-full max-w-[245px] sm:max-w-none sm:flex sm:flex-wrap sm:items-center sm:justify-center">
               {bottomRowCategories.map((cat, idx) =>
                 renderCategoryPill(cat, idx + topRowCategories.length)
               )}
@@ -746,7 +747,7 @@ export function CategoryCoursesShowcase({
             variants={scrollReveal}
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: false, amount: 0.3, margin: "0px 0px -40px 0px" }}
+            viewport={{ once: true, amount: 0.3, margin: "0px 0px -40px 0px" }}
             className="flex items-center justify-between mb-8 pb-3 border-b border-border/60"
           >
             <div className="flex items-center gap-2">
@@ -793,7 +794,7 @@ export function CategoryCoursesShowcase({
                       variants={zoomInUp}
                       initial="hidden"
                       whileInView="visible"
-                      viewport={{ once: false, amount: 0.2, margin: "0px 0px -50px 0px" }}
+                      viewport={{ once: true, amount: 0.2, margin: "0px 0px -50px 0px" }}
                       whileHover={hoverLiftProps.whileHover}
                       whileTap={hoverLiftProps.whileTap}
                       className="group flex flex-col bg-surface border border-border/80 rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-primary/15 hover:border-primary/50 transition-all duration-300 h-full anim-hover-lift"

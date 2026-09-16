@@ -479,6 +479,8 @@ h1, h2, h3, h4, h5, h6, p, span, a, button, input, select, textarea {
   animation: borderRotate 3.5s linear infinite;
   will-change: transform;
   pointer-events: none;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
 }
 
 .border-beam-glow {
@@ -491,5 +493,7 @@ h1, h2, h3, h4, h5, h6, p, span, a, button, input, select, textarea {
   filter: blur(5px);
   will-change: transform;
   pointer-events: none;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
 }
 

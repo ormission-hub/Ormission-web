@@ -211,9 +211,9 @@ export function HeroSection({
 
   return (
     <section className="relative bg-background overflow-hidden pt-16 pb-6 sm:pb-8">
-      {/* Ambient background soft glow */}
+      {/* Ambient background soft glow (hidden on mobile to eliminate GPU scroll lag) */}
       <div
-        className="absolute top-12 left-1/2 -translate-x-1/2 w-[800px] h-[500px] rounded-full opacity-25 dark:opacity-15 pointer-events-none blur-3xl"
+        className="hidden sm:block absolute top-12 left-1/2 -translate-x-1/2 w-[800px] h-[500px] rounded-full opacity-25 dark:opacity-15 pointer-events-none blur-3xl"
         style={{
           background: "radial-gradient(circle, rgba(255,95,0,0.16) 0%, transparent 70%)",
         }}
