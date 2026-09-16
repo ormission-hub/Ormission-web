@@ -210,7 +210,7 @@ export function HeroSection({
   const currentSlide = slides[currentIndex] || slides[0];
 
   return (
-    <section className="relative bg-background overflow-hidden pt-16 pb-6 sm:pb-8">
+    <section className="relative bg-background overflow-hidden pt-16 pb-3 sm:pb-5">
       {/* Ambient background soft glow (hidden on mobile to eliminate GPU scroll lag) */}
       <div
         className="hidden sm:block absolute top-12 left-1/2 -translate-x-1/2 w-[800px] h-[500px] rounded-full opacity-25 dark:opacity-15 pointer-events-none blur-3xl"

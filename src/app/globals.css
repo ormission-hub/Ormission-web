@@ -472,27 +472,35 @@ h1, h2, h3, h4, h5, h6, p, span, a, button, input, select, textarea {
 
 .border-beam-sharp {
   position: absolute;
-  top: -150%;
-  left: -150%;
-  width: 400%;
-  height: 400%;
+  top: -100%;
+  left: -100%;
+  width: 300%;
+  height: 300%;
   will-change: transform;
   pointer-events: none;
   transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
+  contain: strict;
 }
 
 .border-beam-glow {
   position: absolute;
-  top: -150%;
-  left: -150%;
-  width: 400%;
-  height: 400%;
-  filter: blur(5px);
+  top: -100%;
+  left: -100%;
+  width: 300%;
+  height: 300%;
   will-change: transform;
   pointer-events: none;
   transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
+  contain: strict;
+  opacity: 0.5;
+}
+
+@media (max-width: 640px) {
+  .border-beam-glow {
+    display: none !important;
+  }
 }
 
 .no-scrollbar::-webkit-scrollbar {

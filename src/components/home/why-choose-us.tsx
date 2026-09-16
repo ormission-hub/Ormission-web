@@ -129,13 +129,20 @@ export function WhyChooseUs() {
   const sliderRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
 
+  const whyScrollRaf = useRef<number | null>(null);
+
   const handleScroll = () => {
-    if (!sliderRef.current) return;
-    const { scrollLeft, offsetWidth } = sliderRef.current;
-    const cardStep = offsetWidth * 0.82;
-    if (cardStep <= 0) return;
-    const index = Math.round(scrollLeft / cardStep);
-    setActiveIndex(Math.min(Math.max(index, 0), features.length - 1));
+    if (whyScrollRaf.current) return;
+    whyScrollRaf.current = requestAnimationFrame(() => {
+      whyScrollRaf.current = null;
+      if (!sliderRef.current) return;
+      const { scrollLeft, offsetWidth } = sliderRef.current;
+      const cardStep = offsetWidth * 0.82;
+      if (cardStep <= 0) return;
+      const index = Math.round(scrollLeft / cardStep);
+      const targetIdx = Math.min(Math.max(index, 0), features.length - 1);
+      setActiveIndex((prev) => (prev !== targetIdx ? targetIdx : prev));
+    });
   };
 
   const scrollToIndex = (index: number) => {
@@ -171,17 +178,13 @@ export function WhyChooseUs() {
           onScroll={handleScroll}
           className="flex overflow-x-auto snap-x snap-mandatory gap-3.5 pb-4 -mx-4 px-4 scrollbar-none scroll-smooth select-none"
         >
-          {features.map((feature, idx) => (
-            <motion.div
+          {features.map((feature) => (
+            <div
               key={feature.title}
-              initial={{ opacity: 0, x: 50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, amount: 0.2 }}
-              transition={{ duration: 0.45, delay: idx * 0.06 }}
               className="w-[84vw] max-w-[320px] shrink-0 snap-center"
             >
               <FeatureCard feature={feature} isMobile />
-            </motion.div>
+            </div>
           ))}
         </div>
 

@@ -679,78 +679,82 @@ export function CategoryCoursesShowcase({
     }
   };
 
+  const courseScrollRafRef = useRef<number | null>(null);
+  const bookScrollRafRef = useRef<number | null>(null);
+
   const handleCourseScroll = () => {
-    if (coursesScrollRef.current) {
-      const cardWidth = coursesScrollRef.current.clientWidth > 640 ? 380 : 310;
-      const idx = Math.round(coursesScrollRef.current.scrollLeft / cardWidth);
-      setCourseActiveIndex(Math.max(0, Math.min(idx, pinnedCourses.length - 1)));
-    }
+    if (courseScrollRafRef.current) return;
+    courseScrollRafRef.current = requestAnimationFrame(() => {
+      courseScrollRafRef.current = null;
+      if (coursesScrollRef.current) {
+        const cardWidth = coursesScrollRef.current.clientWidth > 640 ? 380 : 310;
+        const idx = Math.round(coursesScrollRef.current.scrollLeft / cardWidth);
+        const clamped = Math.max(0, Math.min(idx, pinnedCourses.length - 1));
+        setCourseActiveIndex((prev) => (prev !== clamped ? clamped : prev));
+      }
+    });
   };
 
   const handleBookScroll = () => {
-    if (booksScrollRef.current) {
-      const cardWidth = booksScrollRef.current.clientWidth > 640 ? 340 : 300;
-      const idx = Math.round(booksScrollRef.current.scrollLeft / cardWidth);
-      setBookActiveIndex(Math.max(0, Math.min(idx, pinnedBooks.length - 1)));
-    }
+    if (bookScrollRafRef.current) return;
+    bookScrollRafRef.current = requestAnimationFrame(() => {
+      bookScrollRafRef.current = null;
+      if (booksScrollRef.current) {
+        const cardWidth = booksScrollRef.current.clientWidth > 640 ? 340 : 300;
+        const idx = Math.round(booksScrollRef.current.scrollLeft / cardWidth);
+        const clamped = Math.max(0, Math.min(idx, pinnedBooks.length - 1));
+        setBookActiveIndex((prev) => (prev !== clamped ? clamped : prev));
+      }
+    });
   };
+
+  // Clean up RAF on unmount
+  useEffect(() => {
+    return () => {
+      if (courseScrollRafRef.current) cancelAnimationFrame(courseScrollRafRef.current);
+      if (bookScrollRafRef.current) cancelAnimationFrame(bookScrollRafRef.current);
+    };
+  }, []);
 
   // Category layout: 3 on top row, 2 on bottom row
   const topRowCategories = displayCategories.slice(0, 3);
   const bottomRowCategories = displayCategories.slice(3);
 
-  // Category Pill Component with continuous rotating laser beam
+  // Category Pill Component: Lightweight, GPU-accelerated & 60fps smooth
   const renderCategoryPill = (cat: DbCategoryShowcaseItem, idx: number) => {
     const isSelected = activeCategory === cat.slug;
-    const flipVariant = idx % 2 === 0 ? flipLeft : flipRight;
     const illustration = getCategoryIllustration(cat);
 
     return (
       <motion.button
         key={cat.id || cat.slug}
         type="button"
-        variants={flipVariant}
+        variants={zoomIn}
         onClick={() => {
           setSelectedCategory(cat.slug);
         }}
-        whileHover={{ y: -3, scale: 1.02, transition: { duration: 0.2 } }}
-        whileTap={{ scale: 0.96 }}
+        whileHover={{ y: -2, scale: 1.02, transition: { duration: 0.15 } }}
+        whileTap={{ scale: 0.97 }}
         className={`group relative p-[1.5px] sm:p-[2px] rounded-xl sm:rounded-2xl cursor-pointer select-none transition-all duration-200 overflow-hidden w-full sm:w-auto min-w-0 sm:min-w-[170px] ${
           isSelected
-            ? "shadow-[0_0_12px_rgba(255,95,0,0.35)] sm:shadow-[0_0_20px_rgba(255,95,0,0.4)] dark:shadow-[0_0_18px_rgba(255,115,21,0.3)] ring-1.5 sm:ring-2 ring-primary/40 bg-primary/20"
-            : "shadow-2xs sm:shadow-soft-card hover:shadow-lg bg-slate-300/80 dark:bg-slate-800/90 hover:bg-primary/20"
+            ? "shadow-[0_0_15px_rgba(255,95,0,0.35)] ring-1.5 sm:ring-2 ring-primary/40 bg-primary/20"
+            : "border border-border/80 bg-surface dark:bg-slate-900 hover:border-primary/40 hover:shadow-sm"
         }`}
       >
+        {/* Animated laser beam ONLY on the single active/selected pill */}
         {isSelected && (
           <div
-            className="border-beam-glow hidden sm:block"
+            className="border-beam-sharp"
             style={{
               background:
-                "conic-gradient(from 0deg, transparent 0deg, transparent 250deg, #FF5F00 300deg, #FFA048 335deg, transparent 360deg)",
+                "conic-gradient(from 0deg, transparent 0deg, transparent 250deg, #FF5F00 295deg, #FFFFFF 335deg, transparent 360deg)",
               animationName: "borderRotate",
               animationDuration: "3s",
               animationTimingFunction: "linear",
               animationIterationCount: "infinite",
-              animationDelay: `${idx * -0.9}s`,
-              opacity: 1,
             }}
           />
         )}
-
-        <div
-          className="border-beam-sharp"
-          style={{
-            background: isSelected
-              ? "conic-gradient(from 0deg, transparent 0deg, transparent 250deg, #FF5F00 295deg, #FFFFFF 335deg, transparent 360deg)"
-              : "conic-gradient(from 0deg, transparent 0deg, transparent 270deg, rgba(255,95,0,0.55) 310deg, #FFFFFF 340deg, transparent 360deg)",
-            animationName: "borderRotate",
-            animationDuration: isSelected ? "2.8s" : "4.5s",
-            animationTimingFunction: "linear",
-            animationIterationCount: "infinite",
-            animationDelay: `${idx * -0.9}s`,
-            opacity: isSelected ? 1 : 0.65,
-          }}
-        />
 
         <div
           className={`relative z-10 w-full h-full rounded-[10px] sm:rounded-[13.5px] flex items-center justify-center gap-1 sm:gap-3.5 px-1 py-2 sm:px-8 sm:py-4 transition-colors duration-200 overflow-hidden ${
@@ -798,38 +802,24 @@ export function CategoryCoursesShowcase({
   ) => {
     return (
       <div
-        className="group relative p-[2px] sm:p-[2.5px] rounded-xl sm:rounded-2xl select-none transition-all duration-300 overflow-hidden w-auto shadow-sm hover:shadow-xl hover:shadow-primary/25 bg-slate-300/80 dark:bg-slate-800/90 hover:bg-primary/20 ring-1 ring-border/60 hover:ring-primary/60"
+        className="group relative p-[2px] sm:p-[2.5px] rounded-xl sm:rounded-2xl select-none transition-all duration-300 overflow-hidden w-auto shadow-[0_0_15px_rgba(255,95,0,0.2)] hover:shadow-[0_0_22px_rgba(255,95,0,0.35)] bg-slate-300/80 dark:bg-slate-800/90 ring-1 ring-border/60 hover:ring-primary/60"
       >
-        {/* Layer 1: Radiant Glow Beam */}
-        <div
-          className="border-beam-glow hidden sm:block opacity-75 group-hover:opacity-100 transition-opacity duration-300"
-          style={{
-            background:
-              "conic-gradient(from 0deg, transparent 0deg, transparent 250deg, #FF5F00 300deg, #FFA048 335deg, transparent 360deg)",
-            animationName: "borderRotate",
-            animationDuration: "3.2s",
-            animationTimingFunction: "linear",
-            animationIterationCount: "infinite",
-            animationDelay: `${idx * -1.2}s`,
-          }}
-        />
-
-        {/* Layer 2: Sharp Laser Beam */}
+        {/* Hardware-accelerated Single Laser Beam Layer */}
         <div
           className="border-beam-sharp"
           style={{
             background:
               "conic-gradient(from 0deg, transparent 0deg, transparent 260deg, #FF5F00 295deg, #FFFFFF 335deg, transparent 360deg)",
             animationName: "borderRotate",
-            animationDuration: "3.2s",
+            animationDuration: "3.5s",
             animationTimingFunction: "linear",
             animationIterationCount: "infinite",
-            animationDelay: `${idx * -1.2}s`,
+            animationDelay: `${idx * -1.5}s`,
             opacity: 0.9,
           }}
         />
 
-        {/* Layer 3: Inner Container */}
+        {/* Inner Container */}
         <div className="relative z-10 w-full h-full rounded-[10px] sm:rounded-[13.5px] flex items-center gap-2 sm:gap-3.5 px-3 py-2 sm:px-5 sm:py-3 bg-surface dark:bg-slate-900 text-text overflow-hidden">
           <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 dark:via-white/[0.08] to-transparent pointer-events-none group-hover:animate-glass-shimmer" />
           <span className="absolute inset-x-0 top-0 h-1/2 rounded-t-[10px] sm:rounded-t-[13.5px] bg-gradient-to-b from-white/60 dark:from-white/[0.06] to-transparent pointer-events-none" />
@@ -851,36 +841,25 @@ export function CategoryCoursesShowcase({
   };
 
   return (
-    <section id="category-courses-section" className="relative pt-10 sm:pt-14 pb-16 sm:pb-20 lg:pb-24 bg-background overflow-hidden">
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-            @keyframes borderRotate {
-              0% { transform: rotate(0deg); }
-              100% { transform: rotate(360deg); }
-            }
-          `,
-        }}
-      />
-      
-      {/* Ambient background glow */}
+    <section id="category-courses-section" className="relative pt-5 sm:pt-8 pb-10 sm:pb-14 lg:pb-16 bg-background overflow-hidden">
+      {/* Ambient background glow (GPU-friendly radial gradient without expensive blur filter) */}
       <div
-        className="hidden sm:block absolute top-1/4 left-1/2 -translate-x-1/2 w-[900px] h-[450px] rounded-full opacity-20 dark:opacity-10 pointer-events-none blur-3xl"
+        className="hidden sm:block absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[350px] rounded-full opacity-20 dark:opacity-10 pointer-events-none"
         style={{
-          background: "radial-gradient(circle, rgba(255,95,0,0.15) 0%, rgba(124,58,237,0.12) 50%, transparent 70%)",
+          background: "radial-gradient(ellipse at center, rgba(255,95,0,0.12) 0%, rgba(124,58,237,0.08) 50%, transparent 70%)",
         }}
         aria-hidden="true"
       />
 
       <div className="container-main relative z-10">
         {/* Header */}
-        <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-14">
+        <div className="text-center max-w-3xl mx-auto mb-5 sm:mb-8">
           <motion.h2
             variants={scrollReveal}
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.5, margin: "0px 0px -60px 0px" }}
-            className="text-3xl sm:text-4xl lg:text-[44px] font-black text-text tracking-tight font-bengali mb-4"
+            className="text-2xl sm:text-3xl lg:text-[38px] font-black text-text tracking-tight font-bengali mb-2 sm:mb-3"
           >
             ক্লাস অনুযায়ী কোর্স দেখুন
           </motion.h2>
@@ -890,11 +869,9 @@ export function CategoryCoursesShowcase({
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.4, margin: "0px 0px -50px 0px" }}
-            className="text-sm sm:text-base text-slate-600 dark:text-slate-300 font-medium font-bengali leading-relaxed"
+            className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-medium font-bengali max-w-xl mx-auto leading-relaxed"
           >
-            ওরমিশন বাংলাদেশের সকল শিক্ষার্থীদের জন্য SSC, HSC, এবং এডমিশন প্রস্তুতিতে কাজ করছে।
-            বিজ্ঞানের জন্য রয়েছে TARGET DU, BUET, DMC, GST, এবং বিশ্ববিদ্যালয় প্রস্তুতি
-            প্রোগ্রাম। একই সাথে আর্টস ও কমার্স এবং নার্সিংয়ের জন্য রয়েছে পূর্ণাঙ্গ অনলাইন প্ল্যাটফর্ম...
+            দেশসেরা অভিজ্ঞ মেন্টরদের সাথে SSC, HSC ও ভর্তি পরীক্ষার পূর্ণাঙ্গ প্রস্তুতি।
           </motion.p>
 
           <motion.p
@@ -902,7 +879,7 @@ export function CategoryCoursesShowcase({
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.4, margin: "0px 0px -40px 0px" }}
-            className="text-xs sm:text-sm text-text-muted font-bengali mt-5 mb-1"
+            className="text-[11px] sm:text-xs text-text-muted font-bengali mt-2.5 mb-1"
           >
             ক্যাটাগরি নির্বাচন করুন
           </motion.p>
@@ -914,7 +891,7 @@ export function CategoryCoursesShowcase({
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.2 }}
-          className="flex flex-col items-center justify-center gap-2.5 sm:gap-4 mb-10 sm:mb-16 w-full px-1 sm:px-0"
+          className="flex flex-col items-center justify-center gap-2 sm:gap-3.5 mb-5 sm:mb-7 w-full px-1 sm:px-0"
         >
           <div className="grid grid-cols-3 gap-1.5 sm:gap-4 w-full max-w-sm sm:max-w-none sm:flex sm:flex-wrap sm:items-center sm:justify-center">
             {topRowCategories.map((cat, idx) => renderCategoryPill(cat, idx))}
@@ -931,7 +908,7 @@ export function CategoryCoursesShowcase({
 
         {/* Stats Bar (Audience / Students) placed directly between Category Pills and Course Cards */}
         {statsBar && (
-          <div className="mb-10 sm:mb-14">
+          <div className="mb-6 sm:mb-8">
             {statsBar}
           </div>
         )}
@@ -939,8 +916,8 @@ export function CategoryCoursesShowcase({
         {/* ============================================================ */}
         {/* 1. PINNED COURSES SLIDESHOW (Side-sliding horizontal carousel) */}
         {/* ============================================================ */}
-        <div className="mb-16 sm:mb-20">
-          <div className="flex items-center justify-between gap-3 mb-6 sm:mb-8">
+        <div className="mb-6 sm:mb-8">
+          <div className="flex items-center justify-between gap-3 mb-3.5 sm:mb-4">
             <div className="flex items-center gap-2.5 sm:gap-3">
               {renderSectionLabel("জনপ্রিয় কোর্স", <PopularCoursesIllustration />, 0, "নির্বাচিত")}
             </div>
@@ -986,15 +963,9 @@ export function CategoryCoursesShowcase({
                 : course.categories?.name_bn || course.categories?.name || "কোর্স";
 
               return (
-                <motion.div
+                <div
                   key={course.id || course.slug}
-                  initial={{ opacity: 0, x: 60 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true, amount: 0.15 }}
-                  transition={{ duration: 0.45, delay: idx * 0.08, ease: "easeOut" }}
-                  whileHover={hoverLiftProps.whileHover}
-                  whileTap={hoverLiftProps.whileTap}
-                  className="w-[86vw] xs:w-[320px] sm:w-[360px] lg:w-[380px] shrink-0 snap-start group flex flex-col bg-surface border border-border/80 rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-primary/15 hover:border-primary/50 transition-all duration-300 h-full anim-hover-lift"
+                  className="w-[86vw] xs:w-[320px] sm:w-[360px] lg:w-[380px] shrink-0 snap-start group flex flex-col bg-surface border border-border/80 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:shadow-primary/15 hover:border-primary/50 hover:-translate-y-1 transition-all duration-300 h-full"
                 >
                   {/* Image Thumbnail with zoom hover */}
                   <Link
@@ -1096,14 +1067,14 @@ export function CategoryCoursesShowcase({
                       </Link>
                     </div>
                   </div>
-                </motion.div>
+                </div>
               );
             })}
           </div>
 
           {/* Dots Indicator */}
           {pinnedCourses.length > 1 && (
-            <div className="flex items-center justify-center gap-1.5 mt-5">
+            <div className="flex items-center justify-center gap-1.5 mt-2.5">
               {pinnedCourses.map((_, i) => (
                 <button
                   key={i}
@@ -1127,8 +1098,8 @@ export function CategoryCoursesShowcase({
         {/* ============================================================ */}
         {/* 2. PINNED BOOKS SLIDESHOW (Side-sliding horizontal carousel) */}
         {/* ============================================================ */}
-        <div className="pt-8 border-t border-border/60">
-          <div className="flex items-center justify-between gap-3 mb-6 sm:mb-8">
+        <div className="pt-5 sm:pt-6 border-t border-border/60">
+          <div className="flex items-center justify-between gap-3 mb-3.5 sm:mb-4">
             <div className="flex items-center gap-2.5 sm:gap-3">
               {renderSectionLabel("আমাদের বইসমূহ", <OurBooksIllustration />, 1, "স্পেশাল বুকস")}
             </div>
@@ -1168,15 +1139,9 @@ export function CategoryCoursesShowcase({
             className="flex gap-5 sm:gap-6 overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar py-3 px-1 -mx-1"
           >
             {pinnedBooks.map((book, idx) => (
-              <motion.div
+              <div
                 key={book.id}
-                initial={{ opacity: 0, x: 60 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, amount: 0.15 }}
-                transition={{ duration: 0.45, delay: idx * 0.08, ease: "easeOut" }}
-                whileHover={hoverLiftProps.whileHover}
-                whileTap={hoverLiftProps.whileTap}
-                className="w-[84vw] xs:w-[300px] sm:w-[320px] lg:w-[340px] shrink-0 snap-start group flex flex-col bg-surface border border-border/80 rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-primary/15 hover:border-primary/50 transition-all duration-300 h-full anim-hover-lift"
+                className="w-[84vw] xs:w-[300px] sm:w-[320px] lg:w-[340px] shrink-0 snap-start group flex flex-col bg-surface border border-border/80 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:shadow-primary/15 hover:border-primary/50 hover:-translate-y-1 transition-all duration-300 h-full"
               >
                 {/* Book Visual Mockup Cover Area */}
                 <div
@@ -1268,13 +1233,13 @@ export function CategoryCoursesShowcase({
                     </Link>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
 
           {/* Dots Indicator */}
           {pinnedBooks.length > 1 && (
-            <div className="flex items-center justify-center gap-1.5 mt-5">
+            <div className="flex items-center justify-center gap-1.5 mt-2.5">
               {pinnedBooks.map((_, i) => (
                 <button
                   key={i}
