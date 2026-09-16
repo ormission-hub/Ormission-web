@@ -225,7 +225,7 @@ export function HeroSection({
         <div className="relative w-full">
           {/* Banner Container: 100% full-width edge-to-edge */}
           <div
-            className="relative w-full aspect-video sm:aspect-[21/9] lg:aspect-[2.35/1] max-h-[640px] overflow-hidden bg-surface rounded-none border-b border-border/80 shadow-md group select-none"
+            className="relative w-full aspect-video overflow-hidden bg-surface rounded-none border-b border-border/80 shadow-md group select-none"
             onMouseEnter={() => setIsPaused(true)}
             onMouseLeave={() => setIsPaused(false)}
           >
@@ -246,7 +246,7 @@ export function HeroSection({
                     priority
                     unoptimized={Boolean(currentSlide.url?.startsWith("http"))}
                     sizes="100vw"
-                    className="object-cover object-center group-hover:scale-[1.015] transition-transform duration-500"
+                    className="object-cover object-top group-hover:scale-[1.015] transition-transform duration-500"
                   />
 
                   {/* Cinematic Dark Gradient Overlay for optimal button contrast */}

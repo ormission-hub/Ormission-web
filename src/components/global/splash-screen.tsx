@@ -10,7 +10,7 @@ export function SplashScreen() {
   const [isVisible, setIsVisible] = useState(true);
   const [progress, setProgress] = useState(0);
   const [loadingText, setLoadingText] = useState("কনসেপ্ট ক্লিয়ারিং ক্লাস লোড হচ্ছে...");
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [canvasNode, setCanvasNode] = useState<HTMLCanvasElement | null>(null);
   const progressRef = useRef(0);
 
   useEffect(() => {
@@ -24,7 +24,7 @@ export function SplashScreen() {
 
   // Smooth, deliberate progress timer: ~2.8 to 3.2 seconds total
   useEffect(() => {
-    if (!isVisible) return;
+    if (!isVisible || !mounted) return;
 
     const interval = setInterval(() => {
       setProgress((prev) => {
@@ -58,13 +58,13 @@ export function SplashScreen() {
     }, 28);
 
     return () => clearInterval(interval);
-  }, [isVisible]);
+  }, [isVisible, mounted]);
 
   // 3D Canvas Scene with Three.js
   useEffect(() => {
-    if (!isVisible || !canvasRef.current) return;
+    if (!isVisible || !canvasNode) return;
 
-    const canvas = canvasRef.current;
+    const canvas = canvasNode;
     const width = 320;
     const height = 320;
 
@@ -74,18 +74,29 @@ export function SplashScreen() {
     camera.position.z = 5.5;
 
     // 2. High-performance Renderer
-    const renderer = new THREE.WebGLRenderer({
-      canvas,
-      alpha: true,
-      antialias: true,
-      powerPreference: "high-performance",
-    });
-    renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    let renderer: THREE.WebGLRenderer;
+    try {
+      renderer = new THREE.WebGLRenderer({
+        canvas,
+        alpha: true,
+        antialias: true,
+        powerPreference: "high-performance",
+      });
+      renderer.setSize(width, height);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    } catch (err) {
+      console.warn("WebGL initialization error:", err);
+      return;
+    }
 
     // 3. Texture Loader for Official Ormission Logo
     const textureLoader = new THREE.TextureLoader();
-    const logoTexture = textureLoader.load("/images/brand-logo-v2.png");
+    const logoTexture = textureLoader.load(
+      "/images/brand-logo-v2.png",
+      () => {
+        faceMaterial.needsUpdate = true;
+      }
+    );
     logoTexture.colorSpace = THREE.SRGBColorSpace;
 
     // 4. Medallion Group (Holds front, back, and rim for upright coin rotation)
@@ -272,7 +283,7 @@ export function SplashScreen() {
       particleMaterial.dispose();
       logoTexture.dispose();
     };
-  }, [isVisible]);
+  }, [isVisible, canvasNode]);
 
   const handleSkip = () => {
     setIsVisible(false);
@@ -321,7 +332,9 @@ export function SplashScreen() {
               className="relative flex items-center justify-center w-[320px] h-[320px] -mb-4"
             >
               <canvas
-                ref={canvasRef}
+                ref={setCanvasNode}
+                width={320}
+                height={320}
                 className="w-[320px] h-[320px] cursor-grab active:cursor-grabbing drop-shadow-[0_10px_35px_rgba(1,44,148,0.7)]"
               />
             </motion.div>
