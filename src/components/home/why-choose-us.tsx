@@ -1,3 +1,6 @@
+"use client";
+
+import { useRef, useState } from "react";
 import {
   GraduationCap,
   BookOpenCheck,
@@ -8,8 +11,11 @@ import {
   Headphones,
   CheckCircle2,
   ArrowRight,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { SectionWrapper } from "@/components/global/section-wrapper";
 import { SectionHeading } from "@/components/global/section-heading";
 import { cn } from "@/lib/utils";
@@ -77,7 +83,72 @@ const features = [
   },
 ];
 
+function FeatureCard({
+  feature,
+  isMobile = false,
+}: {
+  feature: (typeof features)[0];
+  isMobile?: boolean;
+}) {
+  const Icon = feature.icon;
+  return (
+    <div
+      className={cn(
+        "group relative flex flex-col p-5 sm:p-6 rounded-2xl border border-border bg-surface transition-all duration-300 h-full",
+        "hover:border-primary/30 hover:shadow-lg hover:-translate-y-1",
+        isMobile && "shadow-soft-card border-border/90"
+      )}
+    >
+      {/* Header row: Icon & Tag */}
+      <div className="flex items-center justify-between mb-3.5 sm:mb-4">
+        <div
+          className={cn(
+            "w-11 h-11 sm:w-12 sm:h-12 rounded-2xl border flex items-center justify-center transition-all duration-300 shadow-xs",
+            "group-hover:scale-110",
+            feature.badgeBg
+          )}
+        >
+          <Icon className={cn("w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-300", feature.color)} />
+        </div>
+        <span className={cn("text-[10.5px] sm:text-[11px] font-bold px-2.5 py-1 rounded-full border font-bengali", feature.tagBg)}>
+          {feature.tag}
+        </span>
+      </div>
+
+      <h3 className="text-base sm:text-lg font-bold text-text mb-2 font-bengali group-hover:text-primary transition-colors leading-snug">
+        {feature.title}
+      </h3>
+      <p className="text-xs sm:text-sm text-text-muted leading-relaxed font-bengali">
+        {feature.description}
+      </p>
+    </div>
+  );
+}
+
 export function WhyChooseUs() {
+  const sliderRef = useRef<HTMLDivElement>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  const handleScroll = () => {
+    if (!sliderRef.current) return;
+    const { scrollLeft, offsetWidth } = sliderRef.current;
+    const cardStep = offsetWidth * 0.82;
+    if (cardStep <= 0) return;
+    const index = Math.round(scrollLeft / cardStep);
+    setActiveIndex(Math.min(Math.max(index, 0), features.length - 1));
+  };
+
+  const scrollToIndex = (index: number) => {
+    if (!sliderRef.current) return;
+    const targetIdx = Math.min(Math.max(index, 0), features.length - 1);
+    const cardStep = sliderRef.current.offsetWidth * 0.82;
+    sliderRef.current.scrollTo({
+      left: targetIdx * cardStep,
+      behavior: "smooth",
+    });
+    setActiveIndex(targetIdx);
+  };
+
   return (
     <SectionWrapper>
       {/* Top Pill Badge */}
@@ -93,43 +164,82 @@ export function WhyChooseUs() {
         subtitle="কোচিং ছাড়া ঘরে বসেই কনসেপ্ট ক্লিয়ারিং, বিগত ২০ বছরের প্রশ্নব্যাংক অ্যানালাইসিস ও সঠিক স্টাডি স্ট্র্যাটেজিতে বোর্ড ও ভর্তি পরীক্ষার সেরা প্রস্তুতি"
       />
 
-      {/* 6 Core USPs Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6">
-        {features.map((feature) => {
-          const Icon = feature.icon;
-          return (
-            <div
+      {/* Mobile Slideshow View: Cards slide horizontally from the side with touch snap */}
+      <div className="block sm:hidden relative mt-2">
+        <div
+          ref={sliderRef}
+          onScroll={handleScroll}
+          className="flex overflow-x-auto snap-x snap-mandatory gap-3.5 pb-4 -mx-4 px-4 scrollbar-none scroll-smooth select-none"
+        >
+          {features.map((feature, idx) => (
+            <motion.div
               key={feature.title}
-              className={cn(
-                "group relative flex flex-col p-6 rounded-2xl border border-border bg-surface transition-all duration-300",
-                "hover:border-primary/30 hover:shadow-lg hover:-translate-y-1"
-              )}
+              initial={{ opacity: 0, x: 50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ duration: 0.45, delay: idx * 0.06 }}
+              className="w-[84vw] max-w-[320px] shrink-0 snap-center"
             >
-              {/* Header row: Icon & Tag */}
-              <div className="flex items-center justify-between mb-4">
-                <div
-                  className={cn(
-                    "w-12 h-12 rounded-2xl border flex items-center justify-center transition-all duration-300 shadow-xs",
-                    "group-hover:scale-110",
-                    feature.badgeBg
-                  )}
-                >
-                  <Icon className={cn("w-6 h-6 transition-transform duration-300", feature.color)} />
-                </div>
-                <span className={cn("text-[11px] font-bold px-2.5 py-1 rounded-full border font-bengali", feature.tagBg)}>
-                  {feature.tag}
-                </span>
-              </div>
+              <FeatureCard feature={feature} isMobile />
+            </motion.div>
+          ))}
+        </div>
 
-              <h3 className="text-base font-bold text-text mb-2.5 font-bengali group-hover:text-primary transition-colors leading-snug">
-                {feature.title}
-              </h3>
-              <p className="text-sm text-text-muted leading-relaxed font-bengali">
-                {feature.description}
-              </p>
-            </div>
-          );
-        })}
+        {/* Mobile Navigation Controls: Dot Indicators & Prev/Next Arrows */}
+        <div className="flex items-center justify-between pt-1 px-1">
+          {/* Dot Indicators */}
+          <div className="flex items-center gap-1.5">
+            {features.map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => scrollToIndex(i)}
+                aria-label={`Go to slide ${i + 1}`}
+                className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                  activeIndex === i ? "w-6 bg-primary" : "w-1.5 bg-border/80"
+                }`}
+              />
+            ))}
+          </div>
+
+          {/* Prev / Next Chevrons */}
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => scrollToIndex(activeIndex - 1)}
+              disabled={activeIndex === 0}
+              className="w-7 h-7 rounded-full border border-border bg-surface flex items-center justify-center text-text disabled:opacity-30 transition-opacity cursor-pointer shadow-2xs"
+              aria-label="Previous card"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollToIndex(activeIndex + 1)}
+              disabled={activeIndex === features.length - 1}
+              className="w-7 h-7 rounded-full border border-border bg-surface flex items-center justify-center text-text disabled:opacity-30 transition-opacity cursor-pointer shadow-2xs"
+              aria-label="Next card"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Desktop / Tablet Grid View (Visible on sm: and up) */}
+      <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6 mt-2">
+        {features.map((feature, idx) => (
+          <motion.div
+            key={feature.title}
+            initial={{ opacity: 0, y: 25 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.15 }}
+            transition={{ duration: 0.45, delay: idx * 0.08 }}
+            className="h-full"
+          >
+            <FeatureCard feature={feature} />
+          </motion.div>
+        ))}
       </div>
 
       {/* 24/7 Personal Mentorship Trust Banner */}

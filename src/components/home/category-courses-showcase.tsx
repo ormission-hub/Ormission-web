@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, type ReactNode } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, Sparkles, Star, Clock, Users } from "lucide-react";
+import { ArrowRight, Sparkles, Star, Clock, Users, BookOpen, ShoppingBag, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { DbFeaturedCourse } from "./featured-courses";
 import { createClient } from "@/lib/supabase/client";
@@ -141,6 +141,173 @@ function FreeCourseIllustration() {
     </div>
   );
 }
+
+
+// ==========================================
+// 3D Illustrations for Section Toggle Buttons
+// ==========================================
+
+function PopularCoursesIllustration() {
+  return (
+    <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center shrink-0 select-none">
+      <svg viewBox="0 0 64 64" fill="none" className="w-full h-full drop-shadow-sm">
+        {/* Outer Flame Glow */}
+        <circle cx="32" cy="34" r="18" fill="url(#popular-fire-glow)" opacity="0.3" />
+        {/* Outer Flame (Deep Orange / Red) */}
+        <path
+          d="M32 10C35 18 42 22 45 30C48 37 45 46 38 51C34 54 28 54 24 51C17 46 14 37 19 28C21 24 23 21 23 18C23 18 27 22 28 25C29 19 32 10 32 10Z"
+          fill="url(#popular-flame-outer)"
+        />
+        {/* Middle Flame (Amber / Bright Orange) */}
+        <path
+          d="M32 20C34 25 39 29 40 35C42 41 39 46 34 49C31 51 27 51 24 49C20 45 20 39 23 33C24.5 30 26 28 26 25C26 25 29 27 30 29C30.5 25 32 20 32 20Z"
+          fill="url(#popular-flame-mid)"
+        />
+        {/* Inner Flame (Golden Yellow & White Core) */}
+        <path
+          d="M32 30C33.5 33 36 36 36 40C36 44 34 47 31 48C29 49 27 49 25 48C23 45 23 42 25 38C26 36 27 35 27 33C27 33 29 34 30 35C30.5 33 32 30 32 30Z"
+          fill="url(#popular-flame-inner)"
+        />
+        {/* Sparkles */}
+        <circle cx="43" cy="18" r="2" fill="#FDE047" />
+        <circle cx="19" cy="22" r="1.5" fill="#FDE047" />
+        <circle cx="47" cy="30" r="1.2" fill="#FFA048" />
+
+        <defs>
+          <radialGradient id="popular-fire-glow" cx="0.5" cy="0.5" r="0.5">
+            <stop offset="0%" stopColor="#FF5F00" />
+            <stop offset="100%" stopColor="#FF5F00" stopOpacity="0" />
+          </radialGradient>
+          <linearGradient id="popular-flame-outer" x1="16" y1="10" x2="46" y2="54" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#FF3300" />
+            <stop offset="50%" stopColor="#FF5F00" />
+            <stop offset="100%" stopColor="#D92400" />
+          </linearGradient>
+          <linearGradient id="popular-flame-mid" x1="21" y1="20" x2="41" y2="51" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#FF9900" />
+            <stop offset="100%" stopColor="#FF5F00" />
+          </linearGradient>
+          <linearGradient id="popular-flame-inner" x1="24" y1="30" x2="36" y2="49" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#FFFFFF" />
+            <stop offset="40%" stopColor="#FEF08A" />
+            <stop offset="100%" stopColor="#FACC15" />
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
+  );
+}
+
+function OurBooksIllustration() {
+  return (
+    <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center shrink-0 select-none">
+      <svg viewBox="0 0 64 64" fill="none" className="w-full h-full drop-shadow-sm">
+        {/* Bottom Emerald Book */}
+        <rect x="11" y="44" width="42" height="9" rx="2.5" fill="url(#book-emerald)" />
+        <rect x="8" y="46.5" width="5" height="4" rx="1" fill="#047857" />
+        <line x1="17" y1="48.5" x2="50" y2="48.5" stroke="#A7F3D0" strokeWidth="1.5" strokeLinecap="round" />
+
+        {/* Middle Royal Sapphire Book */}
+        <rect x="14" y="34" width="39" height="8.5" rx="2.5" fill="url(#book-sapphire)" />
+        <rect x="11" y="36.5" width="5" height="3.5" rx="1" fill="#1D4ED8" />
+        <line x1="20" y1="38" x2="49" y2="38" stroke="#BFDBFE" strokeWidth="1.5" strokeLinecap="round" />
+
+        {/* Top Vibrant Sunset Orange Book */}
+        <rect x="12" y="24" width="41" height="8.5" rx="2.5" fill="url(#book-orange)" />
+        <rect x="9" y="26.5" width="5" height="3.5" rx="1" fill="#C2410C" />
+        {/* Golden Bookmark ribbon drooping down */}
+        <path d="M42 24V40L45.5 37L49 40V24H42Z" fill="#FBBF24" />
+
+        {/* Golden Star on top */}
+        <circle cx="32" cy="15" r="7" fill="url(#book-star-glow)" />
+        <path d="M32 10L33.5 13.5L37 14L34.5 16.5L35 20L32 18L29 20L29.5 16.5L27 14L30.5 13.5L32 10Z" fill="#FFFFFF" />
+
+        <defs>
+          <linearGradient id="book-emerald" x1="11" y1="44" x2="53" y2="53" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#10B981" />
+            <stop offset="100%" stopColor="#047857" />
+          </linearGradient>
+          <linearGradient id="book-sapphire" x1="14" y1="34" x2="53" y2="42.5" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#3B82F6" />
+            <stop offset="100%" stopColor="#1E40AF" />
+          </linearGradient>
+          <linearGradient id="book-orange" x1="12" y1="24" x2="53" y2="32.5" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#F97316" />
+            <stop offset="100%" stopColor="#C2410C" />
+          </linearGradient>
+          <linearGradient id="book-star-glow" x1="25" y1="8" x2="39" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#F59E0B" />
+            <stop offset="100%" stopColor="#D97706" />
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
+  );
+}
+
+// Curated Ormission Publications Books
+const ormissionBooks = [
+  {
+    id: "book-1",
+    title: "এইচএসসি পদার্থবিজ্ঞান মাস্টার ফর্মুলা বুক",
+    subtitle: "১ম ও ২য় পত্রের সকল সূত্রের প্রমাণ, শর্টকাট ট্রিকস ও বোর্ড প্রশ্ন সমাধান",
+    category: "এইচএসসি বিজ্ঞান",
+    badge: "বেস্টসেলার",
+    coverGradient: "from-blue-600 via-indigo-600 to-sky-700",
+    pages: "৩২০ পৃষ্ঠা",
+    format: "হার্ডকভার + ই-বুক",
+    rating: "5.0",
+    reviewsCount: 1420,
+    price: 380,
+    originalPrice: 500,
+    features: ["অধ্যায়ভিত্তিক সকল সূত্র ও মাত্রা", "বিগত ১০ বছরের বোর্ড প্রশ্ন সমাধান", "টাইপভিত্তিক শর্টকাট মেথড"],
+  },
+  {
+    id: "book-2",
+    title: "বুয়েট ও ইঞ্জিনিয়ারিং বিগত ২০ বছরের প্রশ্নব্যাংক",
+    subtitle: "বুয়েট, রুয়েট, কুয়েট, চুয়েটের অধ্যায়ভিত্তিক নিখুঁত প্রশ্ন বিশ্লেষণ ও সমাধান",
+    category: "ইঞ্জিনিয়ারিং ভর্তি",
+    badge: "প্রিমিয়াম এডিশন",
+    coverGradient: "from-purple-700 via-indigo-800 to-slate-900",
+    pages: "৫৪০ পৃষ্ঠা",
+    format: "হার্ডকভার প্রিন্ট",
+    rating: "5.0",
+    reviewsCount: 980,
+    price: 550,
+    originalPrice: 720,
+    features: ["বিগত ২০ বছরের বুয়েট প্রশ্ন", "অধ্যায়ভিত্তিক ওয়েইটেজ এনালাইসিস", "কঠিন ম্যাথের সহজ বিকল্প টেকনিক"],
+  },
+  {
+    id: "book-3",
+    title: "মেডিকেল বায়োলজি নেমোনিক্স ও হাই-ইল্ড হ্যান্ডবুক",
+    subtitle: "ডিএমসি ও শীর্ষ মেডিকেল শিক্ষার্থীদের তৈরিকৃত মনে রাখার স্পেশাল হ্যান্ডনোট",
+    category: "মেডিকেল ভর্তি",
+    badge: "টপ রেটেড",
+    coverGradient: "from-emerald-600 via-teal-700 to-cyan-800",
+    pages: "২৮০ পৃষ্ঠা",
+    format: "৪ কালার আর্ট প্রিন্ট",
+    rating: "4.9",
+    reviewsCount: 1650,
+    price: 320,
+    originalPrice: 450,
+    features: ["১০০% চিত্রসহ রঙিন ডায়াগ্রাম", "জাদুকরী নেমোনিক্স ও শর্টকাট", "বোটানি ও জুয়োলজির পূর্ণাঙ্গ কাভারেজ"],
+  },
+  {
+    id: "book-4",
+    title: "এইচএসসি রসায়ন অর্গানিক রিঅ্যাকশন রঙিন রোডম্যাপ",
+    subtitle: "জৈব রসায়নের সকল বিক্রিয়া ও পারস্পরিক রূপান্তরের এক নজরে রঙিন ফ্লোচার্ট",
+    category: "এইচএসসি একাডেমি",
+    badge: "কালার আর্ট মেগা চার্ট",
+    coverGradient: "from-orange-600 via-amber-600 to-red-600",
+    pages: "১৯০ পৃষ্ঠা",
+    format: "প্রিমিয়াম আর্ট পেপার",
+    rating: "5.0",
+    reviewsCount: 840,
+    price: 290,
+    originalPrice: 390,
+    features: ["সম্পূর্ণ বিক্রিয়ার রঙিন মেগা ফ্লোচার্ট", "সকল গুরুত্বপূর্ণ নেম রিঅ্যাকশন", "এডমিশন স্পেশাল কনভার্সন ট্রিকস"],
+  },
+];
 
 // 3D Boy Student Avatar Component (Matching 2nd Image)
 export function StudentAvatar3D() {
@@ -492,6 +659,7 @@ export function CategoryCoursesShowcase({
 
   // Selected category state (explicitly selected by user)
   const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [activeSectionTab, setActiveSectionTab] = useState<"courses" | "books">("courses");
 
   // Smart default category: If user hasn't selected a category yet,
   // pick the first category that actually has courses; fallback to the first category
@@ -584,7 +752,10 @@ export function CategoryCoursesShowcase({
         key={cat.id || cat.slug}
         type="button"
         variants={flipVariant}
-        onClick={() => setSelectedCategory(cat.slug)}
+        onClick={() => {
+          setSelectedCategory(cat.slug);
+          setActiveSectionTab("courses");
+        }}
         whileHover={{ y: -3, scale: 1.02, transition: { duration: 0.2 } }}
         whileTap={{ scale: 0.96 }}
         className={`group relative p-[2px] sm:p-[2.5px] rounded-xl sm:rounded-2xl cursor-pointer select-none transition-all duration-200 overflow-hidden w-full sm:w-auto min-w-0 sm:min-w-[210px] ${
@@ -667,6 +838,103 @@ export function CategoryCoursesShowcase({
       </motion.button>
     );
   };
+
+  // Reusable Section Toggle Pill ("জনপ্রিয় কোর্স" & "আমাদের বইসমূহ") with Same Animated Laser Border
+  const renderSectionPill = (
+    id: "courses" | "books",
+    title: string,
+    illustration: ReactNode,
+    idx: number
+  ) => {
+    const isSelected = activeSectionTab === id;
+
+    return (
+      <motion.button
+        key={id}
+        type="button"
+        onClick={() => setActiveSectionTab(id)}
+        whileHover={{ y: -3, scale: 1.02, transition: { duration: 0.2 } }}
+        whileTap={{ scale: 0.96 }}
+        className={`group relative p-[2px] sm:p-[2.5px] rounded-xl sm:rounded-2xl cursor-pointer select-none transition-all duration-200 overflow-hidden w-full sm:w-auto min-w-0 sm:min-w-[210px] ${
+          isSelected
+            ? "shadow-[0_0_15px_rgba(255,95,0,0.4)] sm:shadow-[0_0_25px_rgba(255,95,0,0.45)] dark:shadow-[0_0_20px_rgba(255,115,21,0.35)] ring-1.5 sm:ring-2 ring-primary/40 bg-primary/20"
+            : "shadow-2xs sm:shadow-soft-card hover:shadow-lg bg-slate-300/80 dark:bg-slate-800/90 hover:bg-primary/20"
+        }`}
+      >
+        {/* Layer 1: Radiant Outer Glow Beam (Rendered on selected pill on desktop) */}
+        {isSelected && (
+          <div
+            className="border-beam-glow hidden sm:block"
+            style={{
+              background:
+                "conic-gradient(from 0deg, transparent 0deg, transparent 250deg, #FF5F00 300deg, #FFA048 335deg, transparent 360deg)",
+              animationName: "borderRotate",
+              animationDuration: "3s",
+              animationTimingFunction: "linear",
+              animationIterationCount: "infinite",
+              animationDelay: `${idx * -0.9}s`,
+              opacity: 1,
+            }}
+          />
+        )}
+
+        {/* Layer 2: Sharp Luminous Laser Beam (Hardware-accelerated 60fps beam in 2.5px track) */}
+        <div
+          className="border-beam-sharp"
+          style={{
+            background: isSelected
+              ? "conic-gradient(from 0deg, transparent 0deg, transparent 250deg, #FF5F00 295deg, #FFFFFF 335deg, transparent 360deg)"
+              : "conic-gradient(from 0deg, transparent 0deg, transparent 270deg, rgba(255,95,0,0.55) 310deg, #FFFFFF 340deg, transparent 360deg)",
+            animationName: "borderRotate",
+            animationDuration: isSelected ? "2.8s" : "4.5s",
+            animationTimingFunction: "linear",
+            animationIterationCount: "infinite",
+            animationDelay: `${idx * -0.9}s`,
+            opacity: isSelected ? 1 : 0.65,
+          }}
+        />
+
+        {/* Layer 3: Inner Pill Content Container */}
+        <div
+          className={`relative z-10 w-full h-full rounded-[10px] sm:rounded-[13.5px] flex items-center justify-center gap-1.5 sm:gap-3.5 px-2 py-2 sm:px-8 sm:py-3.5 transition-colors duration-200 overflow-hidden ${
+            isSelected
+              ? "bg-surface dark:bg-slate-900 text-primary"
+              : "bg-surface dark:bg-slate-900/95 text-text group-hover:text-primary"
+          }`}
+        >
+          {/* Continuous Glass Shimmer Sweep (Only on selected pill) */}
+          {isSelected && (
+            <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/35 dark:via-white/[0.08] to-transparent pointer-events-none animate-glass-shimmer" />
+          )}
+
+          {/* Top Glossy Sheen */}
+          <span className="absolute inset-x-0 top-0 h-1/2 rounded-t-[10px] sm:rounded-t-[13.5px] bg-gradient-to-b from-white/60 dark:from-white/[0.06] to-transparent pointer-events-none" />
+
+          {/* 3D Illustration: 20px on mobile, 36px on desktop */}
+          <div className="relative z-10 w-5 h-5 sm:w-9 sm:h-9 shrink-0 [&>div]:!w-5 [&>div]:!h-5 sm:[&>div]:!w-9 sm:[&>div]:!h-9 transition-transform duration-200 group-hover:scale-110 drop-shadow-xs">
+            {illustration}
+          </div>
+
+          {/* Title Text */}
+          <span
+            className={`relative z-10 text-xs xs:text-sm sm:text-base lg:text-lg tracking-tight transition-colors duration-200 truncate sm:whitespace-nowrap font-bengali ${
+              isSelected
+                ? "text-primary font-black"
+                : "text-text group-hover:text-primary font-bold"
+            }`}
+          >
+            {title}
+          </span>
+
+          {/* Active indicator dot */}
+          {isSelected && (
+            <span className="relative z-10 w-1.5 h-1.5 sm:w-2.5 sm:h-2.5 rounded-full bg-primary animate-pulse shrink-0 ml-0.5 shadow-[0_0_8px_#FF5F00]" />
+          )}
+        </div>
+      </motion.button>
+    );
+  };
+
   return (
     <section id="category-courses-section" className="relative pt-10 sm:pt-14 pb-16 sm:pb-20 lg:pb-24 bg-background overflow-hidden">
       {/* Bulletproof Keyframe Animation for Border Beam */}
@@ -765,221 +1033,301 @@ export function CategoryCoursesShowcase({
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.3, margin: "0px 0px -40px 0px" }}
-            className="flex items-center justify-between mb-8 pb-3 border-b border-border/60"
+            className="flex items-center justify-center mb-8 sm:mb-10 pb-4 border-b border-border/60"
           >
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse" />
-              <h3 className="text-lg sm:text-xl font-black text-text font-bengali">
-                {activeCategory === "all"
-                  ? "সকল রানিং ও স্পেশাল কোর্সসমূহ"
-                  : `${
-                      displayCategories.find((c) => c.slug === activeCategory)?.name_bn ||
-                      displayCategories.find((c) => c.slug === activeCategory)?.name ||
-                      "নির্বাচিত"
-                    } কোর্সসমূহ`}
-              </h3>
+            {/* The 2 Animated Toggle Pill Buttons: 'জনপ্রিয় কোর্স' and 'আমাদের বইসমূহ' */}
+            <div className="grid grid-cols-2 gap-2 sm:gap-5 w-full max-w-sm sm:max-w-none sm:flex sm:items-center sm:justify-center">
+              {renderSectionPill("courses", "জনপ্রিয় কোর্স", <PopularCoursesIllustration />, 0)}
+              {renderSectionPill("books", "আমাদের বইসমূহ", <OurBooksIllustration />, 1)}
             </div>
-
-            <Link
-              href="/courses"
-              className="text-xs sm:text-sm font-bold text-primary hover:text-primary-hover flex items-center gap-1 group font-bengali"
-            >
-              <span>সকল কোর্স দেখুন</span>
-              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-            </Link>
           </motion.div>
 
           <AnimatePresence mode="wait">
-            {filteredCourses.length > 0 ? (
-              <motion.div
-                key={activeCategory}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0, transition: { duration: 0.2 } }}
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8"
-              >
-                {filteredCourses.map((course) => {
-                  const title = course.title_bn || course.title;
-                  const categoryName = Array.isArray(course.categories)
-                    ? course.categories[0]?.name_bn || course.categories[0]?.name
-                    : course.categories?.name_bn || course.categories?.name || "কোর্স";
+            {activeSectionTab === "courses" ? (
+              filteredCourses.length > 0 ? (
+                <motion.div
+                  key={`courses-${activeCategory}`}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0, transition: { duration: 0.2 } }}
+                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8"
+                >
+                  {filteredCourses.map((course) => {
+                    const title = course.title_bn || course.title;
+                    const categoryName = Array.isArray(course.categories)
+                      ? course.categories[0]?.name_bn || course.categories[0]?.name
+                      : course.categories?.name_bn || course.categories?.name || "কোর্স";
 
-                  return (
-                    /* Zoom In Up entrance when scrolled into view + Hover Lift Effect */
-                    <motion.div
-                      key={course.id || course.slug}
-                      variants={zoomInUp}
-                      initial="hidden"
-                      whileInView="visible"
-                      viewport={{ once: true, amount: 0.2, margin: "0px 0px -50px 0px" }}
-                      whileHover={hoverLiftProps.whileHover}
-                      whileTap={hoverLiftProps.whileTap}
-                      className="group flex flex-col bg-surface border border-border/80 rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-primary/15 hover:border-primary/50 transition-all duration-300 h-full anim-hover-lift"
-                    >
-                      {/* Image Thumbnail with zoom hover */}
-                      <Link
-                        href={`/course/${course.slug}`}
-                        className="relative aspect-video w-full bg-slate-900 overflow-hidden block"
+                    return (
+                      /* Zoom In Up entrance when scrolled into view + Hover Lift Effect */
+                      <motion.div
+                        key={course.id || course.slug}
+                        variants={zoomInUp}
+                        initial="hidden"
+                        whileInView="visible"
+                        viewport={{ once: true, amount: 0.2, margin: "0px 0px -50px 0px" }}
+                        whileHover={hoverLiftProps.whileHover}
+                        whileTap={hoverLiftProps.whileTap}
+                        className="group flex flex-col bg-surface border border-border/80 rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-primary/15 hover:border-primary/50 transition-all duration-300 h-full anim-hover-lift"
                       >
-                        {course.thumbnail_url ? (
-                          <Image
-                            src={course.thumbnail_url}
-                            alt={title}
-                            fill
-                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                            className="object-cover group-hover:scale-105 transition-transform duration-500"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gradient-to-br from-primary/10 via-surface-secondary to-secondary/15 flex items-center justify-center p-4">
-                            <Sparkles className="w-8 h-8 text-primary" />
-                          </div>
-                        )}
-
-                        {/* Category Tag */}
-                        <span className="absolute bottom-3 left-3 px-3 py-1 text-[11px] font-bold rounded-full bg-black/70 backdrop-blur-xs text-white border border-white/20 font-bengali z-10 shadow-sm">
-                          {categoryName}
-                        </span>
-
-                        {/* Live Batch Badge */}
-                        <span className="absolute top-3 right-3 px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-red-600 text-white shadow-sm flex items-center gap-1 z-10 animate-pulse">
-                          <span className="w-1.5 h-1.5 rounded-full bg-white" />
-                          <span>LIVE BATCH</span>
-                        </span>
-                      </Link>
-
-                      {/* Card Content */}
-                      <div className="flex flex-col flex-1 p-5 sm:p-6">
-                        <Link href={`/course/${course.slug}`}>
-                          <h4 className="text-base sm:text-lg font-black text-text line-clamp-1 mb-2 font-bengali group-hover:text-primary transition-colors">
-                            {title}
-                          </h4>
+                        {/* Image Thumbnail with zoom hover */}
+                        <Link
+                          href={`/course/${course.slug}`}
+                          className="relative aspect-video w-full bg-slate-900 overflow-hidden block"
+                        >
+                          {course.thumbnail_url ? (
+                            <Image
+                              src={course.thumbnail_url}
+                              alt={title}
+                              fill
+                              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                              className="object-cover group-hover:scale-105 transition-transform duration-500"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-surface-secondary text-text-muted">
+                              <Sparkles className="w-10 h-10 opacity-30" />
+                            </div>
+                          )}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                          <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-xs font-bold text-white bg-black/40 backdrop-blur-md border border-white/10 font-bengali">
+                            {categoryName}
+                          </span>
                         </Link>
 
-                        <p className="text-xs sm:text-sm text-text-muted line-clamp-2 mb-4 font-bengali leading-relaxed">
-                          {course.short_description ||
-                            course.description ||
-                            "সেরা মেন্টরদের লাইভ ক্লাস, বিগত ২০ বছরের প্রশ্নব্যাংক সলভিং ও সার্বক্ষণিক ডাউট সলভিং।"}
-                        </p>
-
-                        {/* Features Pill Bar */}
-                        <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 mb-5 font-bengali">
-                          <span className="flex items-center gap-1">
-                            <Clock className="w-3.5 h-3.5 text-primary" />
-                            <span>
-                              {course.total_duration && course.total_duration > 0
-                                ? `${course.total_duration}+ ঘণ্টা লাইভ`
-                                : "১০০+ ঘণ্টা লাইভ"}
-                            </span>
-                          </span>
-                          <span>•</span>
-                          <span className="flex items-center gap-1">
-                            <Users className="w-3.5 h-3.5 text-emerald-500" />
-                            <span>
-                              {course.total_lessons && course.total_lessons > 0
-                                ? `${course.total_lessons}টি ক্লাস • ডাউট সলভিং`
-                                : "ডাউট সলভিং"}
-                            </span>
-                          </span>
-                        </div>
-
-                        {/* 5-Star Rating & 2nd Image Inspired Student Enrollment Badge */}
-                        <div className="flex items-center justify-between gap-2 mb-4">
-                          {/* 5-Star Rating */}
-                          <div className="flex items-center gap-1">
-                            {[...Array(5)].map((_, i) => (
-                              <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                            ))}
-                            <span className="text-xs font-bold text-text ml-1">5.0</span>
-                          </div>
-
-                          {/* 2nd Image Inspired Student Enrollment Capsule */}
-                          <div className="inline-flex items-center gap-2 p-1 pr-3 rounded-2xl bg-white dark:bg-[#180d19]/90 border border-[#FCE7F3] dark:border-[#FB7185]/30 shadow-[0_2px_8px_rgba(225,29,72,0.06)] dark:shadow-[0_4px_14px_rgba(225,29,72,0.2)] transition-all duration-200 hover:shadow-md hover:scale-[1.02] shrink-0">
-                            {/* 3D Student Avatar in Rounded Square Box */}
-                            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-[#FFF0F4] dark:bg-[#2E101F] border border-[#FCE7F3] dark:border-[#FB7185]/20 flex items-center justify-center shrink-0 p-0.5 overflow-hidden shadow-2xs">
-                              <StudentAvatar3D />
-                            </div>
-
-                            {/* Pink Enrolled Count + 'জন ভর্তি' */}
-                            <div className="flex items-baseline gap-1">
-                              <span className="text-sm sm:text-base font-black text-[#E11D48] dark:text-[#FB7185] font-sans tracking-tight tabular-nums">
-                                {(course.enrollment_count !== undefined && course.enrollment_count !== null
-                                  ? course.enrollment_count
-                                  : 1250
-                                ).toLocaleString("en-US")}
-                              </span>
-                              <span className="text-[11px] sm:text-xs font-bold text-slate-800 dark:text-slate-100 font-bengali">
-                                জন ভর্তি
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Pricing & Action */}
-                        <div className="mt-auto pt-4 border-t border-border/60 flex items-center justify-between">
-                          <div className="flex items-baseline gap-2">
-                            <span className="text-xl font-black text-primary tabular-nums">
-                              ৳{course.price.toLocaleString("en-US")}
-                            </span>
-                            {course.original_price && course.original_price > course.price && (
-                              <span className="text-xs text-text-muted line-through tabular-nums">
-                                ৳{course.original_price.toLocaleString("en-US")}
-                              </span>
-                            )}
-                          </div>
-
-                          <Link
-                            href={`/course/${course.slug}`}
-                            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-primary hover:bg-primary-hover shadow-md shadow-primary/25 hover:shadow-lg hover:shadow-primary/35 transition-all duration-200 group-hover:scale-105 font-bengali"
-                          >
-                            <span>বিস্তারিত</span>
-                            <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                        {/* Content */}
+                        <div className="p-5 sm:p-6 flex flex-col flex-1">
+                          <Link href={`/course/${course.slug}`}>
+                            <h4 className="text-base sm:text-lg font-black text-text group-hover:text-primary transition-colors line-clamp-2 mb-2 font-bengali">
+                              {title}
+                            </h4>
                           </Link>
+
+                          <p className="text-xs sm:text-sm text-text-muted line-clamp-2 mb-4 font-bengali">
+                            {course.short_description || course.description || "কোর্সের বিস্তারিত শীঘ্রই যুক্ত হচ্ছে..."}
+                          </p>
+
+                          {/* Features summary: Clean icons */}
+                          <div className="flex items-center gap-3 text-xs text-text-muted mb-4 font-bengali">
+                            <span className="flex items-center gap-1.5">
+                              <Users className="w-3.5 h-3.5 text-primary" />
+                              <span>লাইভ ক্লাস</span>
+                            </span>
+                            <span>•</span>
+                            <span className="flex items-center gap-1.5">
+                              <Clock className="w-3.5 h-3.5 text-primary" />
+                              <span>
+                                {course.total_duration ? `${course.total_duration} ঘণ্টা` : "ডাউট সলভিং"}
+                              </span>
+                            </span>
+                          </div>
+
+                          {/* 5-Star Rating & Student Enrollment Badge */}
+                          <div className="flex items-center justify-between gap-2 mb-4">
+                            {/* 5-Star Rating */}
+                            <div className="flex items-center gap-1">
+                              {[...Array(5)].map((_, i) => (
+                                <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                              ))}
+                              <span className="text-xs font-bold text-text ml-1">5.0</span>
+                            </div>
+
+                            {/* Student Enrollment Capsule */}
+                            <div className="inline-flex items-center gap-2 p-1 pr-3 rounded-2xl bg-white dark:bg-[#180d19]/90 border border-[#FCE7F3] dark:border-[#FB7185]/30 shadow-[0_2px_8px_rgba(225,29,72,0.06)] dark:shadow-[0_4px_14px_rgba(225,29,72,0.2)] transition-all duration-200 hover:shadow-md hover:scale-[1.02] shrink-0">
+                              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-[#FFF0F4] dark:bg-[#2E101F] border border-[#FCE7F3] dark:border-[#FB7185]/20 flex items-center justify-center shrink-0 p-0.5 overflow-hidden shadow-2xs">
+                                <StudentAvatar3D />
+                              </div>
+                              <div className="flex items-baseline gap-1">
+                                <span className="text-sm sm:text-base font-black text-[#E11D48] dark:text-[#FB7185] font-sans tracking-tight tabular-nums">
+                                  {(course.enrollment_count !== undefined && course.enrollment_count !== null
+                                    ? course.enrollment_count
+                                    : 1250
+                                  ).toLocaleString("en-US")}
+                                </span>
+                                <span className="text-[11px] sm:text-xs font-bold text-slate-800 dark:text-slate-100 font-bengali">
+                                  জন ভর্তি
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Pricing & Action */}
+                          <div className="mt-auto pt-4 border-t border-border/60 flex items-center justify-between">
+                            <div className="flex items-baseline gap-2">
+                              <span className="text-xl font-black text-primary tabular-nums">
+                                ৳{course.price.toLocaleString("en-US")}
+                              </span>
+                              {course.original_price && course.original_price > course.price && (
+                                <span className="text-xs text-text-muted line-through tabular-nums">
+                                  ৳{course.original_price.toLocaleString("en-US")}
+                                </span>
+                              )}
+                            </div>
+
+                            <Link
+                              href={`/course/${course.slug}`}
+                              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-primary hover:bg-primary-hover shadow-md shadow-primary/25 hover:shadow-lg hover:shadow-primary/35 transition-all duration-200 group-hover:scale-105 font-bengali"
+                            >
+                              <span>বিস্তারিত</span>
+                              <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                            </Link>
+                          </div>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </motion.div>
+              ) : (
+                /* Friendly Empty State with Action */
+                <motion.div
+                  key="empty"
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="p-10 sm:p-14 rounded-3xl bg-surface border border-border/80 text-center max-w-xl mx-auto shadow-sm"
+                >
+                  <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary mx-auto flex items-center justify-center mb-4">
+                    <Sparkles className="w-7 h-7" />
+                  </div>
+                  <h4 className="text-lg sm:text-xl font-black text-text font-bengali mb-2">
+                    {(displayCategories.find((c) => c.slug === activeCategory)?.name_bn || displayCategories.find((c) => c.slug === activeCategory)?.name || "এই ক্যাটাগরির")} এর নতুন ব্যাচ শীঘ্রই শুরু হচ্ছে!
+                  </h4>
+                  <p className="text-xs sm:text-sm text-text-muted font-bengali mb-6 leading-relaxed">
+                    আমাদের অভিজ্ঞ শিক্ষকমণ্ডলীর নতুন লাইভ ব্যাচ ও প্রশ্নব্যাংক কোর্স খুব শীঘ্রই যুক্ত হচ্ছে।
+                    ফ্রি নোট ও প্রশ্নব্যাংকগুলো এখনই দেখে নিন।
+                  </p>
+                  <div className="flex flex-wrap items-center justify-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (defaultCategorySlug && defaultCategorySlug !== activeCategory) {
+                          setSelectedCategory(defaultCategorySlug);
+                        } else {
+                          setSelectedCategory("");
+                        }
+                      }}
+                      className="px-5 py-2.5 rounded-full text-xs font-bold text-white bg-primary hover:bg-primary-hover shadow-md font-bengali transition-colors cursor-pointer"
+                    >
+                      সকল রানিং কোর্স দেখুন
+                    </button>
+                    <Link
+                      href="/free-resources"
+                      className="px-5 py-2.5 rounded-full text-xs font-bold text-text bg-surface-secondary border border-border hover:border-primary/40 font-bengali transition-colors"
+                    >
+                      ফ্রি রিসোর্স এক্সপ্লোর করুন
+                    </Link>
+                  </div>
+                </motion.div>
+              )
+            ) : (
+              /* Books Showcase Grid ('আমাদের বইসমূহ') */
+              <motion.div
+                key="books"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10, transition: { duration: 0.2 } }}
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-7"
+              >
+                {ormissionBooks.map((book) => (
+                  <motion.div
+                    key={book.id}
+                    variants={zoomInUp}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true, amount: 0.2, margin: "0px 0px -50px 0px" }}
+                    whileHover={hoverLiftProps.whileHover}
+                    whileTap={hoverLiftProps.whileTap}
+                    className="group flex flex-col bg-surface border border-border/80 rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-primary/15 hover:border-primary/50 transition-all duration-300 h-full anim-hover-lift"
+                  >
+                    {/* Book Visual Mockup Cover Area */}
+                    <div className={`relative h-48 sm:h-52 w-full bg-gradient-to-br ${book.coverGradient} p-4 sm:p-5 flex flex-col justify-between overflow-hidden`}>
+                      <div className="absolute -right-8 -bottom-8 w-32 h-32 rounded-full bg-white/10 blur-xl pointer-events-none" />
+                      <div className="absolute left-0 top-0 w-full h-full bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.18),transparent_65%)] pointer-events-none" />
+
+                      {/* Badges */}
+                      <div className="relative z-10 flex items-center justify-between gap-2">
+                        <span className="px-2.5 py-0.5 rounded-full text-[10.5px] font-black text-white bg-black/40 backdrop-blur-md border border-white/20 font-bengali">
+                          {book.category}
+                        </span>
+                        {book.badge && (
+                          <span className="px-2.5 py-0.5 rounded-full text-[10.5px] font-black text-white bg-primary shadow-sm font-bengali">
+                            {book.badge}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* 3D Book Spine & Page Mockup */}
+                      <div className="relative z-10 flex items-center gap-3 my-auto">
+                        <div className="w-14 h-20 rounded-md bg-white/20 backdrop-blur-md border border-white/30 shadow-2xl flex flex-col items-center justify-center p-2 text-white shrink-0 group-hover:scale-105 transition-transform duration-300">
+                          <BookOpen className="w-7 h-7 mb-1 text-white drop-shadow-sm" />
+                          <span className="text-[8.5px] font-black tracking-widest text-white/90">ORMISSION</span>
+                        </div>
+                        <div className="text-white space-y-1">
+                          <span className="inline-block px-2 py-0.5 rounded bg-white/25 text-[10px] font-bold">
+                            {book.format}
+                          </span>
+                          <p className="text-xs font-semibold text-white/90 font-bengali">
+                            {book.pages}
+                          </p>
                         </div>
                       </div>
-                    </motion.div>
-                  );
-                })}
-              </motion.div>
-            ) : (
-              /* Friendly Empty State with Action */
-              <motion.div
-                key="empty"
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0 }}
-                className="p-10 sm:p-14 rounded-3xl bg-surface border border-border/80 text-center max-w-xl mx-auto shadow-sm"
-              >
-                <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary mx-auto flex items-center justify-center mb-4">
-                  <Sparkles className="w-7 h-7" />
-                </div>
-                <h4 className="text-lg sm:text-xl font-black text-text font-bengali mb-2">
-                  {(displayCategories.find((c) => c.slug === activeCategory)?.name_bn || displayCategories.find((c) => c.slug === activeCategory)?.name || "এই ক্যাটাগরির")} এর নতুন ব্যাচ শীঘ্রই শুরু হচ্ছে!
-                </h4>
-                <p className="text-xs sm:text-sm text-text-muted font-bengali mb-6 leading-relaxed">
-                  আমাদের অভিজ্ঞ শিক্ষকমণ্ডলীর নতুন লাইভ ব্যাচ ও প্রশ্নব্যাংক কোর্স খুব শীঘ্রই যুক্ত হচ্ছে।
-                  ফ্রি নোট ও প্রশ্নব্যাংকগুলো এখনই দেখে নিন।
-                </p>
-                <div className="flex flex-wrap items-center justify-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (defaultCategorySlug && defaultCategorySlug !== activeCategory) {
-                        setSelectedCategory(defaultCategorySlug);
-                      } else {
-                        setSelectedCategory("");
-                      }
-                    }}
-                    className="px-5 py-2.5 rounded-full text-xs font-bold text-white bg-primary hover:bg-primary-hover shadow-md font-bengali transition-colors cursor-pointer"
-                  >
-                    সকল রানিং কোর্স দেখুন
-                  </button>
-                  <Link
-                    href="/free-resources"
-                    className="px-5 py-2.5 rounded-full text-xs font-bold text-text bg-surface-secondary border border-border hover:border-primary/40 font-bengali transition-colors"
-                  >
-                    ফ্রি রিসোর্স এক্সপ্লোর করুন
-                  </Link>
-                </div>
+                    </div>
+
+                    {/* Book Details */}
+                    <div className="p-5 flex flex-col flex-1">
+                      <h4 className="text-base sm:text-lg font-black text-text group-hover:text-primary transition-colors line-clamp-1 mb-1.5 font-bengali">
+                        {book.title}
+                      </h4>
+                      <p className="text-xs text-text-muted line-clamp-2 mb-3 leading-relaxed font-bengali">
+                        {book.subtitle}
+                      </p>
+
+                      {/* Key features */}
+                      <div className="space-y-1.5 mb-4">
+                        {book.features.slice(0, 2).map((feat, fIdx) => (
+                          <div key={fIdx} className="flex items-center gap-1.5 text-[11.5px] font-medium text-slate-600 dark:text-slate-300 font-bengali">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-primary shrink-0" />
+                            <span className="truncate">{feat}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* 5-Star Rating */}
+                      <div className="flex items-center justify-between gap-2 mb-4 pt-2.5 border-t border-border/40">
+                        <div className="flex items-center gap-1">
+                          {[...Array(5)].map((_, i) => (
+                            <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                          ))}
+                          <span className="text-xs font-bold text-text ml-1">{book.rating}</span>
+                        </div>
+                        <span className="text-[11px] text-text-muted font-bengali">
+                          ({book.reviewsCount.toLocaleString("en-US")}+ রিভিউ)
+                        </span>
+                      </div>
+
+                      {/* Pricing & CTA */}
+                      <div className="mt-auto pt-3 border-t border-border/60 flex items-center justify-between">
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-xl font-black text-primary tabular-nums">
+                            ৳{book.price.toLocaleString("en-US")}
+                          </span>
+                          {book.originalPrice > book.price && (
+                            <span className="text-xs text-text-muted line-through tabular-nums">
+                              ৳{book.originalPrice.toLocaleString("en-US")}
+                            </span>
+                          )}
+                        </div>
+
+                        <Link
+                          href="/free-resources"
+                          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-primary hover:bg-primary-hover shadow-md shadow-primary/25 hover:shadow-lg hover:shadow-primary/35 transition-all duration-200 group-hover:scale-105 font-bengali"
+                        >
+                          <ShoppingBag className="w-3.5 h-3.5" />
+                          <span>সংগ্রহ করুন</span>
+                        </Link>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
               </motion.div>
             )}
           </AnimatePresence>
