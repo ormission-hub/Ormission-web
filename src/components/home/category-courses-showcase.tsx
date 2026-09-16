@@ -141,6 +141,46 @@ function FreeCourseIllustration() {
   );
 }
 
+// 3D Boy Student Avatar Component (Matching 2nd Image)
+export function StudentAvatar3D() {
+  return (
+    <svg viewBox="0 0 64 64" fill="none" className="w-full h-full drop-shadow-2xs select-none">
+      {/* Hair Base */}
+      <ellipse cx="32" cy="27" rx="16" ry="17" fill="#1E293B" />
+      {/* Ears */}
+      <circle cx="17" cy="32" r="4" fill="#FED7AA" />
+      <circle cx="47" cy="32" r="4" fill="#FED7AA" />
+      <circle cx="17" cy="32" r="2.5" fill="#FCA5A5" opacity="0.6" />
+      <circle cx="47" cy="32" r="2.5" fill="#FCA5A5" opacity="0.6" />
+      {/* Cute Round Face */}
+      <rect x="18" y="19" width="28" height="26" rx="14" fill="#FFEDD5" />
+      {/* Hair Top & Front Bangs */}
+      <path
+        d="M17 27C17 18 23.5 13 32 13C40.5 13 47 18 47 27C43 25 39 23.5 35 23.5C30 23.5 26.5 25.5 23 25.5C19.5 25.5 17.5 26.5 17 27Z"
+        fill="#1E293B"
+      />
+      {/* Sparkly Eyes */}
+      <circle cx="26" cy="31" r="2.5" fill="#0F172A" />
+      <circle cx="38" cy="31" r="2.5" fill="#0F172A" />
+      <circle cx="25.2" cy="30.2" r="0.8" fill="white" />
+      <circle cx="37.2" cy="30.2" r="0.8" fill="white" />
+      {/* Blush Cheeks */}
+      <ellipse cx="23" cy="34" rx="2.5" ry="1.5" fill="#FDA4AF" opacity="0.75" />
+      <ellipse cx="41" cy="34" rx="2.5" ry="1.5" fill="#FDA4AF" opacity="0.75" />
+      {/* Cheerful Smile */}
+      <path d="M29.5 36.5C30.8 37.8 33.2 37.8 34.5 36.5" stroke="#9A3412" strokeWidth="1.6" strokeLinecap="round" />
+      {/* Orange Jumper / Jacket */}
+      <path
+        d="M13 58C13 48.5 19 45 25 45H39C45 45 51 48.5 51 58V64H13V58Z"
+        fill="#F95721"
+      />
+      {/* Inner White Collar with Cyan Accent */}
+      <path d="M26 45L32 54L38 45H35L32 49.5L29 45H26Z" fill="#F0F9FF" />
+      <path d="M28 45L32 51.5L36 45" stroke="#38BDF8" strokeWidth="1.2" fill="none" />
+    </svg>
+  );
+}
+
 // ==========================================
 // Category Item Model & Dynamic Illustration Resolver
 // ==========================================
@@ -641,24 +681,53 @@ export function CategoryCoursesShowcase({
                         <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 mb-5 font-bengali">
                           <span className="flex items-center gap-1">
                             <Clock className="w-3.5 h-3.5 text-primary" />
-                            <span>১০০+ ঘণ্টা লাইভ</span>
+                            <span>
+                              {course.total_duration && course.total_duration > 0
+                                ? `${course.total_duration}+ ঘণ্টা লাইভ`
+                                : "১০০+ ঘণ্টা লাইভ"}
+                            </span>
                           </span>
                           <span>•</span>
                           <span className="flex items-center gap-1">
                             <Users className="w-3.5 h-3.5 text-emerald-500" />
-                            <span>ডাউট সলভিং</span>
+                            <span>
+                              {course.total_lessons && course.total_lessons > 0
+                                ? `${course.total_lessons}টি ক্লাস • ডাউট সলভিং`
+                                : "ডাউট সলভিং"}
+                            </span>
                           </span>
                         </div>
 
-                        {/* 5-Star Rating */}
-                        <div className="flex items-center gap-1 mb-4">
-                          {[...Array(5)].map((_, i) => (
-                            <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                          ))}
-                          <span className="text-xs font-bold text-text ml-1">5.0</span>
-                          <span className="text-[11px] text-slate-400 ml-1">
-                            ({course.enrollment_count || 120}+ শিক্ষার্থী)
-                          </span>
+                        {/* 5-Star Rating & 2nd Image Inspired Student Enrollment Badge */}
+                        <div className="flex items-center justify-between gap-2 mb-4">
+                          {/* 5-Star Rating */}
+                          <div className="flex items-center gap-1">
+                            {[...Array(5)].map((_, i) => (
+                              <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                            ))}
+                            <span className="text-xs font-bold text-text ml-1">5.0</span>
+                          </div>
+
+                          {/* 2nd Image Inspired Student Enrollment Capsule */}
+                          <div className="inline-flex items-center gap-2 p-1 pr-3 rounded-2xl bg-white dark:bg-[#180d19]/90 border border-[#FCE7F3] dark:border-[#FB7185]/30 shadow-[0_2px_8px_rgba(225,29,72,0.06)] dark:shadow-[0_4px_14px_rgba(225,29,72,0.2)] transition-all duration-200 hover:shadow-md hover:scale-[1.02] shrink-0">
+                            {/* 3D Student Avatar in Rounded Square Box */}
+                            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-[#FFF0F4] dark:bg-[#2E101F] border border-[#FCE7F3] dark:border-[#FB7185]/20 flex items-center justify-center shrink-0 p-0.5 overflow-hidden shadow-2xs">
+                              <StudentAvatar3D />
+                            </div>
+
+                            {/* Pink Enrolled Count + 'জন ভর্তি' */}
+                            <div className="flex items-baseline gap-1">
+                              <span className="text-sm sm:text-base font-black text-[#E11D48] dark:text-[#FB7185] font-sans tracking-tight tabular-nums">
+                                {(course.enrollment_count !== undefined && course.enrollment_count !== null
+                                  ? course.enrollment_count
+                                  : 1250
+                                ).toLocaleString("en-US")}
+                              </span>
+                              <span className="text-[11px] sm:text-xs font-bold text-slate-800 dark:text-slate-100 font-bengali">
+                                জন ভর্তি
+                              </span>
+                            </div>
+                          </div>
                         </div>
 
                         {/* Pricing & Action */}

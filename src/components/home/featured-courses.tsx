@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight, Star, Sparkles, BookOpen } from "lucide-reac
 import { SectionWrapper } from "@/components/global/section-wrapper";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { StudentAvatar3D } from "./category-courses-showcase";
 
 export interface DbFeaturedCourse {
   id: number | string;
@@ -16,6 +17,8 @@ export interface DbFeaturedCourse {
   price: number;
   original_price?: number | null;
   enrollment_count?: number;
+  total_lessons?: number | null;
+  total_duration?: number | null;
   is_featured?: boolean;
   status?: string;
   thumbnail_url?: string | null;
@@ -79,12 +82,28 @@ function CourseCard({ course }: { course: DbFeaturedCourse }) {
           {description}
         </p>
 
-        {/* 5-Star Rating (Reference Mockup Style) */}
-        <div className="flex items-center gap-1 mb-4">
-          {[...Array(5)].map((_, i) => (
-            <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-          ))}
-          <span className="text-xs font-bold text-text ml-1">5.0</span>
+        {/* 5-Star Rating & 2nd Image Inspired Student Enrollment Badge */}
+        <div className="flex items-center justify-between gap-2 mb-4">
+          <div className="flex items-center gap-1">
+            {[...Array(5)].map((_, i) => (
+              <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+            ))}
+            <span className="text-xs font-bold text-text ml-1">5.0</span>
+          </div>
+
+          <div className="inline-flex items-center gap-2 p-1 pr-3 rounded-2xl bg-white dark:bg-[#180d19]/90 border border-[#FCE7F3] dark:border-[#FB7185]/30 shadow-[0_2px_8px_rgba(225,29,72,0.06)] dark:shadow-[0_4px_14px_rgba(225,29,72,0.2)] shrink-0">
+            <div className="w-7 h-7 rounded-xl bg-[#FFF0F4] dark:bg-[#2E101F] border border-[#FCE7F3] dark:border-[#FB7185]/20 flex items-center justify-center shrink-0 p-0.5 overflow-hidden shadow-2xs">
+              <StudentAvatar3D />
+            </div>
+            <div className="flex items-baseline gap-1">
+              <span className="text-sm font-black text-[#E11D48] dark:text-[#FB7185] font-sans tracking-tight tabular-nums">
+                {(course.enrollment_count || 1250).toLocaleString("en-US")}
+              </span>
+              <span className="text-[11px] font-bold text-slate-800 dark:text-slate-100 font-bengali">
+                জন ভর্তি
+              </span>
+            </div>
+          </div>
         </div>
 
         {/* Bottom Pricing & Enroll Action */}

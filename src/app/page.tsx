@@ -32,6 +32,8 @@ export default async function Home() {
           price,
           original_price,
           enrollment_count,
+          total_lessons,
+          total_duration,
           is_featured,
           status,
           thumbnail_url,
