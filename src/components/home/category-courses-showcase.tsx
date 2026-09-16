@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, Sparkles, Star, Clock, Users, Check } from "lucide-react";
+import { ArrowRight, Sparkles, Star, Clock, Users } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { DbFeaturedCourse } from "./featured-courses";
+import { createClient } from "@/lib/supabase/client";
 import {
   staggerContainer,
   scrollReveal,
@@ -263,6 +264,19 @@ function getCategoryIllustration(cat: {
   ) {
     return <FreeCourseIllustration />;
   }
+  // Admin Panel Additional Icons Mapping
+  if (icon === "calculator" || icon === "laptop" || icon === "code") {
+    return <HscIllustration />;
+  }
+  if (icon === "microscope") {
+    return <ScienceNursingIllustration />;
+  }
+  if (icon === "brain" || icon === "compass") {
+    return <AdmissionIllustration />;
+  }
+  if (icon === "palette" || icon === "globe" || icon === "layers") {
+    return <ArtsCommerceIllustration />;
+  }
   // Default fallback
   return <SchoolIllustration />;
 }
@@ -360,60 +374,302 @@ export function CategoryCoursesShowcase({
   categories?: DbCategoryShowcaseItem[];
   courses?: DbFeaturedCourse[];
 }) {
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  // Local state initialized with server-fetched categories and courses
+  const [categoriesList, setCategoriesList] = useState<DbCategoryShowcaseItem[]>(categories);
+  const [coursesList, setCoursesList] = useState<DbFeaturedCourse[]>(courses);
+
+  // Sync if server props change
+  useEffect(() => {
+    if (categories && categories.length > 0) {
+      setCategoriesList(categories);
+    }
+  }, [categories]);
+
+  useEffect(() => {
+    if (courses && courses.length > 0) {
+      setCoursesList(courses);
+    }
+  }, [courses]);
+
+  // Client-side fetch & Realtime subscriptions for categories AND courses
+  useEffect(() => {
+    const supabase = createClient();
+
+    // 1. Fetch fresh categories on mount
+    const fetchFreshCategories = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("categories")
+          .select("id, name_bn, name, slug, icon_name, description, display_order, is_published")
+          .eq("is_published", true)
+          .order("display_order", { ascending: true });
+
+        if (data && data.length > 0 && !error) {
+          setCategoriesList(data);
+        }
+      } catch (err) {
+        console.error("Error fetching categories client-side:", err);
+      }
+    };
+
+    // 2. Fetch fresh courses on mount
+    const fetchFreshCourses = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("courses")
+          .select(`
+            id,
+            slug,
+            title,
+            title_bn,
+            price,
+            original_price,
+            enrollment_count,
+            total_lessons,
+            total_duration,
+            is_featured,
+            status,
+            thumbnail_url,
+            short_description,
+            category_id,
+            categories:category_id (id, name, name_bn, slug),
+            instructors:instructor_id (id, name, name_bn, institution)
+          `)
+          .eq("status", "published")
+          .order("created_at", { ascending: false });
+
+        if (data && !error) {
+          setCoursesList(data);
+        }
+      } catch (err) {
+        console.error("Error fetching courses client-side:", err);
+      }
+    };
+
+    fetchFreshCategories();
+    fetchFreshCourses();
+
+    // 3. Realtime listeners: Whenever categories or courses change in Admin Panel!
+    const catChannel = supabase
+      .channel("categories_realtime_showcase")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "categories" },
+        () => {
+          fetchFreshCategories();
+        }
+      )
+      .subscribe();
+
+    const coursesChannel = supabase
+      .channel("courses_realtime_showcase")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "courses" },
+        () => {
+          fetchFreshCourses();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(catChannel);
+      supabase.removeChannel(coursesChannel);
+    };
+  }, []);
 
   // Real categories from Supabase DB, filtered by is_published and sorted by display_order
   const displayCategories = useMemo(() => {
-    if (categories && categories.length > 0) {
-      return [...categories]
+    if (categoriesList && categoriesList.length > 0) {
+      return [...categoriesList]
         .filter((c) => c.is_published !== false)
         .sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
     }
     return [];
-  }, [categories]);
+  }, [categoriesList]);
+
+  // Selected category state (explicitly selected by user)
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+
+  // Smart default category: If user hasn't selected a category yet,
+  // pick the first category that actually has courses; fallback to the first category
+  const defaultCategorySlug = useMemo(() => {
+    if (displayCategories.length === 0) return "";
+    if (coursesList.length === 0) return displayCategories[0].slug;
+
+    const catWithCourses = displayCategories.find((cat) =>
+      coursesList.some((c) => {
+        const cCatId = c.category_id ?? (Array.isArray(c.categories) ? c.categories[0]?.id : c.categories?.id);
+        const cCatSlug = (Array.isArray(c.categories) ? c.categories[0]?.slug : c.categories?.slug || "").toLowerCase();
+        return (
+          (cat.id && String(cCatId) === String(cat.id)) ||
+          (cat.slug && cCatSlug === cat.slug.toLowerCase())
+        );
+      })
+    );
+
+    return catWithCourses ? catWithCourses.slug : displayCategories[0].slug;
+  }, [displayCategories, coursesList]);
+
+  const activeCategory = selectedCategory || defaultCategorySlug;
 
   // Filter courses dynamically based on the active DB category
   const filteredCourses = useMemo(() => {
-    if (selectedCategory === "all") return courses;
+    if (!activeCategory || activeCategory === "all") return coursesList;
 
-    const currentCat = displayCategories.find((c) => c.slug === selectedCategory);
+    const currentCat = displayCategories.find((c) => c.slug === activeCategory);
     const catId = currentCat?.id;
 
     // Free Courses Filter
-    if (selectedCategory === "free-course" || selectedCategory.includes("free")) {
-      return courses.filter(
-        (c) => c.price === 0 || (catId && c.category_id === catId)
+    if (activeCategory === "free-course" || activeCategory.includes("free")) {
+      return coursesList.filter(
+        (c) => c.price === 0 || (catId && String(c.category_id) === String(catId))
       );
     }
 
-    return courses.filter((c) => {
-      // 1. Direct Category ID match
-      if (
-        catId &&
-        (c.category_id === catId ||
-          (Array.isArray(c.categories) && c.categories[0]?.id === catId) ||
-          (c.categories && !Array.isArray(c.categories) && (c.categories as any).id === catId))
-      ) {
+    return coursesList.filter((c) => {
+      // 1. Direct Category ID match (flexible type check)
+      const cCatId = c.category_id ?? (Array.isArray(c.categories) ? c.categories[0]?.id : c.categories?.id);
+      if (catId && cCatId && String(cCatId) === String(catId)) {
         return true;
       }
+
       // 2. Slug match
       const cSlug = (
         Array.isArray(c.categories) ? c.categories[0]?.slug : c.categories?.slug || ""
       ).toLowerCase();
       if (
         cSlug &&
-        (cSlug === selectedCategory ||
-          cSlug.includes(selectedCategory) ||
-          selectedCategory.includes(cSlug))
+        (cSlug === activeCategory.toLowerCase() ||
+          cSlug.includes(activeCategory.toLowerCase()) ||
+          activeCategory.toLowerCase().includes(cSlug))
       ) {
         return true;
       }
+
+      // 3. Name match fallback
+      if (currentCat?.name || currentCat?.name_bn) {
+        const cCatName = (
+          Array.isArray(c.categories)
+            ? c.categories[0]?.name || c.categories[0]?.name_bn
+            : c.categories?.name || c.categories?.name_bn || ""
+        ).toLowerCase();
+        if (
+          cCatName &&
+          ((currentCat.name && cCatName.includes(currentCat.name.toLowerCase())) ||
+            (currentCat.name_bn && cCatName.includes(currentCat.name_bn.toLowerCase())))
+        ) {
+          return true;
+        }
+      }
+
       return false;
     });
-  }, [courses, selectedCategory, displayCategories]);
+  }, [coursesList, activeCategory, displayCategories]);
 
+  // Split categories for 3 on top row, 2 on bottom row (Matching Reference Image)
+  const topRowCategories = displayCategories.slice(0, 3);
+  const bottomRowCategories = displayCategories.slice(3);
+
+  // Reusable Pill Component with Continuous Animated Rotating Border
+  const renderCategoryPill = (cat: DbCategoryShowcaseItem, idx: number) => {
+    const isSelected = activeCategory === cat.slug;
+    const flipVariant = idx % 2 === 0 ? flipLeft : flipRight;
+    const illustration = getCategoryIllustration(cat);
+
+    return (
+      <motion.button
+        key={cat.id || cat.slug}
+        type="button"
+        variants={flipVariant}
+        onClick={() => setSelectedCategory(cat.slug)}
+        whileHover={{ y: -4, scale: 1.02, transition: { duration: 0.2 } }}
+        whileTap={{ scale: 0.97 }}
+        className={`group relative p-[2.5px] rounded-2xl cursor-pointer select-none transition-all duration-300 overflow-hidden w-full sm:w-auto min-w-[170px] sm:min-w-[210px] ${
+          isSelected
+            ? "shadow-[0_0_25px_rgba(255,95,0,0.45)] dark:shadow-[0_0_30px_rgba(255,115,21,0.4)] ring-2 ring-primary/40 bg-primary/20"
+            : "shadow-soft-card hover:shadow-lg bg-slate-300/80 dark:bg-slate-800/90 hover:bg-primary/20"
+        }`}
+      >
+        {/* Layer 1: Radiant Outer Glow Beam (Blurred moving halo) */}
+        <div
+          className="border-beam-glow"
+          style={{
+            background: isSelected
+              ? "conic-gradient(from 0deg, transparent 0deg, transparent 250deg, #FF5F00 300deg, #FFA048 335deg, transparent 360deg)"
+              : "conic-gradient(from 0deg, transparent 0deg, transparent 265deg, #FF5F00 310deg, #FFA048 335deg, transparent 360deg)",
+            animation: `borderRotate ${isSelected ? '3s' : '4.2s'} linear infinite`,
+            animationDelay: `${idx * -0.85}s`,
+            opacity: isSelected ? 1 : 0.85,
+          }}
+        />
+
+        {/* Layer 2: Sharp Luminous Laser Beam (Races directly inside the 2.5px border track) */}
+        <div
+          className="border-beam-sharp"
+          style={{
+            background: isSelected
+              ? "conic-gradient(from 0deg, transparent 0deg, transparent 250deg, #FF5F00 295deg, #FFFFFF 335deg, transparent 360deg)"
+              : "conic-gradient(from 0deg, transparent 0deg, transparent 265deg, #FF5F00 310deg, #FFFFFF 335deg, transparent 360deg)",
+            animation: `borderRotate ${isSelected ? '3s' : '4.2s'} linear infinite`,
+            animationDelay: `${idx * -0.85}s`,
+          }}
+        />
+
+        {/* Layer 3: Inner Pill Content Container (bg-surface masks center, leaving the 2.5px glowing border beam brilliantly visible!) */}
+        <div
+          className={`relative z-10 w-full h-full rounded-[13.5px] flex items-center justify-center gap-3 sm:gap-4 px-6 sm:px-8 py-3.5 sm:py-4 transition-colors duration-300 overflow-hidden ${
+            isSelected
+              ? "bg-surface dark:bg-slate-900 text-primary"
+              : "bg-surface dark:bg-slate-900/95 text-text group-hover:text-primary"
+          }`}
+        >
+          {/* Continuous Glass Shimmer Sweep */}
+          <span
+            className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/35 dark:via-white/[0.08] to-transparent pointer-events-none animate-glass-shimmer"
+            style={{ animationDelay: `${idx * 0.55}s` }}
+          />
+
+          {/* Top Glossy Sheen */}
+          <span className="absolute inset-x-0 top-0 h-1/2 rounded-t-[13.5px] bg-gradient-to-b from-white/60 dark:from-white/[0.06] to-transparent pointer-events-none" />
+
+          {/* 3D Category Illustration */}
+          <div className="relative z-10 w-9 h-9 sm:w-10 sm:h-10 shrink-0 [&>div]:!w-9 [&>div]:!h-9 sm:[&>div]:!w-10 sm:[&>div]:!h-10 transition-transform duration-300 group-hover:scale-110 drop-shadow-xs">
+            {illustration}
+          </div>
+
+          {/* Category Name */}
+          <span
+            className={`relative z-10 text-base sm:text-lg tracking-tight transition-colors duration-300 whitespace-nowrap ${
+              isSelected
+                ? "text-primary font-black"
+                : "text-text group-hover:text-primary font-bold"
+            }`}
+          >
+            {cat.name || cat.name_bn}
+          </span>
+
+          {/* Active indicator dot */}
+          {isSelected && (
+            <span className="relative z-10 w-2.5 h-2.5 rounded-full bg-primary animate-pulse shrink-0 ml-0.5 shadow-[0_0_8px_#FF5F00]" />
+          )}
+        </div>
+      </motion.button>
+    );
+  };
   return (
     <section id="category-courses-section" className="relative py-16 sm:py-20 lg:py-24 bg-background overflow-hidden">
+      {/* Bulletproof Keyframe Animation for Border Beam */}
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+            @keyframes borderRotate {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+          `,
+        }}
+      />
       {/* Ambient background glow */}
       <div
         className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[900px] h-[450px] rounded-full opacity-20 dark:opacity-10 pointer-events-none blur-3xl"
@@ -450,130 +706,40 @@ export function CategoryCoursesShowcase({
             প্রোগ্রাম। একই সাথে আর্টস ও কমার্স এবং নার্সিংয়ের জন্য রয়েছে পূর্ণাঙ্গ অনলাইন প্ল্যাটফর্ম...
           </motion.p>
 
-          {/* 3. Zoom In Animation on Filter Pill */}
-          <motion.div
+          {/* 3. Category filter label */}
+          <motion.p
             variants={zoomIn}
             initial="hidden"
             whileInView="visible"
             viewport={{ once: false, amount: 0.4, margin: "0px 0px -40px 0px" }}
-            className="flex justify-center mt-6"
+            className="text-xs sm:text-sm text-text-muted font-bengali mt-5 mb-1"
           >
-            <button
-              type="button"
-              onClick={() => setSelectedCategory("all")}
-              className={`px-6 py-2.5 rounded-full text-xs sm:text-sm font-bold transition-all duration-300 cursor-pointer backdrop-blur-md ${
-                selectedCategory === "all"
-                  ? "bg-primary text-white shadow-lg shadow-primary/35 ring-2 ring-primary/30 scale-105"
-                  : "bg-white/80 dark:bg-slate-900/60 text-slate-600 dark:text-slate-300 hover:text-text border border-slate-200/80 dark:border-white/10 shadow-xs hover:shadow-md hover:border-primary/40"
-              }`}
-            >
-              <span>সকল কোর্স ({courses.length})</span>
-            </button>
-          </motion.div>
+            {"\u0995\u09CD\u09AF\u09BE\u099F\u09BE\u0997\u09B0\u09BF \u09A8\u09BF\u09B0\u09CD\u09AC\u09BE\u099A\u09A8 \u0995\u09B0\u09C1\u09A8"}
+          </motion.p>
         </div>
 
-        {/* 4. Category Cards Grid with 2nd Image Glassy Style */}
-        <div
-          className={`grid gap-4 sm:gap-6 mb-14 sm:mb-16 ${
-            displayCategories.length === 3
-              ? "grid-cols-1 sm:grid-cols-3 max-w-4xl mx-auto"
-              : displayCategories.length === 2
-              ? "grid-cols-1 sm:grid-cols-2 max-w-2xl mx-auto"
-              : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
-          }`}
+        {/* Category Pills Grid: 3 on Top Row, 2 on Bottom Row (Matching Reference Photo) */}
+        <motion.div
+          variants={staggerContainer}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: false, amount: 0.3, margin: "0px 0px -40px 0px" }}
+          className="flex flex-col items-center justify-center gap-3 sm:gap-4 mb-14 sm:mb-16"
         >
-          {displayCategories.map((cat, idx) => {
-            const isSelected = selectedCategory === cat.slug;
-            const theme = getCategoryTheme(cat);
-            const flipVariant = idx % 2 === 0 ? flipLeft : flipRight;
+          {/* Row 1: 3 Pills */}
+          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 w-full">
+            {topRowCategories.map((cat, idx) => renderCategoryPill(cat, idx))}
+          </div>
 
-            return (
-              <motion.div
-                key={cat.id || cat.slug}
-                variants={flipVariant}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: false, amount: 0.25, margin: "0px 0px -50px 0px" }}
-                whileHover={{ y: -7, transition: { duration: 0.25, ease: "easeOut" } }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => {
-                  setSelectedCategory((prev) => (prev === cat.slug ? "all" : cat.slug));
-                }}
-                className={`group relative flex flex-col items-center justify-between text-center min-h-[215px] sm:min-h-[235px] p-6 sm:p-7 rounded-3xl cursor-pointer select-none transition-all duration-300 overflow-hidden backdrop-blur-xl border ${
-                  isSelected
-                    ? `${theme.activeBorder} ${theme.activeRing} ${theme.activeBg} shadow-2xl scale-[1.02] bg-white/95 dark:bg-[#091024]/90`
-                    : "bg-white/80 dark:bg-[#070e22]/75 hover:bg-white/95 dark:hover:bg-[#0a132c]/90 border-slate-200/90 dark:border-white/10 shadow-[0_10px_30px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_45px_rgba(0,0,0,0.12)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.45)] dark:hover:shadow-[0_20px_45px_rgba(0,0,0,0.65)] hover:border-slate-300 dark:hover:border-white/20"
-                }`}
-              >
-                {/* Top Glossy Sheen Highlight for Glass Effect */}
-                <div className="absolute inset-x-0 top-0 h-24 rounded-t-3xl bg-gradient-to-b from-white/70 dark:from-white/10 to-transparent pointer-events-none" />
-
-                {/* Continuous Diagonal Light-Sweep Beam that always glides across the Card */}
-                <span
-                  className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 dark:via-white/[0.08] to-transparent pointer-events-none animate-glass-shimmer"
-                  style={{ animationDelay: `${idx * 0.45}s` }}
-                />
-
-                {/* Bottom Ambient Glow Matching Button Theme with Gentle Breathing Pulse */}
-                <div
-                  className={`absolute bottom-0 inset-x-0 h-28 bg-gradient-to-t ${theme.cardGlow} rounded-b-3xl pointer-events-none transition-opacity duration-300 animate-pulse ${
-                    isSelected ? "opacity-100" : "opacity-60 group-hover:opacity-100"
-                  }`}
-                  style={{ animationDuration: "3s" }}
-                />
-
-                {/* Active Selection Badge (Top Right) */}
-                {isSelected && (
-                  <div className="absolute top-3.5 right-3.5 z-10 flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-primary/15 border border-primary/30 text-[11px] font-bold text-primary backdrop-blur-xs font-bengali">
-                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
-                    <span>সক্রিয়</span>
-                  </div>
-                )}
-
-                {/* Card Header Content */}
-                <div className="relative z-10 flex flex-col items-center w-full pt-2">
-                  {/* Category Title: Bold English Header (Image 2 style) */}
-                  <h3 className="text-3xl sm:text-4xl lg:text-[34px] font-black tracking-tight text-slate-900 dark:text-white font-sans transition-transform duration-300 group-hover:scale-[1.03] leading-none mb-2">
-                    {cat.name || cat.name_bn}
-                  </h3>
-
-                  {/* Subtitle / Session Tag */}
-                  <p className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400 font-bengali tracking-wide">
-                    {theme.tagline}
-                  </p>
-                </div>
-
-                {/* Bottom Pill Button (Matching 2nd Image with Continuous Glassy Shimmer) */}
-                <div className="relative z-10 mt-6 w-full flex justify-center">
-                  <div
-                    className={`relative inline-flex items-center justify-center gap-1.5 px-5 sm:px-6 py-2.5 rounded-full text-xs sm:text-sm font-bold text-white tracking-wide transition-all duration-300 group-hover:scale-105 active:scale-95 border border-white/40 dark:border-white/25 backdrop-blur-md overflow-hidden ${theme.btnGradient} ${theme.btnShadow}`}
-                  >
-                    {/* Continuous Ambient Glow Aura Pulse behind the button */}
-                    <span
-                      className="absolute -inset-1 rounded-full bg-inherit opacity-40 blur-xs -z-10 animate-pulse pointer-events-none"
-                      style={{ animationDuration: "2.5s" }}
-                    />
-
-                    {/* Glassy Static Reflection Overlay */}
-                    <span className="absolute inset-0 rounded-full bg-gradient-to-b from-white/35 via-transparent to-transparent pointer-events-none" />
-
-                    {/* Continuous Diagonal Light-Sweep Beam that always glides across the button */}
-                    <span
-                      className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/50 to-transparent pointer-events-none animate-glass-shimmer"
-                      style={{ animationDelay: `${idx * 0.45}s` }}
-                    />
-
-                    <Check className="relative z-10 w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[3.5] text-white shrink-0 drop-shadow-[0_1px_3px_rgba(0,0,0,0.45)]" />
-                    <span className="relative z-10 font-bold text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.45)] font-bengali">
-                      প্রস্তুত হও এখন
-                    </span>
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
-
+          {/* Row 2: 2 Pills (Centered below row 1) */}
+          {bottomRowCategories.length > 0 && (
+            <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 w-full">
+              {bottomRowCategories.map((cat, idx) =>
+                renderCategoryPill(cat, idx + topRowCategories.length)
+              )}
+            </div>
+          )}
+        </motion.div>
         {/* Dynamic Course Section (Animated with Framer Motion) */}
         <div>
           <motion.div
@@ -586,11 +752,11 @@ export function CategoryCoursesShowcase({
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse" />
               <h3 className="text-lg sm:text-xl font-black text-text font-bengali">
-                {selectedCategory === "all"
+                {activeCategory === "all"
                   ? "সকল রানিং ও স্পেশাল কোর্সসমূহ"
                   : `${
-                      displayCategories.find((c) => c.slug === selectedCategory)?.name_bn ||
-                      displayCategories.find((c) => c.slug === selectedCategory)?.name ||
+                      displayCategories.find((c) => c.slug === activeCategory)?.name_bn ||
+                      displayCategories.find((c) => c.slug === activeCategory)?.name ||
                       "নির্বাচিত"
                     } কোর্সসমূহ`}
               </h3>
@@ -608,7 +774,7 @@ export function CategoryCoursesShowcase({
           <AnimatePresence mode="wait">
             {filteredCourses.length > 0 ? (
               <motion.div
-                key={selectedCategory}
+                key={activeCategory}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0, transition: { duration: 0.2 } }}
@@ -769,7 +935,7 @@ export function CategoryCoursesShowcase({
                   <Sparkles className="w-7 h-7" />
                 </div>
                 <h4 className="text-lg sm:text-xl font-black text-text font-bengali mb-2">
-                  এই ক্যাটাগরির নতুন ব্যাচ শীঘ্রই শুরু হচ্ছে!
+                  {(displayCategories.find((c) => c.slug === activeCategory)?.name_bn || displayCategories.find((c) => c.slug === activeCategory)?.name || "এই ক্যাটাগরির")} এর নতুন ব্যাচ শীঘ্রই শুরু হচ্ছে!
                 </h4>
                 <p className="text-xs sm:text-sm text-text-muted font-bengali mb-6 leading-relaxed">
                   আমাদের অভিজ্ঞ শিক্ষকমণ্ডলীর নতুন লাইভ ব্যাচ ও প্রশ্নব্যাংক কোর্স খুব শীঘ্রই যুক্ত হচ্ছে।
@@ -778,7 +944,13 @@ export function CategoryCoursesShowcase({
                 <div className="flex flex-wrap items-center justify-center gap-3">
                   <button
                     type="button"
-                    onClick={() => setSelectedCategory("all")}
+                    onClick={() => {
+                      if (defaultCategorySlug && defaultCategorySlug !== activeCategory) {
+                        setSelectedCategory(defaultCategorySlug);
+                      } else {
+                        setSelectedCategory("");
+                      }
+                    }}
                     className="px-5 py-2.5 rounded-full text-xs font-bold text-white bg-primary hover:bg-primary-hover shadow-md font-bengali transition-colors cursor-pointer"
                   >
                     সকল রানিং কোর্স দেখুন

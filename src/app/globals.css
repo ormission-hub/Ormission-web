@@ -447,3 +447,49 @@ h1, h2, h3, h4, h5, h6, p, span, a, button, input, select, textarea {
   will-change: transform, opacity;
 }
 
+/* ============================================================
+   CONTINUOUS BORDER ANIMATION (Travelling glowing border beam)
+   ============================================================ */
+
+@keyframes borderRotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-border-rotate {
+  animation: borderRotate 4s linear infinite;
+  will-change: transform;
+}
+
+.animate-border-rotate-fast {
+  animation: borderRotate 2.5s linear infinite;
+  will-change: transform;
+}
+
+.border-beam-sharp {
+  position: absolute;
+  top: -150%;
+  left: -150%;
+  width: 400%;
+  height: 400%;
+  animation: borderRotate 3.5s linear infinite;
+  will-change: transform;
+  pointer-events: none;
+}
+
+.border-beam-glow {
+  position: absolute;
+  top: -150%;
+  left: -150%;
+  width: 400%;
+  height: 400%;
+  animation: borderRotate 3.5s linear infinite;
+  filter: blur(5px);
+  will-change: transform;
+  pointer-events: none;
+}
+

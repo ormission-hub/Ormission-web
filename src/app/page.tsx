@@ -2,10 +2,12 @@ import { HeroSection } from "@/components/home/hero-section";
 import { StatsBar } from "@/components/home/stats-bar";
 import { CategoryCoursesShowcase } from "@/components/home/category-courses-showcase";
 import { AboutPreview } from "@/components/home/about-preview";
+import { WhyChooseUs } from "@/components/home/why-choose-us";
 import { Testimonials } from "@/components/home/testimonials";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function Home() {
   let categories: any[] = [];
@@ -60,7 +62,13 @@ export default async function Home() {
         .single(),
     ]);
 
-    if (catRes.data) categories = catRes.data;
+    if (catRes.data) {
+      categories = catRes.data;
+      console.log("SERVER FETCHED CATEGORIES (" + categories.length + "):", categories.map(c => c.name));
+    }
+    if (catRes.error) {
+      console.error("CAT RES ERROR:", catRes.error);
+    }
     if (courseRes.data) featuredCourses = courseRes.data;
     if (testRes.data) testimonials = testRes.data;
     if (instRes.count !== null && instRes.count !== undefined) instructorsCount = instRes.count;
@@ -88,7 +96,10 @@ export default async function Home() {
       {/* 4. About Us: Authentic Group Photo & Narrative */}
       <AboutPreview />
 
-      {/* 5. Testimonials: Real Student Reviews from Supabase (Zero Mock Data) */}
+      {/* 5. Why Choose Ormission: Core USPs & Features */}
+      <WhyChooseUs />
+
+      {/* 6. Testimonials: Real Student Reviews from Supabase (Zero Mock Data) */}
       <Testimonials initialTestimonials={testimonials} />
     </>
   );
