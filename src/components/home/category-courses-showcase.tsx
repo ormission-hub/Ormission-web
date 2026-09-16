@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, Sparkles, Star, Clock, Users } from "lucide-react";
+import { ArrowRight, Sparkles, Star, Clock, Users, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { DbFeaturedCourse } from "./featured-courses";
 import {
@@ -227,6 +227,92 @@ function getCategoryIllustration(cat: {
   return <SchoolIllustration />;
 }
 
+// ==========================================
+// 2nd Image Inspired Theme & Glassy Styling
+// ==========================================
+
+interface CategoryTheme {
+  btnGradient: string;
+  btnShadow: string;
+  cardGlow: string;
+  activeBorder: string;
+  activeRing: string;
+  activeBg: string;
+  tagline: string;
+}
+
+function getCategoryTheme(cat: {
+  slug?: string | null;
+  name?: string | null;
+  description?: string | null;
+}): CategoryTheme {
+  const slug = (cat.slug || "").toLowerCase();
+  const name = (cat.name || "").toLowerCase();
+
+  // 1. SSC / School (Emerald / Mint Green - Image 2 Card 1)
+  if (slug.includes("ssc") || name.includes("ssc") || slug.includes("school")) {
+    return {
+      btnGradient: "bg-gradient-to-r from-[#00cba0] to-[#00b289] hover:from-[#00baa3] hover:to-[#009e7a]",
+      btnShadow: "shadow-lg shadow-[#00cba0]/35 dark:shadow-[#00cba0]/25 hover:shadow-[#00cba0]/50",
+      cardGlow: "from-[#00cba0]/20 via-[#00cba0]/5 to-transparent",
+      activeBorder: "border-[#00cba0]/80 dark:border-[#00cba0]/70",
+      activeRing: "ring-4 ring-[#00cba0]/20",
+      activeBg: "bg-[#00cba0]/[0.03] dark:bg-[#00cba0]/[0.08]",
+      tagline: "SSC 2027-28",
+    };
+  }
+
+  // 2. HSC (Cyan / Sky Blue - Image 2 Card 2)
+  if (slug.includes("hsc") || name.includes("hsc")) {
+    return {
+      btnGradient: "bg-gradient-to-r from-[#28b8ff] to-[#0091ff] hover:from-[#1caeff] hover:to-[#0082e6]",
+      btnShadow: "shadow-lg shadow-[#28b8ff]/35 dark:shadow-[#28b8ff]/25 hover:shadow-[#28b8ff]/50",
+      cardGlow: "from-[#28b8ff]/20 via-[#28b8ff]/5 to-transparent",
+      activeBorder: "border-[#28b8ff]/80 dark:border-[#28b8ff]/70",
+      activeRing: "ring-4 ring-[#28b8ff]/20",
+      activeBg: "bg-[#28b8ff]/[0.03] dark:bg-[#28b8ff]/[0.08]",
+      tagline: "HSC 2026-27",
+    };
+  }
+
+  // 3. Admission / University (Rose / Pink - Image 2 Card 3)
+  if (slug.includes("admission") || name.includes("admission") || slug.includes("university")) {
+    return {
+      btnGradient: "bg-gradient-to-r from-[#ff4099] to-[#ff2a6d] hover:from-[#f5338e] hover:to-[#e81d60]",
+      btnShadow: "shadow-lg shadow-[#ff4099]/35 dark:shadow-[#ff4099]/25 hover:shadow-[#ff4099]/50",
+      cardGlow: "from-[#ff4099]/20 via-[#ff4099]/5 to-transparent",
+      activeBorder: "border-[#ff4099]/80 dark:border-[#ff4099]/70",
+      activeRing: "ring-4 ring-[#ff4099]/20",
+      activeBg: "bg-[#ff4099]/[0.03] dark:bg-[#ff4099]/[0.08]",
+      tagline: "ভর্তি প্রস্তুতি",
+    };
+  }
+
+  // 4. Arts & Commerce / Business (Ormission Signature Vibrant Orange)
+  if (slug.includes("arts") || slug.includes("commerce") || name.includes("commerce")) {
+    return {
+      btnGradient: "bg-gradient-to-r from-[#ff7a00] to-[#ff5000] hover:from-[#ff6b00] hover:to-[#e64500]",
+      btnShadow: "shadow-lg shadow-[#ff6b00]/35 dark:shadow-[#ff6b00]/25 hover:shadow-[#ff6b00]/50",
+      cardGlow: "from-[#ff6b00]/20 via-[#ff6b00]/5 to-transparent",
+      activeBorder: "border-[#ff6b00]/80 dark:border-[#ff6b00]/70",
+      activeRing: "ring-4 ring-[#ff6b00]/20",
+      activeBg: "bg-[#ff6b00]/[0.03] dark:bg-[#ff6b00]/[0.08]",
+      tagline: "মানবিক ও বাণিজ্য",
+    };
+  }
+
+  // Default / Free / Others (Royal Violet / Purple)
+  return {
+    btnGradient: "bg-gradient-to-r from-[#8b5cf6] to-[#7c3aed] hover:from-[#7c3aed] hover:to-[#6d28d9]",
+    btnShadow: "shadow-lg shadow-[#8b5cf6]/35 dark:shadow-[#8b5cf6]/25 hover:shadow-[#8b5cf6]/50",
+    cardGlow: "from-[#8b5cf6]/20 via-[#8b5cf6]/5 to-transparent",
+    activeBorder: "border-[#8b5cf6]/80 dark:border-[#8b5cf6]/70",
+    activeRing: "ring-4 ring-[#8b5cf6]/20",
+    activeBg: "bg-[#8b5cf6]/[0.03] dark:bg-[#8b5cf6]/[0.08]",
+    tagline: cat.description ? cat.description.slice(0, 16) : "প্রস্তুতি শুরু",
+  };
+}
+
 export function CategoryCoursesShowcase({
   categories = [],
   courses = [],
@@ -335,10 +421,10 @@ export function CategoryCoursesShowcase({
             <button
               type="button"
               onClick={() => setSelectedCategory("all")}
-              className={`px-5 py-2 rounded-full text-xs sm:text-sm font-bold transition-all duration-300 cursor-pointer shadow-sm ${
+              className={`px-6 py-2.5 rounded-full text-xs sm:text-sm font-bold transition-all duration-300 cursor-pointer backdrop-blur-md ${
                 selectedCategory === "all"
-                  ? "bg-primary text-white shadow-primary/30 shadow-md scale-105"
-                  : "bg-surface text-text-muted hover:text-text border border-border/80 hover:border-primary/40"
+                  ? "bg-primary text-white shadow-lg shadow-primary/35 ring-2 ring-primary/30 scale-105"
+                  : "bg-white/80 dark:bg-slate-900/60 text-slate-600 dark:text-slate-300 hover:text-text border border-slate-200/80 dark:border-white/10 shadow-xs hover:shadow-md hover:border-primary/40"
               }`}
             >
               <span>সকল কোর্স ({courses.length})</span>
@@ -346,12 +432,19 @@ export function CategoryCoursesShowcase({
           </motion.div>
         </div>
 
-        {/* 4. Category Cards Grid with 3D Perspective */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-14 sm:mb-16 perspective-1000">
+        {/* 4. Category Cards Grid with 2nd Image Glassy Style */}
+        <div
+          className={`grid gap-4 sm:gap-6 mb-14 sm:mb-16 ${
+            displayCategories.length === 3
+              ? "grid-cols-1 sm:grid-cols-3 max-w-4xl mx-auto"
+              : displayCategories.length === 2
+              ? "grid-cols-1 sm:grid-cols-2 max-w-2xl mx-auto"
+              : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
+          }`}
+        >
           {displayCategories.map((cat, idx) => {
             const isSelected = selectedCategory === cat.slug;
-            const illustration = getCategoryIllustration(cat);
-            // 5 & 6. Flip Left (even) & Flip Right (odd) 3D Entrance
+            const theme = getCategoryTheme(cat);
             const flipVariant = idx % 2 === 0 ? flipLeft : flipRight;
 
             return (
@@ -361,36 +454,80 @@ export function CategoryCoursesShowcase({
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: false, amount: 0.25, margin: "0px 0px -50px 0px" }}
-                whileHover={hoverLiftProps.whileHover}
-                whileTap={hoverLiftProps.whileTap}
+                whileHover={{ y: -7, transition: { duration: 0.25, ease: "easeOut" } }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => {
                   setSelectedCategory((prev) => (prev === cat.slug ? "all" : cat.slug));
                 }}
-                className={`group relative flex items-center justify-between p-4 sm:p-5 rounded-2xl cursor-pointer select-none border anim-hover-lift ${
+                className={`group relative flex flex-col items-center justify-between text-center min-h-[215px] sm:min-h-[235px] p-6 sm:p-7 rounded-3xl cursor-pointer select-none transition-all duration-300 overflow-hidden backdrop-blur-xl border ${
                   isSelected
-                    ? "bg-surface text-primary border-2 border-primary ring-4 ring-primary/15 shadow-2xl scale-[1.02]"
-                    : "bg-surface/95 hover:bg-surface text-slate-900 dark:text-slate-100 border-border/80 hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/15"
+                    ? `${theme.activeBorder} ${theme.activeRing} ${theme.activeBg} shadow-2xl scale-[1.02] bg-white/95 dark:bg-[#091024]/90`
+                    : "bg-white/80 dark:bg-[#070e22]/75 hover:bg-white/95 dark:hover:bg-[#0a132c]/90 border-slate-200/90 dark:border-white/10 shadow-[0_10px_30px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_45px_rgba(0,0,0,0.12)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.45)] dark:hover:shadow-[0_20px_45px_rgba(0,0,0,0.65)] hover:border-slate-300 dark:hover:border-white/20"
                 }`}
               >
-                {/* Left Illustration + Title (Zoom In Icon on Hover) */}
-                <div className="flex items-center gap-3.5 sm:gap-4 min-w-0">
-                  <div className="transition-transform duration-300 group-hover:scale-115 group-hover:rotate-2">
-                    {illustration}
+                {/* Top Glossy Sheen Highlight for Glass Effect */}
+                <div className="absolute inset-x-0 top-0 h-24 rounded-t-3xl bg-gradient-to-b from-white/70 dark:from-white/10 to-transparent pointer-events-none" />
+
+                {/* Continuous Diagonal Light-Sweep Beam that always glides across the Card */}
+                <span
+                  className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 dark:via-white/[0.08] to-transparent pointer-events-none animate-glass-shimmer"
+                  style={{ animationDelay: `${idx * 0.45}s` }}
+                />
+
+                {/* Bottom Ambient Glow Matching Button Theme with Gentle Breathing Pulse */}
+                <div
+                  className={`absolute bottom-0 inset-x-0 h-28 bg-gradient-to-t ${theme.cardGlow} rounded-b-3xl pointer-events-none transition-opacity duration-300 animate-pulse ${
+                    isSelected ? "opacity-100" : "opacity-60 group-hover:opacity-100"
+                  }`}
+                  style={{ animationDuration: "3s" }}
+                />
+
+                {/* Active Selection Badge (Top Right) */}
+                {isSelected && (
+                  <div className="absolute top-3.5 right-3.5 z-10 flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-primary/15 border border-primary/30 text-[11px] font-bold text-primary backdrop-blur-xs font-bengali">
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
+                    <span>সক্রিয়</span>
                   </div>
-                  <div className="flex flex-col min-w-0">
-                    <h3 className="text-base sm:text-lg font-black tracking-tight group-hover:text-primary transition-colors truncate">
-                      {cat.name || cat.name_bn}
-                    </h3>
-                  </div>
+                )}
+
+                {/* Card Header Content */}
+                <div className="relative z-10 flex flex-col items-center w-full pt-2">
+                  {/* Category Title: Bold English Header (Image 2 style) */}
+                  <h3 className="text-3xl sm:text-4xl lg:text-[34px] font-black tracking-tight text-slate-900 dark:text-white font-sans transition-transform duration-300 group-hover:scale-[1.03] leading-none mb-2">
+                    {cat.name || cat.name_bn}
+                  </h3>
+
+                  {/* Subtitle / Session Tag */}
+                  <p className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400 font-bengali tracking-wide">
+                    {theme.tagline}
+                  </p>
                 </div>
 
-                {/* Right Arrow (Glides right on hover) */}
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 shrink-0 ${
-                    isSelected ? "text-primary" : "text-slate-600 dark:text-slate-400 group-hover:text-primary"
-                  }`}
-                >
-                  <ArrowRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-2" />
+                {/* Bottom Pill Button (Matching 2nd Image with Continuous Glassy Shimmer) */}
+                <div className="relative z-10 mt-6 w-full flex justify-center">
+                  <div
+                    className={`relative inline-flex items-center justify-center gap-1.5 px-5 sm:px-6 py-2.5 rounded-full text-xs sm:text-sm font-bold text-white tracking-wide transition-all duration-300 group-hover:scale-105 active:scale-95 border border-white/40 dark:border-white/25 backdrop-blur-md overflow-hidden ${theme.btnGradient} ${theme.btnShadow}`}
+                  >
+                    {/* Continuous Ambient Glow Aura Pulse behind the button */}
+                    <span
+                      className="absolute -inset-1 rounded-full bg-inherit opacity-40 blur-xs -z-10 animate-pulse pointer-events-none"
+                      style={{ animationDuration: "2.5s" }}
+                    />
+
+                    {/* Glassy Static Reflection Overlay */}
+                    <span className="absolute inset-0 rounded-full bg-gradient-to-b from-white/35 via-transparent to-transparent pointer-events-none" />
+
+                    {/* Continuous Diagonal Light-Sweep Beam that always glides across the button */}
+                    <span
+                      className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/50 to-transparent pointer-events-none animate-glass-shimmer"
+                      style={{ animationDelay: `${idx * 0.45}s` }}
+                    />
+
+                    <Check className="relative z-10 w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[3.5] text-white shrink-0 drop-shadow-[0_1px_3px_rgba(0,0,0,0.45)]" />
+                    <span className="relative z-10 font-bold text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.45)] font-bengali">
+                      প্রস্তুত হও এখন
+                    </span>
+                  </div>
                 </div>
               </motion.div>
             );
