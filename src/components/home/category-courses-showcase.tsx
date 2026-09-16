@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, type ReactNode } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, Sparkles, Star, Clock, Users } from "lucide-react";
@@ -370,9 +370,11 @@ function getCategoryTheme(cat: {
 export function CategoryCoursesShowcase({
   categories = [],
   courses = [],
+  statsBar,
 }: {
   categories?: DbCategoryShowcaseItem[];
   courses?: DbFeaturedCourse[];
+  statsBar?: ReactNode;
 }) {
   // Local state initialized with server-fetched categories and courses
   const [categoriesList, setCategoriesList] = useState<DbCategoryShowcaseItem[]>(categories);
@@ -597,7 +599,11 @@ export function CategoryCoursesShowcase({
             className="border-beam-glow hidden sm:block"
             style={{
               background: "conic-gradient(from 0deg, transparent 0deg, transparent 250deg, #FF5F00 300deg, #FFA048 335deg, transparent 360deg)",
-              animation: "borderRotate 3s linear infinite",
+              animationName: "borderRotate",
+              animationDuration: "3s",
+              animationTimingFunction: "linear",
+              animationIterationCount: "infinite",
+              animationDelay: `${idx * -0.9}s`,
               opacity: 1,
             }}
           />
@@ -610,7 +616,10 @@ export function CategoryCoursesShowcase({
             background: isSelected
               ? "conic-gradient(from 0deg, transparent 0deg, transparent 250deg, #FF5F00 295deg, #FFFFFF 335deg, transparent 360deg)"
               : "conic-gradient(from 0deg, transparent 0deg, transparent 270deg, rgba(255,95,0,0.55) 310deg, #FFFFFF 340deg, transparent 360deg)",
-            animation: `borderRotate ${isSelected ? '2.8s' : '4.5s'} linear infinite`,
+            animationName: "borderRotate",
+            animationDuration: isSelected ? "2.8s" : "4.5s",
+            animationTimingFunction: "linear",
+            animationIterationCount: "infinite",
             animationDelay: `${idx * -0.9}s`,
             opacity: isSelected ? 1 : 0.65,
           }}
@@ -659,7 +668,7 @@ export function CategoryCoursesShowcase({
     );
   };
   return (
-    <section id="category-courses-section" className="relative py-16 sm:py-20 lg:py-24 bg-background overflow-hidden">
+    <section id="category-courses-section" className="relative pt-10 sm:pt-14 pb-16 sm:pb-20 lg:pb-24 bg-background overflow-hidden">
       {/* Bulletproof Keyframe Animation for Border Beam */}
       <style
         dangerouslySetInnerHTML={{
@@ -741,6 +750,14 @@ export function CategoryCoursesShowcase({
             </div>
           )}
         </motion.div>
+
+        {/* Stats Bar (Audience / Students) placed directly between Category Pills and Course Cards */}
+        {statsBar && (
+          <div className="mb-10 sm:mb-14">
+            {statsBar}
+          </div>
+        )}
+
         {/* Dynamic Course Section (Animated with Framer Motion) */}
         <div>
           <motion.div

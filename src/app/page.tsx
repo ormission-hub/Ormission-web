@@ -84,14 +84,18 @@ export default async function Home() {
       {/* 1. Hero Section: Full-Width Billboard Slider with editable CTA buttons */}
       <HeroSection initialCategories={categories} initialHeroData={heroSettings} />
 
-      {/* 2. Stats Bar: Floating Capsule Card with Real DB Counts */}
-      <StatsBar
-        coursesCount={featuredCourses.length > 0 ? featuredCourses.length : 6}
-        instructorsCount={instructorsCount > 0 ? instructorsCount : 10}
+      {/* 2. Category & Course Showcase (With Audience / StatsBar placed between Category Pills and Course Cards) */}
+      <CategoryCoursesShowcase
+        courses={featuredCourses}
+        categories={categories}
+        statsBar={
+          <StatsBar
+            embedded
+            coursesCount={featuredCourses.length > 0 ? featuredCourses.length : 6}
+            instructorsCount={instructorsCount > 0 ? instructorsCount : 10}
+          />
+        }
       />
-
-      {/* 3. Bondi Pathshala Style Category & Course Animation Showcase */}
-      <CategoryCoursesShowcase courses={featuredCourses} categories={categories} />
 
       {/* 4. About Us: Authentic Group Photo & Narrative */}
       <AboutPreview />
