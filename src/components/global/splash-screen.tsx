@@ -7,11 +7,11 @@ import { motion, AnimatePresence } from "framer-motion";
 export function SplashScreen() {
   const [isVisible, setIsVisible] = useState(true);
 
-  // Auto dismiss after 800ms for a snappy, clean native-app feel
+  // Fast 350ms entry for an ultra snappy, native-app feel
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsVisible(false);
-    }, 800);
+    }, 350);
 
     return () => clearTimeout(timer);
   }, []);

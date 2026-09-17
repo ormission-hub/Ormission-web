@@ -946,6 +946,7 @@ export function CategoryCoursesShowcase({
                         alt={title}
                         fill
                         sizes="(max-width: 768px) 100vw, 400px"
+                        unoptimized={Boolean(course.thumbnail_url?.startsWith("http"))}
                         className="object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                     ) : (
@@ -954,9 +955,6 @@ export function CategoryCoursesShowcase({
                       </div>
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                    <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-xs font-bold text-white bg-black/40 backdrop-blur-md border border-white/10 font-bengali">
-                      {categoryName}
-                    </span>
                     <span className="absolute top-3 right-3 px-2 py-0.5 rounded-full text-[10.5px] font-black text-white bg-primary shadow-sm font-bengali flex items-center gap-1">
                       <Pin className="w-3 h-3 fill-white/30" /> পিন করা
                     </span>

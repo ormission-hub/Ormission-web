@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
-import { Star, User, ChevronLeft, ChevronRight, Quote, Sparkles, ExternalLink, Image as ImageIcon } from "lucide-react";
+import { Star, User, ChevronLeft, ChevronRight, Quote, Sparkles, ExternalLink } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SectionWrapper } from "@/components/global/section-wrapper";
 import { createClient } from "@/lib/supabase/client";
@@ -29,9 +29,12 @@ export function Testimonials({
   const [direction, setDirection] = useState(1);
   const [isPaused, setIsPaused] = useState(false);
 
+  // Sync if initialTestimonials update
   useEffect(() => {
-    // Only fetch client-side if server didn't already provide testimonials
-    if (initialTestimonials && initialTestimonials.length > 0) return;
+    if (initialTestimonials && initialTestimonials.length > 0) {
+      setTestimonials(initialTestimonials);
+      return;
+    }
 
     async function loadTestimonials() {
       const supabase = createClient();
@@ -46,7 +49,7 @@ export function Testimonials({
           setTestimonials(data);
         }
       } catch {
-        // Silent fallback to initial
+        // Silent fallback
       }
     }
 
@@ -55,7 +58,69 @@ export function Testimonials({
 
   const total = testimonials.length;
 
-  // Auto-slide every 6 seconds when not hovered
+  const handlePrev = () => {
+    setDirection(-1);
+    setCurrentIndex((prev) => (prev - 1 + total) % total);
+  };
+
+  const handleNext = () => {
+    setDirection(1);
+    setCurrentIndex((prev) => (prev + 1) % total);
+  };
+
+  // Touch & Swipe gesture handling for mobile & desktop (matching hero section)
+  const touchStartX = useRef<number | null>(null);
+  const touchEndX = useRef<number | null>(null);
+  const minSwipeDistance = 35;
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchEndX.current = null;
+    setIsPaused(true);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    setIsPaused(false);
+    if (touchStartX.current === null || touchEndX.current === null) return;
+    const distance = touchStartX.current - touchEndX.current;
+    if (distance > minSwipeDistance) {
+      handleNext();
+    } else if (distance < -minSwipeDistance) {
+      handlePrev();
+    }
+    touchStartX.current = null;
+    touchEndX.current = null;
+  };
+
+  // Mouse drag support for desktop
+  const mouseStartX = useRef<number | null>(null);
+  const isMouseDown = useRef<boolean>(false);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.button !== 0) return;
+    mouseStartX.current = e.clientX;
+    isMouseDown.current = true;
+    setIsPaused(true);
+  };
+
+  const handleMouseUp = (e: React.MouseEvent) => {
+    setIsPaused(false);
+    if (!isMouseDown.current || mouseStartX.current === null) return;
+    const distance = mouseStartX.current - e.clientX;
+    if (distance > minSwipeDistance) {
+      handleNext();
+    } else if (distance < -minSwipeDistance) {
+      handlePrev();
+    }
+    isMouseDown.current = false;
+    mouseStartX.current = null;
+  };
+
+  // Auto-slide every 6 seconds when not hovered/touched
   useEffect(() => {
     if (total <= 1 || isPaused) return;
     const interval = setInterval(() => {
@@ -69,48 +134,38 @@ export function Testimonials({
     return null;
   }
 
-  const handlePrev = () => {
-    setDirection(-1);
-    setCurrentIndex((prev) => (prev - 1 + total) % total);
-  };
+  const current = testimonials[currentIndex] || testimonials[0];
 
-  const handleNext = () => {
-    setDirection(1);
-    setCurrentIndex((prev) => (prev + 1) % total);
-  };
-
-  const current = testimonials[currentIndex];
-
-  // Slide transition variants
+  // Slide transition variants with hardware acceleration
   const slideVariants = {
     enter: (dir: number) => ({
-      x: dir > 0 ? 80 : -80,
+      x: dir > 0 ? 70 : -70,
       opacity: 0,
-      scale: 0.97,
+      scale: 0.98,
     }),
     center: {
       x: 0,
       opacity: 1,
       scale: 1,
       transition: {
-        x: { type: "spring" as const, stiffness: 300, damping: 30 },
-        opacity: { duration: 0.3 },
-        scale: { duration: 0.3 },
+        x: { type: "spring" as const, stiffness: 320, damping: 32 },
+        opacity: { duration: 0.25 },
+        scale: { duration: 0.25 },
       },
     },
     exit: (dir: number) => ({
-      x: dir > 0 ? -80 : 80,
+      x: dir > 0 ? -70 : 70,
       opacity: 0,
-      scale: 0.97,
+      scale: 0.98,
       transition: {
-        x: { type: "spring" as const, stiffness: 300, damping: 30 },
-        opacity: { duration: 0.2 },
+        x: { type: "spring" as const, stiffness: 320, damping: 32 },
+        opacity: { duration: 0.18 },
       },
     }),
   };
 
   return (
-    <SectionWrapper className="!pt-1 !pb-6 sm:!pt-2 sm:!pb-10 overflow-hidden">
+    <SectionWrapper className="!pt-1 !pb-5 sm:!pt-2 sm:!pb-8 overflow-hidden">
       {/* Section Header */}
       <div className="flex flex-col items-center justify-center mb-2.5 sm:mb-3.5 text-center">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold font-bengali mb-1.5">
@@ -130,7 +185,7 @@ export function Testimonials({
         </p>
       </div>
 
-      {/* ─── Testimonial Card Carousel ─── */}
+      {/* ─── Testimonial Card Carousel (Touchable & Swipeable) ─── */}
       <div
         className="max-w-3xl mx-auto relative px-2 sm:px-4"
         onMouseEnter={() => setIsPaused(true)}
@@ -139,15 +194,22 @@ export function Testimonials({
         {/* Soft ambient glow behind the card */}
         <div className="absolute inset-x-8 top-8 bottom-4 rounded-3xl bg-primary/8 dark:bg-primary/5 blur-2xl pointer-events-none" />
 
-        {/* Main Card */}
-        <div className="relative w-full rounded-2xl sm:rounded-3xl overflow-hidden bg-surface border border-border/60 dark:border-border/40 shadow-lg dark:shadow-2xl">
+        {/* Main Card with touch & mouse drag gestures */}
+        <div
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onMouseDown={handleMouseDown}
+          onMouseUp={handleMouseUp}
+          className="relative w-full rounded-2xl sm:rounded-3xl overflow-hidden bg-surface border border-border/60 dark:border-border/40 shadow-lg dark:shadow-2xl select-none cursor-grab active:cursor-grabbing touch-pan-y"
+        >
           {/* Top accent strip */}
           <div className="h-1 w-full bg-gradient-to-r from-primary/60 via-primary to-primary/60" />
 
           {/* Content area */}
-          <div className="relative px-6 sm:px-12 lg:px-16 pt-8 sm:pt-10 pb-6 sm:pb-8">
+          <div className="relative px-5 sm:px-12 lg:px-16 pt-7 sm:pt-10 pb-5 sm:pb-8">
             {/* Decorative large quote mark */}
-            <div className="absolute top-4 left-4 sm:top-6 sm:left-8">
+            <div className="absolute top-4 left-4 sm:top-6 sm:left-8 pointer-events-none">
               <Quote className="w-10 h-10 sm:w-14 sm:h-14 text-primary/10 dark:text-primary/8 rotate-180" />
             </div>
 
@@ -163,7 +225,7 @@ export function Testimonials({
                 className="w-full flex flex-col items-center text-center"
               >
                 {/* Star Rating */}
-                <div className="flex items-center gap-1 mb-5">
+                <div className="flex items-center gap-1 mb-4 sm:mb-5">
                   {[...Array(current.rating || 5)].map((_, i) => (
                     <Star key={i} className="w-4 h-4 sm:w-[18px] sm:h-[18px] fill-amber-400 text-amber-400" />
                   ))}
@@ -195,7 +257,7 @@ export function Testimonials({
 
                   if (isImageReview && reviewImageUrl) {
                     return (
-                      <div className="relative mb-6 sm:mb-8 max-w-lg sm:max-w-xl mx-auto w-full">
+                      <div className="relative mb-5 sm:mb-8 max-w-lg sm:max-w-xl mx-auto w-full">
                         <div className="relative rounded-2xl overflow-hidden border border-border/80 dark:border-border/60 bg-surface-secondary/40 dark:bg-slate-900/70 shadow-md group transition-all duration-300 hover:shadow-xl hover:border-primary/40">
                           {/* Review Image / Screenshot */}
                           <div className="relative w-full flex items-center justify-center p-2 sm:p-3.5 bg-black/5 dark:bg-black/25">
@@ -204,6 +266,7 @@ export function Testimonials({
                               alt={`Review from ${current.student_name}`}
                               className="w-auto h-auto max-h-[290px] sm:max-h-[390px] object-contain rounded-xl shadow-xs transition-transform duration-300 group-hover:scale-[1.01]"
                               loading="lazy"
+                              decoding="async"
                             />
                           </div>
 
@@ -213,6 +276,7 @@ export function Testimonials({
                             target="_blank"
                             rel="noopener noreferrer"
                             className="absolute bottom-3 right-3 px-2.5 py-1 rounded-lg bg-black/75 hover:bg-black/90 text-white text-[11px] font-bold backdrop-blur-md border border-white/20 flex items-center gap-1.5 transition-all opacity-90 hover:opacity-100 shadow-md font-bengali"
+                            onClick={(e) => e.stopPropagation()}
                           >
                             <ExternalLink className="w-3.5 h-3.5" />
                             <span>বড় করে দেখুন</span>
@@ -230,7 +294,7 @@ export function Testimonials({
                   }
 
                   return (
-                    <blockquote className="relative mb-7 sm:mb-8 max-w-xl mx-auto">
+                    <blockquote className="relative mb-6 sm:mb-8 max-w-xl mx-auto">
                       <p className="text-base sm:text-lg lg:text-xl font-semibold font-bengali leading-relaxed sm:leading-loose text-text">
                         &ldquo;{current.review}&rdquo;
                       </p>
@@ -239,18 +303,19 @@ export function Testimonials({
                 })()}
 
                 {/* Divider */}
-                <div className="w-12 h-0.5 bg-primary/25 rounded-full mb-5 sm:mb-6" />
+                <div className="w-12 h-0.5 bg-primary/25 rounded-full mb-4 sm:mb-6" />
 
                 {/* Student Info */}
-                <div className="flex flex-col items-center gap-3">
+                <div className="flex flex-col items-center gap-2.5">
                   {/* Photo */}
-                  <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full ring-2 ring-primary/20 ring-offset-2 ring-offset-surface overflow-hidden">
+                  <div className="relative w-13 h-13 sm:w-16 sm:h-16 rounded-full ring-2 ring-primary/20 ring-offset-2 ring-offset-surface overflow-hidden">
                     {current.student_photo ? (
                       <Image
                         src={current.student_photo}
                         alt={current.student_name}
                         fill
                         sizes="64px"
+                        loading="lazy"
                         className="rounded-full object-cover"
                       />
                     ) : (
@@ -278,25 +343,29 @@ export function Testimonials({
             </AnimatePresence>
           </div>
 
-          {/* Bottom bar: pagination + nav */}
-          <div className="relative px-6 sm:px-12 pb-5 sm:pb-6 flex items-center justify-center gap-4">
+          {/* Bottom bar: pagination + subtle arrows */}
+          <div className="relative px-6 sm:px-12 pb-5 sm:pb-6 flex items-center justify-center gap-3.5">
             {/* Prev button */}
             <button
               type="button"
-              onClick={handlePrev}
+              onClick={(e) => {
+                e.stopPropagation();
+                handlePrev();
+              }}
               aria-label="Previous Testimonial"
-              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-border/80 dark:border-border/50 bg-surface-secondary/60 dark:bg-surface-secondary/40 hover:bg-primary/10 dark:hover:bg-primary/15 text-text-muted hover:text-primary flex items-center justify-center transition-all duration-200 cursor-pointer focus:outline-none"
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border border-border/80 dark:border-border/50 bg-surface-secondary/60 dark:bg-surface-secondary/40 hover:bg-primary/10 dark:hover:bg-primary/15 text-text-muted hover:text-primary flex items-center justify-center transition-all duration-200 cursor-pointer focus:outline-none"
             >
-              <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+              <ChevronLeft className="w-4 h-4" />
             </button>
 
-            {/* Dots */}
+            {/* Touch Indicator Dots */}
             <div className="flex items-center gap-1.5 sm:gap-2">
               {testimonials.map((_, idx) => (
                 <button
                   key={idx}
                   type="button"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     setDirection(idx > currentIndex ? 1 : -1);
                     setCurrentIndex(idx);
                   }}
@@ -313,11 +382,14 @@ export function Testimonials({
             {/* Next button */}
             <button
               type="button"
-              onClick={handleNext}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleNext();
+              }}
               aria-label="Next Testimonial"
-              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-border/80 dark:border-border/50 bg-surface-secondary/60 dark:bg-surface-secondary/40 hover:bg-primary/10 dark:hover:bg-primary/15 text-text-muted hover:text-primary flex items-center justify-center transition-all duration-200 cursor-pointer focus:outline-none"
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border border-border/80 dark:border-border/50 bg-surface-secondary/60 dark:bg-surface-secondary/40 hover:bg-primary/10 dark:hover:bg-primary/15 text-text-muted hover:text-primary flex items-center justify-center transition-all duration-200 cursor-pointer focus:outline-none"
             >
-              <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+              <ChevronRight className="w-4 h-4" />
             </button>
           </div>
         </div>

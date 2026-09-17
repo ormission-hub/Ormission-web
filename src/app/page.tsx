@@ -2,7 +2,6 @@ import { HeroSection } from "@/components/home/hero-section";
 import { StatsBar } from "@/components/home/stats-bar";
 import { CategoryCoursesShowcase } from "@/components/home/category-courses-showcase";
 import { AboutPreview } from "@/components/home/about-preview";
-import { WhyChooseUs } from "@/components/home/why-choose-us";
 import { Testimonials } from "@/components/home/testimonials";
 import { createClient } from "@/lib/supabase/server";
 
@@ -126,12 +125,7 @@ export default async function Home() {
         <AboutPreview initialInstructors={initialInstructors} />
       </div>
 
-      {/* 5. Why Choose Ormission: Core USPs & Features */}
-      <div className="content-visibility-auto">
-        <WhyChooseUs />
-      </div>
-
-      {/* 6. Testimonials: Real Student Reviews from Supabase (Zero Mock Data) */}
+      {/* 5. Testimonials: Real Student Reviews from Supabase (Zero Mock Data) */}
       <div className="content-visibility-auto">
         <Testimonials initialTestimonials={testimonials} />
       </div>
