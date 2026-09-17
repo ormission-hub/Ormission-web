@@ -2,7 +2,7 @@ import { Course, CurriculumSection } from "../data/courses";
 import { Instructor, INSTRUCTORS } from "../data/instructors";
 
 export const DEFAULT_COURSE_THUMBNAIL =
-  "https://images.unsplash.com/photo-1636466497217-26a8cbeaf0aa?q=80&w=800&auto=format&fit=crop";
+  "https://oorovtqwyfrfjfwuufyi.supabase.co/storage/v1/object/public/hero_images/hero_1789356392635_x4rpk6.webp";
 
 export function mapDbCourseToAppCourse(dbCourse: any): Course {
   const cat = Array.isArray(dbCourse.categories)

@@ -46,9 +46,6 @@ export async function getLiveCourseBySlug(
   return { course, instructor };
 }
 
-/**
- * Fetch all courses (Supabase first, merged with static)
- */
 export async function getLiveCourses(): Promise<Course[]> {
   try {
     const supabase = await createServerClient();
@@ -63,16 +60,13 @@ export async function getLiveCourses(): Promise<Course[]> {
       .order("created_at", { ascending: false });
 
     if (!error && data && data.length > 0) {
-      const dbMapped = data.map(mapDbCourseToAppCourse);
-      const dbSlugs = new Set(dbMapped.map((c) => c.slug));
-      const remainingStatic = COURSES.filter((c) => !dbSlugs.has(c.slug));
-      return [...dbMapped, ...remainingStatic];
+      return data.map(mapDbCourseToAppCourse);
     }
   } catch (err) {
-    console.warn("Failed to load courses from DB, using fallback:", err);
+    console.warn("Failed to load courses from DB:", err);
   }
 
-  return COURSES;
+  return [];
 }
 
 /**

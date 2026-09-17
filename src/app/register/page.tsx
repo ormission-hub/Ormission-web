@@ -1,7 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   User,
@@ -21,8 +21,10 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
-export default function RegisterPage() {
+function RegisterContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const targetDestination = searchParams.get("redirect") || "/dashboard?welcome=true";
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -40,8 +42,6 @@ export default function RegisterPage() {
   const [verificationPending, setVerificationPending] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
   const [resending, setResending] = useState(false);
-  const [otpCode, setOtpCode] = useState("");
-  const [otpVerifying, setOtpVerifying] = useState(false);
 
   // Password strength calculation
   const calculateStrength = (pass: string) => {
@@ -86,7 +86,7 @@ export default function RegisterPage() {
 
     try {
       const supabase = createClient();
-      const redirectUrl = `${window.location.origin}/auth/callback`;
+      const emailCallbackUrl = `${window.location.origin}/auth/callback?redirect=${encodeURIComponent(targetDestination)}`;
 
       const { data, error } = await supabase.auth.signUp({
         email: formData.email.trim(),
@@ -97,14 +97,14 @@ export default function RegisterPage() {
             phone: formData.phone.trim(),
             academic_level: formData.academicLevel,
           },
-          emailRedirectTo: redirectUrl,
+          emailRedirectTo: emailCallbackUrl,
         },
       });
 
       if (error) throw error;
 
       if (data.session) {
-        router.push("/dashboard?welcome=true");
+        router.push(targetDestination);
         return;
       }
 
@@ -141,46 +141,22 @@ export default function RegisterPage() {
     setErrorMessage(null);
     try {
       const supabase = createClient();
+      const emailCallbackUrl = `${window.location.origin}/auth/callback?redirect=${encodeURIComponent(targetDestination)}`;
       const { error } = await supabase.auth.resend({
         type: "signup",
         email: formData.email.trim(),
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: emailCallbackUrl,
         },
       });
       if (error) throw error;
       startResendCountdown();
-      alert("ভেরিফিকেশন ইমেইল পুনরায় পাঠানো হয়েছে! ইনবক্স বা স্প্যাম ফোল্ডার চেক করুন।");
+      alert("ভেরিফিকেশন কনফার্মেশন ইমেইল পুনরায় পাঠানো হয়েছে! ইনবক্স বা স্প্যাম ফোল্ডার চেক করুন।");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "ইমেইল পুনরায় পাঠাতে সমস্যা হয়েছে";
       setErrorMessage(msg);
     } finally {
       setResending(false);
-    }
-  };
-
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!otpCode.trim()) return;
-
-    setOtpVerifying(true);
-    setErrorMessage(null);
-    try {
-      const supabase = createClient();
-      const { error } = await supabase.auth.verifyOtp({
-        email: formData.email.trim(),
-        token: otpCode.trim(),
-        type: "signup",
-      });
-
-      if (error) throw error;
-
-      router.push("/dashboard?verified=true");
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "ভেরিফিকেশন কোডটি সঠিক নয়";
-      setErrorMessage(msg);
-    } finally {
-      setOtpVerifying(false);
     }
   };
 
@@ -305,7 +281,7 @@ export default function RegisterPage() {
                     exit={{ opacity: 0, scale: 0.95 }}
                     className="text-center py-4 space-y-6 font-bengali"
                   >
-                    <div className="w-16 h-16 rounded-2xl bg-blue-50 dark:bg-blue-500/20 border border-blue-200 dark:border-blue-500/40 flex items-center justify-center mx-auto text-blue-600 dark:text-blue-400 relative">
+                    <div className="w-16 h-16 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mx-auto text-blue-600 dark:text-blue-400 relative">
                       <Mail className="w-8 h-8 animate-bounce" />
                       <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs shadow-sm">
                         <Check className="w-3 h-3 stroke-[3]" />
@@ -313,14 +289,14 @@ export default function RegisterPage() {
                     </div>
 
                     <div>
-                      <span className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20 mb-2">
-                        ইমেইল যাচাইকরণ বাকি আছে
+                      <span className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20 mb-2">
+                        কনফার্মেশন ইমেইল পাঠানো হয়েছে
                       </span>
                       <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                        আপনার ইমেইল ইনবক্স চেক করুন
+                        আপনার ইমেইল ভেরিফাই করুন
                       </h2>
                       <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-2 max-w-md mx-auto leading-relaxed">
-                        আমরা একটি ভেরিফিকেশন লিংক ও ওটিপি কোড পাঠিয়েছি:
+                        আমরা আপনার এই ঠিকানায় একটি অ্যাক্টিভেশন লিংক পাঠিয়েছি:
                       </p>
                       <div className="inline-block px-4 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 mt-2 text-sm font-bold text-blue-700 dark:text-blue-300 font-sans select-all shadow-inner">
                         {formData.email}
@@ -334,13 +310,41 @@ export default function RegisterPage() {
                       </div>
                     )}
 
+                    {/* Step-by-Step Instructions Box */}
+                    <div className="max-w-md mx-auto text-left p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 space-y-2.5 text-xs text-slate-700 dark:text-slate-300">
+                      <div className="flex items-start gap-2.5">
+                        <div className="w-5 h-5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold flex items-center justify-center shrink-0 text-[11px]">
+                          ১
+                        </div>
+                        <p className="pt-0.5">
+                          আপনার ইমেইল ইনবক্স চেক করুন (অথবা নিচের বাটনে ক্লিক করে Gmail খুলুন)।
+                        </p>
+                      </div>
+                      <div className="flex items-start gap-2.5">
+                        <div className="w-5 h-5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold flex items-center justify-center shrink-0 text-[11px]">
+                          ২
+                        </div>
+                        <p className="pt-0.5">
+                          Ormission থেকে আসা ইমেইলের ভেতরের <strong className="text-blue-600 dark:text-blue-400 font-bold">&quot;Verify Email Address&quot;</strong> বাটনে ক্লিক করুন।
+                        </p>
+                      </div>
+                      <div className="flex items-start gap-2.5">
+                        <div className="w-5 h-5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold flex items-center justify-center shrink-0 text-[11px]">
+                          ৩
+                        </div>
+                        <p className="pt-0.5">
+                          ক্লিক করার সাথে সাথে অ্যাকাউন্ট সক্রিয় হবে এবং সরাসরি কোর্সের চেকআউট পাতায় নিয়ে যাবে।
+                        </p>
+                      </div>
+                    </div>
+
                     {/* 1-Click Open Webmail Buttons */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-md mx-auto pt-1">
                       <a
                         href="https://mail.google.com"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-xs shadow-xs transition-all hover:-translate-y-0.5 bg-slate-950 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-100"
+                        className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-xs shadow-xs transition-all hover:-translate-y-0.5 bg-slate-950 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-100 cursor-pointer"
                       >
                         <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                           <path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 0 1 0 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L5.455 4.64 12 9.548l6.545-4.91 1.528-1.145C21.69 2.28 24 3.434 24 5.457z" />
@@ -353,7 +357,7 @@ export default function RegisterPage() {
                         href="https://outlook.live.com"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs transition-all hover:-translate-y-0.5"
+                        className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs transition-all hover:-translate-y-0.5 cursor-pointer"
                       >
                         <Mail className="w-4 h-4 text-slate-500 dark:text-slate-400" />
                         <span>অন্যান্য ইমেইল ইনবক্স</span>
@@ -361,35 +365,11 @@ export default function RegisterPage() {
                       </a>
                     </div>
 
-                    {/* 6-Digit OTP Code Option */}
-                    <div className="max-w-md mx-auto pt-4 border-t border-slate-200 dark:border-slate-800">
-                      <p className="text-xs text-slate-600 dark:text-slate-400 mb-3">
-                        ইমেইলে প্রাপ্ত ৬ ডিজিটের কোডটি এখানে লিখে সরাসরি ভেরিফাই করুন:
-                      </p>
-                      <form onSubmit={handleVerifyOtp} className="flex gap-2">
-                        <input
-                          type="text"
-                          maxLength={6}
-                          placeholder="৬ ডিজিটের কোড"
-                          value={otpCode}
-                          onChange={(e) => setOtpCode(e.target.value)}
-                          className="flex-1 px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-center text-sm font-sans tracking-[0.25em] font-bold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
-                        />
-                        <button
-                          type="submit"
-                          disabled={otpVerifying || !otpCode.trim()}
-                          className="px-5 py-2.5 rounded-xl font-bold text-xs shrink-0 transition-all bg-slate-950 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-100 disabled:opacity-50"
-                        >
-                          {otpVerifying ? "যাচাই..." : "ভেরিফাই"}
-                        </button>
-                      </form>
-                    </div>
-
                     {/* Resend & Help */}
-                    <div className="pt-2 text-xs text-slate-600 dark:text-slate-400 space-y-2">
+                    <div className="pt-2 text-xs text-slate-600 dark:text-slate-400 space-y-2.5">
                       <p>
                         ইমেইল খুঁজে না পেলে অনুগ্রহ করে আপনার{" "}
-                        <strong className="text-slate-900 dark:text-slate-200 font-semibold">Spam / Junk</strong> ফোল্ডার চেক করুন।
+                        <strong className="text-slate-900 dark:text-slate-200 font-semibold">Spam / Junk / Promotions</strong> ফোল্ডার চেক করুন।
                       </p>
 
                       <div>
@@ -397,22 +377,22 @@ export default function RegisterPage() {
                           type="button"
                           disabled={resendTimer > 0 || resending}
                           onClick={handleResendVerificationEmail}
-                          className="inline-flex items-center gap-1.5 text-blue-600 dark:text-blue-400 hover:underline font-bold disabled:text-slate-400 dark:disabled:text-slate-500 disabled:no-underline"
+                          className="inline-flex items-center gap-1.5 text-blue-600 dark:text-blue-400 hover:underline font-bold disabled:text-slate-400 dark:disabled:text-slate-500 disabled:no-underline cursor-pointer"
                         >
                           <RefreshCw className={`w-3.5 h-3.5 ${resending ? "animate-spin" : ""}`} />
                           <span>
                             {resendTimer > 0
                               ? `পুনরায় ইমেইল পাঠাতে অপেক্ষা করুন (${resendTimer} সেকেন্ড)`
-                              : "পুনরায় ভেরিফিকেশন ইমেইল পাঠান"}
+                              : "পুনরায় কনফার্মেশন ইমেইল পাঠান"}
                           </span>
                         </button>
                       </div>
 
-                      <div className="pt-2">
+                      <div className="pt-1">
                         <button
                           type="button"
                           onClick={() => setVerificationPending(false)}
-                          className="text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 underline text-[11px]"
+                          className="text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 underline text-[11px] cursor-pointer"
                         >
                           ভুল ইমেইল দিয়েছেন? পুনরায় তথ্য পরিবর্তন করুন
                         </button>
@@ -445,7 +425,7 @@ export default function RegisterPage() {
                       </div>
 
                       <Link
-                        href="/login"
+                        href={searchParams.get("redirect") ? `/login?redirect=${encodeURIComponent(searchParams.get("redirect")!)}` : "/login"}
                         className="hidden sm:inline-flex items-center gap-1 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline font-bengali shrink-0 pt-2"
                       >
                         <span>লগইন করুন</span>
@@ -635,7 +615,10 @@ export default function RegisterPage() {
                       {/* Mobile Login Link */}
                       <div className="text-center pt-2 sm:hidden">
                         <span className="text-xs text-slate-500 dark:text-slate-400">ইতিমধ্যে অ্যাকাউন্ট আছে? </span>
-                        <Link href="/login" className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline">
+                        <Link
+                          href={searchParams.get("redirect") ? `/login?redirect=${encodeURIComponent(searchParams.get("redirect")!)}` : "/login"}
+                          className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline"
+                        >
                           লগইন করুন
                         </Link>
                       </div>
@@ -648,5 +631,19 @@ export default function RegisterPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <p className="text-sm font-bengali text-text-muted">লোড হচ্ছে...</p>
+        </div>
+      }
+    >
+      <RegisterContent />
+    </Suspense>
   );
 }

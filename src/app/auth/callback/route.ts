@@ -5,7 +5,8 @@ import { NextResponse } from "next/server";
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/dashboard";
+  const rawTarget = searchParams.get("redirect") || searchParams.get("next") || "/dashboard";
+  const targetPath = rawTarget.startsWith("/") ? rawTarget : `/${rawTarget}`;
 
   if (code) {
     const cookieStore = await cookies();
@@ -51,7 +52,8 @@ export async function GET(request: Request) {
         console.error("Profile sync error on verification:", err);
       }
 
-      return NextResponse.redirect(`${origin}${next}?verified=true`);
+      const separator = targetPath.includes("?") ? "&" : "?";
+      return NextResponse.redirect(`${origin}${targetPath}${separator}verified=true`);
     }
   }
 

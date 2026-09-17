@@ -1,144 +1,237 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Play, BookOpen, Clock, Award, CheckCircle2 } from "lucide-react";
+import {
+  Play,
+  BookOpen,
+  Clock,
+  CheckCircle2,
+  Receipt,
+  RefreshCw,
+  ArrowRight,
+  Sparkles,
+} from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 import { COURSES } from "@/lib/data/courses";
 
 export default function MyCoursesPage() {
-  const [filter, setFilter] = useState<"all" | "in-progress" | "completed">("all");
+  const [filter, setFilter] = useState<"all" | "approved" | "pending">("all");
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const myCourses = [
-    { course: COURSES[0], progress: 65, completedLessons: 53, totalLessons: 82 },
-    { course: COURSES[1], progress: 40, completedLessons: 30, totalLessons: 74 },
-    { course: COURSES[2], progress: 100, completedLessons: 90, totalLessons: 90 },
-  ];
+  const loadCourses = async () => {
+    setLoading(true);
+    try {
+      const supabase = createClient();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
-  const filtered = myCourses.filter((item) => {
-    if (filter === "in-progress") return item.progress < 100;
-    if (filter === "completed") return item.progress === 100;
-    return true;
-  });
+      if (session?.user) {
+        const res = await fetch(`/api/orders?userId=${session.user.id}`);
+        const data = await res.json();
+        if (data.success && Array.isArray(data.data)) {
+          setOrders(data.data);
+        }
+      }
+    } catch (e) {
+      console.error("Error loading student courses:", e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadCourses();
+  }, []);
+
+  const approvedOrders = orders.filter(
+    (o) => o.status === "paid" || o.status === "completed"
+  );
+  const pendingOrders = orders.filter((o) => o.status === "pending");
+
+  const displayedList =
+    filter === "approved"
+      ? approvedOrders
+      : filter === "pending"
+      ? pendingOrders
+      : orders;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 font-bengali">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-text font-bengali">
-            আমার নথিভুক্ত কোর্সসমূহ
+          <h1 className="text-2xl font-bold text-text">
+            আমার নথিভুক্ত কোর্সসমূহ ({orders.length})
           </h1>
-          <p className="text-xs text-text-muted font-bengali mt-0.5">
-            আপনার ক্রয়কৃত সকল কোর্স ও ক্লাসের বর্তমান অগ্রগতি
+          <p className="text-xs text-text-muted mt-0.5">
+            আপনার সকল অনুমোদিত ও অপেক্ষমান কোর্সের ক্লাসরুম তালিকা
           </p>
         </div>
 
         {/* Filter Tabs */}
-        <div className="flex items-center gap-1.5 p-1 bg-surface-secondary rounded-lg text-xs font-bengali font-semibold">
+        <div className="flex items-center gap-1.5 p-1 bg-surface-secondary/80 rounded-xl text-xs font-semibold border border-border/60">
           <button
             type="button"
             onClick={() => setFilter("all")}
-            className={`px-3 py-1.5 rounded-md transition-all ${
+            className={`px-3 py-1.5 rounded-lg transition-all ${
               filter === "all"
-                ? "bg-surface text-primary shadow-xs"
+                ? "bg-surface text-primary shadow-xs font-bold"
                 : "text-text-muted hover:text-text"
             }`}
           >
-            সকল ({myCourses.length})
+            সকল ({orders.length})
           </button>
           <button
             type="button"
-            onClick={() => setFilter("in-progress")}
-            className={`px-3 py-1.5 rounded-md transition-all ${
-              filter === "in-progress"
-                ? "bg-surface text-primary shadow-xs"
+            onClick={() => setFilter("approved")}
+            className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 ${
+              filter === "approved"
+                ? "bg-surface text-emerald-600 dark:text-emerald-400 shadow-xs font-bold"
                 : "text-text-muted hover:text-text"
             }`}
           >
-            চলমান (২)
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            <span>অনুমোদিত ({approvedOrders.length})</span>
           </button>
           <button
             type="button"
-            onClick={() => setFilter("completed")}
-            className={`px-3 py-1.5 rounded-md transition-all ${
-              filter === "completed"
-                ? "bg-surface text-primary shadow-xs"
+            onClick={() => setFilter("pending")}
+            className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 ${
+              filter === "pending"
+                ? "bg-surface text-amber-600 dark:text-amber-400 shadow-xs font-bold"
                 : "text-text-muted hover:text-text"
             }`}
           >
-            সম্পন্ন (১)
+            <Clock className="w-3.5 h-3.5" />
+            <span>অপেক্ষমান ({pendingOrders.length})</span>
           </button>
         </div>
       </div>
 
       {/* Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {filtered.map(({ course, progress, completedLessons, totalLessons }) => {
-          const isCompleted = progress === 100;
+      {loading ? (
+        <div className="bg-surface rounded-2xl border border-border p-12 text-center text-xs text-text-muted">
+          <RefreshCw className="w-6 h-6 mx-auto mb-2 animate-spin text-primary" />
+          আপনার নথিভুক্ত কোর্সগুলো লোড হচ্ছে...
+        </div>
+      ) : displayedList.length === 0 ? (
+        <div className="bg-surface rounded-2xl border border-border p-12 text-center shadow-xs">
+          <BookOpen className="w-12 h-12 mx-auto mb-3 opacity-30 text-text-muted" />
+          <h3 className="text-base font-bold text-text mb-1">
+            {filter === "pending"
+              ? "কোনো কোর্স বর্তমানে অপেক্ষমান নেই"
+              : filter === "approved"
+              ? "কোনো অনুমোদিত কোর্স এখনো নেই"
+              : "আপনার কোনো নথিভুক্ত কোর্স নেই"}
+          </h3>
+          <p className="text-xs text-text-muted mb-4 max-w-sm mx-auto">
+            আপনার পছন্দের কোর্সে ভর্তি হয়ে অনলাইন ক্লাস শুরু করুন।
+          </p>
+          <Link
+            href="/courses"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-white text-xs font-bold shadow-xs hover:bg-primary-hover transition-colors"
+          >
+            <span>কোর্সসমূহ এক্সপ্লোর করুন</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {displayedList.map((order) => {
+            const isApproved =
+              order.status === "paid" || order.status === "completed";
+            const slug = order.courses?.slug || "test-course";
+            const thumb =
+              order.courses?.thumbnail_url || COURSES[0].thumbnail;
 
-          return (
-            <div
-              key={course.id}
-              className="bg-surface rounded-lg border border-border overflow-hidden flex flex-col justify-between hover:border-primary/40 hover:shadow-xs transition-all"
-            >
-              <div>
-                <div className="relative aspect-video w-full overflow-hidden bg-slate-900">
-                  <Image
-                    src={course.thumbnail}
-                    alt={course.titleBn}
-                    fill
-                    className="object-cover"
-                  />
-                  {isCompleted && (
-                    <span className="absolute top-3 right-3 px-2.5 py-1 rounded bg-success text-white text-xs font-semibold font-bengali flex items-center gap-1 shadow-xs">
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span>সম্পন্ন হয়েছে</span>
-                    </span>
-                  )}
-                </div>
+            return (
+              <div
+                key={order.id}
+                className={`bg-surface rounded-2xl border overflow-hidden flex flex-col justify-between shadow-xs transition-all ${
+                  isApproved
+                    ? "border-border hover:border-primary/40"
+                    : "border-amber-500/30 bg-amber-500/[0.02]"
+                }`}
+              >
+                <div>
+                  <div className="relative aspect-video w-full overflow-hidden bg-slate-900">
+                    <Image
+                      src={thumb}
+                      alt={order.courseTitle}
+                      fill
+                      className="object-cover"
+                    />
 
-                <div className="p-5">
-                  <span className="text-xs font-semibold text-secondary font-bengali">
-                    {course.categoryNameBn}
-                  </span>
-                  <h3 className="font-bold text-base text-text font-bengali line-clamp-2 mt-1 mb-4 leading-snug">
-                    {course.titleBn}
-                  </h3>
-
-                  {/* Progress Bar */}
-                  <div className="space-y-1.5 mb-4">
-                    <div className="flex items-center justify-between text-xs text-text-muted font-bengali">
-                      <span>অগ্রগতি: {completedLessons}/{totalLessons} লেসন</span>
-                      <span className="font-bold text-text font-sans">{progress}%</span>
-                    </div>
-                    <div className="w-full h-2 bg-surface-secondary rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all duration-500 ${
-                          isCompleted ? "bg-success" : "bg-primary"
-                        }`}
-                        style={{ width: `${progress}%` }}
-                      />
+                    <div className="absolute top-3 right-3">
+                      {isApproved ? (
+                        <span className="px-2.5 py-1 rounded-lg bg-emerald-500 text-white text-xs font-bold flex items-center gap-1 shadow-sm">
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span>অনুমোদিত</span>
+                        </span>
+                      ) : (
+                        <span className="px-2.5 py-1 rounded-lg bg-amber-500 text-white text-xs font-bold flex items-center gap-1 shadow-sm">
+                          <Clock className="w-3.5 h-3.5 animate-pulse" />
+                          <span>ভেরিফিকেশন চলছে</span>
+                        </span>
+                      )}
                     </div>
                   </div>
+
+                  <div className="p-5">
+                    <div className="flex items-center justify-between text-[11px] text-text-muted mb-1.5 font-sans">
+                      <span>অর্ডার: {order.orderNumber}</span>
+                      <span className="uppercase font-semibold text-primary">
+                        {order.payment_method || "bKash"}
+                      </span>
+                    </div>
+
+                    <h3 className="font-bold text-base text-text leading-snug mb-2">
+                      {order.courseTitle}
+                    </h3>
+
+                    {isApproved ? (
+                      <p className="text-xs text-text-muted">
+                        আপনার এই কোর্সের পূর্ণাঙ্গ ক্লাসরুম অ্যাক্সেস সক্রিয় রয়েছে।
+                      </p>
+                    ) : (
+                      <div className="text-xs text-amber-700 dark:text-amber-300 bg-amber-500/10 p-2.5 rounded-xl border border-amber-500/20">
+                        <p className="font-bold">TrxID: {order.transactionId || "Reviewing"}</p>
+                        <p className="text-[11px] opacity-90 mt-0.5">
+                          অ্যাডমিন টিম পেমেন্টটি যাচাই করছে, যাচাই সম্পন্ন হলে ক্লাসরুম বাটনটি চালু হবে।
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="p-5 pt-0">
+                  {isApproved ? (
+                    <Link
+                      href={`/course/${slug}/learn/les-1`}
+                      className="w-full py-2.5 px-4 rounded-xl font-bold text-xs text-white bg-primary hover:bg-primary-hover flex items-center justify-center gap-2 shadow-xs transition-colors"
+                    >
+                      <Play className="w-3.5 h-3.5 fill-white" />
+                      <span>ক্লাসরুমে প্রবেশ করুন</span>
+                    </Link>
+                  ) : (
+                    <Link
+                      href="/dashboard/orders"
+                      className="w-full py-2.5 px-4 rounded-xl font-bold text-xs text-text bg-surface-secondary hover:bg-surface-secondary/80 border border-border flex items-center justify-center gap-2 transition-colors"
+                    >
+                      <Receipt className="w-3.5 h-3.5 text-primary" />
+                      <span>অর্ডারের বিবরণ দেখুন</span>
+                    </Link>
+                  )}
                 </div>
               </div>
-
-              <div className="p-5 pt-0">
-                <Link
-                  href={`/course/${course.slug}/learn/l-1-1`}
-                  className={`btn btn-sm w-full font-bengali font-semibold flex items-center justify-center gap-2 ${
-                    isCompleted ? "btn-outline" : "btn-primary"
-                  }`}
-                >
-                  <Play className="w-3.5 h-3.5 fill-current" />
-                  <span>{isCompleted ? "পুনরায় ক্লাস রিভিশন করুন" : "ক্লাস চালিয়ে যান"}</span>
-                </Link>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

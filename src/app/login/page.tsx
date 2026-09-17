@@ -1,7 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   Mail,
@@ -20,8 +20,10 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get("redirect") || "/dashboard";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -69,7 +71,7 @@ export default function LoginPage() {
       }
 
       if (data.session) {
-        router.push("/dashboard");
+        router.push(redirectUrl);
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "লগইন ব্যর্থ হয়েছে";
@@ -200,7 +202,7 @@ export default function LoginPage() {
                 </div>
 
                 <Link
-                  href="/register"
+                  href={searchParams.get("redirect") ? `/register?redirect=${encodeURIComponent(searchParams.get("redirect")!)}` : "/register"}
                   className="hidden sm:inline-flex items-center gap-1 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline font-bengali shrink-0 pt-2"
                 >
                   <span>নতুন অ্যাকাউন্ট খুলুন</span>
@@ -326,7 +328,10 @@ export default function LoginPage() {
                 {/* Mobile Switch Link */}
                 <div className="text-center pt-2 sm:hidden">
                   <span className="text-xs text-slate-500 dark:text-slate-400">নতুন শিক্ষার্থী? </span>
-                  <Link href="/register" className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline">
+                  <Link
+                    href={searchParams.get("redirect") ? `/register?redirect=${encodeURIComponent(searchParams.get("redirect")!)}` : "/register"}
+                    className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline"
+                  >
                     রেজিস্ট্রেশন করুন
                   </Link>
                 </div>
@@ -336,5 +341,19 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <p className="text-sm font-bengali text-text-muted">লোড হচ্ছে...</p>
+        </div>
+      }
+    >
+      <LoginContent />
+    </Suspense>
   );
 }

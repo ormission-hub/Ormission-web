@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -14,15 +15,21 @@ import {
   LogIn,
   ArrowRight,
   ChevronRight,
+  ChevronDown,
   BookOpen,
   Layers,
   FileText,
   Users,
   PhoneCall,
+  LayoutDashboard,
+  Receipt,
+  User as UserIcon,
+  LogOut,
 } from "lucide-react";
 import { BrandLogo } from "@/components/global/brand-logo";
 import { useTheme } from "@/components/global/theme-provider";
 import { cn } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
 
 const navItems = [
   { label: "কোর্স সমূহ", href: "/courses", icon: BookOpen },
@@ -37,9 +44,72 @@ export function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [user, setUser] = useState<any>(null);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
   const { resolvedTheme, toggleTheme } = useTheme();
   const pathname = usePathname();
   const router = useRouter();
+
+  // Supabase Auth listener
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  // Close user dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setIsUserMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      const supabase = createClient();
+      await supabase.auth.signOut();
+      setUser(null);
+      setIsUserMenuOpen(false);
+      setIsMobileMenuOpen(false);
+      router.push("/login");
+      router.refresh();
+    } catch (err) {
+      console.error("Logout error:", err);
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
+
+  const userMeta = user?.user_metadata || {};
+  const userAvatarUrl = userMeta.avatar_url || null;
+  const displayName =
+    userMeta.full_name ||
+    userMeta.name ||
+    user?.email?.split("@")[0] ||
+    "শিক্ষার্থী";
+  const userInitial = (
+    displayName?.[0] ||
+    user?.email?.[0] ||
+    "U"
+  ).toUpperCase();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -49,9 +119,10 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Automatically close mobile menu on route change
+  // Automatically close mobile menu & user dropdown on route change
   useEffect(() => {
     setIsMobileMenuOpen(false);
+    setIsUserMenuOpen(false);
   }, [pathname]);
 
   // Lock body scroll when mobile menu is open
@@ -155,27 +226,164 @@ export function Navbar() {
                 )}
               </button>
 
-              {/* Login - desktop clean link */}
-              <Link
-                href="/login"
-                className={cn(
-                  "hidden sm:inline-flex items-center px-3.5 py-1.5 text-xs font-bold rounded-xl transition-all duration-200 font-bengali",
-                  "text-slate-700 hover:text-slate-950 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800/80"
-                )}
-              >
-                লগইন
-              </Link>
+              {/* Auth Buttons: Logged In User Pill vs Login/Register */}
+              {user ? (
+                <div className="relative hidden sm:block" ref={userMenuRef}>
+                  <button
+                    type="button"
+                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                    className={cn(
+                      "flex items-center gap-2 pl-1.5 pr-3 py-1 rounded-full border transition-all duration-200 font-bengali text-xs font-semibold shadow-xs",
+                      isUserMenuOpen
+                        ? "bg-primary/10 border-primary/40 text-primary"
+                        : "bg-surface-secondary/70 hover:bg-surface-secondary border-border hover:border-primary/40 text-text"
+                    )}
+                    aria-expanded={isUserMenuOpen}
+                  >
+                    {userAvatarUrl ? (
+                      <div className="relative w-7 h-7 rounded-full overflow-hidden shrink-0 border border-primary/20">
+                        <Image
+                          src={userAvatarUrl}
+                          alt={displayName}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-primary to-accent text-white flex items-center justify-center font-bold text-xs uppercase shadow-xs shrink-0">
+                        {userInitial}
+                      </div>
+                    )}
+                    <span className="max-w-[120px] truncate text-xs font-bold text-text">
+                      {displayName}
+                    </span>
+                    <ChevronDown
+                      className={cn(
+                        "w-3.5 h-3.5 text-text-muted transition-transform duration-200",
+                        isUserMenuOpen && "rotate-180 text-primary"
+                      )}
+                    />
+                  </button>
 
-              {/* Register CTA - desktop high-contrast button */}
-              <Link
-                href="/register"
-                className={cn(
-                  "hidden sm:inline-flex items-center px-4 py-1.5 text-xs font-bold rounded-xl shadow-xs transition-all duration-200 font-bengali hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]",
-                  "bg-slate-950 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-100"
-                )}
-              >
-                রেজিস্ট্রেশন
-              </Link>
+                  {/* Dropdown Menu */}
+                  <AnimatePresence>
+                    {isUserMenuOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 6, scale: 0.96 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute right-0 mt-2 w-64 rounded-2xl bg-surface/98 backdrop-blur-md border border-border shadow-xl py-2 z-50 overflow-hidden font-bengali"
+                      >
+                        {/* Profile Header */}
+                        <div className="px-4 py-3 bg-surface-secondary/50 border-b border-border/70">
+                          <div className="flex items-center gap-3">
+                            {userAvatarUrl ? (
+                              <div className="relative w-10 h-10 rounded-full overflow-hidden shrink-0 border border-primary/20">
+                                <Image
+                                  src={userAvatarUrl}
+                                  alt={displayName}
+                                  fill
+                                  className="object-cover"
+                                />
+                              </div>
+                            ) : (
+                              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-accent text-white flex items-center justify-center font-bold text-sm uppercase shadow-xs shrink-0">
+                                {userInitial}
+                              </div>
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <p className="text-xs font-bold text-text truncate">{displayName}</p>
+                              <p className="text-[11px] text-text-muted truncate font-sans">{user.email}</p>
+                            </div>
+                          </div>
+                          <div className="mt-2.5 flex items-center gap-1.5">
+                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                              ভেরিফাইড শিক্ষার্থী
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Links */}
+                        <div className="p-1.5 space-y-0.5">
+                          <Link
+                            href="/dashboard"
+                            onClick={() => setIsUserMenuOpen(false)}
+                            className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-xl text-text hover:bg-primary/10 hover:text-primary transition-colors"
+                          >
+                            <LayoutDashboard className="w-4 h-4 text-primary" />
+                            <span>আমার ড্যাশবোর্ড</span>
+                          </Link>
+
+                          <Link
+                            href="/dashboard/my-courses"
+                            onClick={() => setIsUserMenuOpen(false)}
+                            className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-xl text-text hover:bg-primary/10 hover:text-primary transition-colors"
+                          >
+                            <BookOpen className="w-4 h-4 text-primary" />
+                            <span>আমার কোর্সসমূহ</span>
+                          </Link>
+
+                          <Link
+                            href="/dashboard/orders"
+                            onClick={() => setIsUserMenuOpen(false)}
+                            className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-xl text-text hover:bg-primary/10 hover:text-primary transition-colors"
+                          >
+                            <Receipt className="w-4 h-4 text-primary" />
+                            <span>পেমেন্ট ও অর্ডার হিস্ট্রি</span>
+                          </Link>
+
+                          <Link
+                            href="/dashboard/profile"
+                            onClick={() => setIsUserMenuOpen(false)}
+                            className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-xl text-text hover:bg-primary/10 hover:text-primary transition-colors"
+                          >
+                            <UserIcon className="w-4 h-4 text-primary" />
+                            <span>প্রোফাইল সেটিংস</span>
+                          </Link>
+                        </div>
+
+                        <div className="p-1.5 pt-1 border-t border-border/80 mt-1">
+                          <button
+                            type="button"
+                            onClick={handleLogout}
+                            disabled={isLoggingOut}
+                            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold rounded-xl text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                          >
+                            <LogOut className="w-4 h-4" />
+                            <span>{isLoggingOut ? "লগআউট হচ্ছে..." : "লগআউট"}</span>
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              ) : (
+                <>
+                  {/* Login - desktop clean link */}
+                  <Link
+                    href="/login"
+                    className={cn(
+                      "hidden sm:inline-flex items-center px-3.5 py-1.5 text-xs font-bold rounded-xl transition-all duration-200 font-bengali",
+                      "text-slate-700 hover:text-slate-950 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800/80"
+                    )}
+                  >
+                    লগইন
+                  </Link>
+
+                  {/* Register CTA - desktop high-contrast button */}
+                  <Link
+                    href="/register"
+                    className={cn(
+                      "hidden sm:inline-flex items-center px-4 py-1.5 text-xs font-bold rounded-xl shadow-xs transition-all duration-200 font-bengali hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]",
+                      "bg-slate-950 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-100"
+                    )}
+                  >
+                    রেজিস্ট্রেশন
+                  </Link>
+                </>
+              )}
 
               {/* Mobile menu toggle (3-dot / hamburger toggle) */}
               <button
@@ -390,31 +598,78 @@ export function Navbar() {
 
               {/* Bottom CTAs & Support */}
               <div className="p-4 sm:p-5 bg-surface/80 dark:bg-slate-950/60 border-t border-border space-y-3 mt-auto">
-                <div className="grid grid-cols-2 gap-2.5">
-                  <Link
-                    href="/login"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={cn(
-                      "flex items-center justify-center gap-2 px-4 py-3 text-sm font-bold rounded-xl transition-all font-bengali",
-                      "text-slate-800 dark:text-slate-100 bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs active:scale-[0.98]"
-                    )}
-                  >
-                    <LogIn className="w-4 h-4" />
-                    <span>লগইন</span>
-                  </Link>
+                {user ? (
+                  <div className="space-y-3">
+                    {/* Student Profile Card */}
+                    <div className="flex items-center gap-3 p-3 rounded-2xl bg-surface-secondary/70 border border-border">
+                      {userAvatarUrl ? (
+                        <div className="relative w-10 h-10 rounded-full overflow-hidden shrink-0 border border-primary/20">
+                          <Image
+                            src={userAvatarUrl}
+                            alt={displayName}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-accent text-white flex items-center justify-center font-bold text-sm uppercase shrink-0 shadow-xs">
+                          {userInitial}
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-bold text-text truncate font-bengali">{displayName}</p>
+                        <p className="text-[11px] text-text-muted truncate font-sans">{user.email}</p>
+                      </div>
+                    </div>
 
-                  <Link
-                    href="/register"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={cn(
-                      "flex items-center justify-center gap-2 px-4 py-3 text-sm font-bold rounded-xl transition-all font-bengali shadow-sm",
-                      "bg-slate-950 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-100 active:scale-[0.98]"
-                    )}
-                  >
-                    <span>রেজিস্ট্রেশন</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </Link>
-                </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Link
+                        href="/dashboard"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-bold rounded-xl bg-primary text-white hover:bg-primary/90 transition-all font-bengali shadow-xs"
+                      >
+                        <LayoutDashboard className="w-4 h-4" />
+                        <span>ড্যাশবোর্ড</span>
+                      </Link>
+
+                      <button
+                        type="button"
+                        onClick={handleLogout}
+                        disabled={isLoggingOut}
+                        className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-bold rounded-xl text-rose-600 dark:text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 transition-all font-bengali"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        <span>{isLoggingOut ? "লগআউট..." : "লগআউট"}</span>
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <Link
+                      href="/login"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={cn(
+                        "flex items-center justify-center gap-2 px-4 py-3 text-sm font-bold rounded-xl transition-all font-bengali",
+                        "text-slate-800 dark:text-slate-100 bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs active:scale-[0.98]"
+                      )}
+                    >
+                      <LogIn className="w-4 h-4" />
+                      <span>লগইন</span>
+                    </Link>
+
+                    <Link
+                      href="/register"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={cn(
+                        "flex items-center justify-center gap-2 px-4 py-3 text-sm font-bold rounded-xl transition-all font-bengali shadow-sm",
+                        "bg-slate-950 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-100 active:scale-[0.98]"
+                      )}
+                    >
+                      <span>রেজিস্ট্রেশন</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </Link>
+                  </div>
+                )}
 
                 <div className="flex items-center justify-center gap-2 pt-1 text-[11px] text-text-muted font-bengali">
                   <PhoneCall className="w-3.5 h-3.5 text-primary" />

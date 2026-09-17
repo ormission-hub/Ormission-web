@@ -2,6 +2,7 @@ import { HeroSection } from "@/components/home/hero-section";
 import { StatsBar } from "@/components/home/stats-bar";
 import { CategoryCoursesShowcase } from "@/components/home/category-courses-showcase";
 import { AboutPreview } from "@/components/home/about-preview";
+import { FreeMaterialBanner } from "@/components/home/free-material-banner";
 import { Testimonials } from "@/components/home/testimonials";
 import { createClient } from "@/lib/supabase/server";
 
@@ -125,7 +126,12 @@ export default async function Home() {
         <AboutPreview initialInstructors={initialInstructors} />
       </div>
 
-      {/* 5. Testimonials: Real Student Reviews from Supabase (Zero Mock Data) */}
+      {/* 5. Free Study Materials & Mentorship Banner */}
+      <div className="content-visibility-auto">
+        <FreeMaterialBanner />
+      </div>
+
+      {/* 6. Testimonials: Real Student Reviews from Supabase (Zero Mock Data) */}
       <div className="content-visibility-auto">
         <Testimonials initialTestimonials={testimonials} />
       </div>
