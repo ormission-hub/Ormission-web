@@ -30,6 +30,9 @@ export function Testimonials({
   const [isPaused, setIsPaused] = useState(false);
 
   useEffect(() => {
+    // Only fetch client-side if server didn't already provide testimonials
+    if (initialTestimonials && initialTestimonials.length > 0) return;
+
     async function loadTestimonials() {
       const supabase = createClient();
       try {
@@ -48,7 +51,7 @@ export function Testimonials({
     }
 
     loadTestimonials();
-  }, []);
+  }, [initialTestimonials]);
 
   const total = testimonials.length;
 

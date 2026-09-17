@@ -243,9 +243,8 @@ export function HeroSection({
                     src={currentSlide.url}
                     alt={currentSlide.title || "Ormission Hero Banner"}
                     fill
-                    priority
-                    unoptimized={Boolean(currentSlide.url?.startsWith("http"))}
-                    sizes="100vw"
+                    priority={currentIndex === 0}
+                    sizes="(max-width: 768px) 100vw, 1200px"
                     className="object-cover object-top group-hover:scale-[1.015] transition-transform duration-500"
                   />
 

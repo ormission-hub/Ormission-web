@@ -118,13 +118,19 @@ export default async function Home() {
       />
 
       {/* 4. About Us: Authentic Group Photo & Narrative */}
-      <AboutPreview />
+      <div className="content-visibility-auto">
+        <AboutPreview />
+      </div>
 
       {/* 5. Why Choose Ormission: Core USPs & Features */}
-      <WhyChooseUs />
+      <div className="content-visibility-auto">
+        <WhyChooseUs />
+      </div>
 
       {/* 6. Testimonials: Real Student Reviews from Supabase (Zero Mock Data) */}
-      <Testimonials initialTestimonials={testimonials} />
+      <div className="content-visibility-auto">
+        <Testimonials initialTestimonials={testimonials} />
+      </div>
     </>
   );
 }
