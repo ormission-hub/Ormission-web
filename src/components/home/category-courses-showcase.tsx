@@ -841,7 +841,7 @@ export function CategoryCoursesShowcase({
   };
 
   return (
-    <section id="category-courses-section" className="relative pt-5 sm:pt-8 pb-10 sm:pb-14 lg:pb-16 bg-background overflow-hidden">
+    <section id="category-courses-section" className="relative pt-2 sm:pt-4 pb-10 sm:pb-14 lg:pb-16 bg-background overflow-hidden">
       {/* Ambient background glow (GPU-friendly radial gradient without expensive blur filter) */}
       <div
         className="hidden sm:block absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[350px] rounded-full opacity-20 dark:opacity-10 pointer-events-none"
@@ -852,39 +852,6 @@ export function CategoryCoursesShowcase({
       />
 
       <div className="container-main relative z-10">
-        {/* Header */}
-        <div className="text-center max-w-3xl mx-auto mb-5 sm:mb-8">
-          <motion.h2
-            variants={scrollReveal}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.5, margin: "0px 0px -60px 0px" }}
-            className="text-2xl sm:text-3xl lg:text-[38px] font-black text-text tracking-tight font-bengali mb-2 sm:mb-3"
-          >
-            ক্লাস অনুযায়ী কোর্স দেখুন
-          </motion.h2>
-
-          <motion.p
-            variants={zoomInUp}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.4, margin: "0px 0px -50px 0px" }}
-            className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-medium font-bengali max-w-xl mx-auto leading-relaxed"
-          >
-            দেশসেরা অভিজ্ঞ মেন্টরদের সাথে SSC, HSC ও ভর্তি পরীক্ষার পূর্ণাঙ্গ প্রস্তুতি।
-          </motion.p>
-
-          <motion.p
-            variants={zoomIn}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.4, margin: "0px 0px -40px 0px" }}
-            className="text-[11px] sm:text-xs text-text-muted font-bengali mt-2.5 mb-1"
-          >
-            ক্যাটাগরি নির্বাচন করুন
-          </motion.p>
-        </div>
-
         {/* Category Pills: 3 on Top Row, 2 on Bottom Row */}
         <motion.div
           variants={staggerContainer}
