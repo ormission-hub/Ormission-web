@@ -49,8 +49,8 @@
   --radius-2xl: 16px;
 
   /* ---- Spacing ---- */
-  --section-padding-y: 4rem;
-  --section-padding-y-lg: 5rem;
+  --section-padding-y: 1.5rem;
+  --section-padding-y-lg: 2.25rem;
   --container-max-width: 1200px;
   --container-padding: 1rem;
 

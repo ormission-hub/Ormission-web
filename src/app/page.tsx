@@ -17,6 +17,7 @@ export default async function Home() {
   let heroSettings: any = null;
   let pinnedCourseIds: (number | string)[] = [];
   let initialBooks: any[] = [];
+  let initialInstructors: any[] = [];
 
   try {
     const supabase = await createClient();
@@ -55,8 +56,10 @@ export default async function Home() {
         .order("display_order", { ascending: true }),
       supabase
         .from("instructors")
-        .select("id", { count: "exact" })
-        .eq("is_published", true),
+        .select("id, name, name_bn, designation, institution, bio, photo_url, display_order, is_featured", { count: "exact" })
+        .eq("is_published", true)
+        .order("display_order", { ascending: true })
+        .order("id", { ascending: true }),
       supabase
         .from("site_settings")
         .select("value")
@@ -84,6 +87,7 @@ export default async function Home() {
     if (courseRes.data) featuredCourses = courseRes.data;
     if (testRes.data) testimonials = testRes.data;
     if (instRes.count !== null && instRes.count !== undefined) instructorsCount = instRes.count;
+    if (instRes.data && Array.isArray(instRes.data)) initialInstructors = instRes.data;
     if (heroRes.data?.value && typeof heroRes.data.value === "object") {
       heroSettings = heroRes.data.value;
     }
@@ -119,7 +123,7 @@ export default async function Home() {
 
       {/* 4. About Us: Authentic Group Photo & Narrative */}
       <div className="content-visibility-auto">
-        <AboutPreview />
+        <AboutPreview initialInstructors={initialInstructors} />
       </div>
 
       {/* 5. Why Choose Ormission: Core USPs & Features */}

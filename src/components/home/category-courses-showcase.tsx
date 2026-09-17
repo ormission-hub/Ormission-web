@@ -735,29 +735,30 @@ export function CategoryCoursesShowcase({
         }}
         whileHover={{ y: -2, scale: 1.02, transition: { duration: 0.15 } }}
         whileTap={{ scale: 0.97 }}
-        className={`group relative p-[1.5px] sm:p-[2px] rounded-xl sm:rounded-2xl cursor-pointer select-none transition-all duration-200 overflow-hidden w-full sm:w-auto min-w-0 sm:min-w-[170px] ${
+        className={`group relative p-[1.5px] sm:p-[2.5px] rounded-xl sm:rounded-2xl cursor-pointer select-none transition-all duration-200 overflow-hidden w-full sm:w-auto min-w-0 sm:min-w-[170px] min-h-[46px] sm:min-h-[56px] ${
           isSelected
-            ? "shadow-[0_0_15px_rgba(255,95,0,0.35)] ring-1.5 sm:ring-2 ring-primary/40 bg-primary/20"
-            : "border border-border/80 bg-surface dark:bg-slate-900 hover:border-primary/40 hover:shadow-sm"
+            ? "shadow-[0_0_18px_rgba(255,95,0,0.38)] ring-1.5 sm:ring-2 ring-primary/60 bg-primary/20"
+            : "border border-border/80 bg-slate-200/60 dark:bg-slate-800/60 hover:border-primary/50 hover:shadow-xs"
         }`}
       >
-        {/* Animated laser beam ONLY on the single active/selected pill */}
-        {isSelected && (
-          <div
-            className="border-beam-sharp"
-            style={{
-              background:
-                "conic-gradient(from 0deg, transparent 0deg, transparent 250deg, #FF5F00 295deg, #FFFFFF 335deg, transparent 360deg)",
-              animationName: "borderRotate",
-              animationDuration: "3s",
-              animationTimingFunction: "linear",
-              animationIterationCount: "infinite",
-            }}
-          />
-        )}
+        {/* Continuous rotating glowing border laser beam on ALL pills */}
+        <div
+          className="border-beam-sharp"
+          style={{
+            background: isSelected
+              ? "conic-gradient(from 0deg, transparent 0deg, transparent 240deg, #FF5F00 285deg, #FFFFFF 330deg, transparent 360deg)"
+              : "conic-gradient(from 0deg, transparent 0deg, transparent 255deg, rgba(255,95,0,0.7) 295deg, rgba(255,255,255,0.95) 335deg, transparent 360deg)",
+            animationName: "borderRotate",
+            animationDuration: isSelected ? "2.6s" : "3.5s",
+            animationTimingFunction: "linear",
+            animationIterationCount: "infinite",
+            animationDelay: `${idx * -0.7}s`,
+            opacity: isSelected ? 1 : 0.75,
+          }}
+        />
 
         <div
-          className={`relative z-10 w-full h-full rounded-[10px] sm:rounded-[13.5px] flex items-center justify-center gap-1 sm:gap-3.5 px-1 py-2 sm:px-8 sm:py-4 transition-colors duration-200 overflow-hidden ${
+          className={`relative z-10 w-full h-full rounded-[10px] sm:rounded-[13.5px] flex items-center justify-center gap-1.5 sm:gap-3.5 px-2 py-2.5 sm:px-8 sm:py-3.5 transition-colors duration-200 overflow-hidden ${
             isSelected
               ? "bg-surface dark:bg-slate-900 text-primary"
               : "bg-surface dark:bg-slate-900/95 text-text group-hover:text-primary"
@@ -771,12 +772,12 @@ export function CategoryCoursesShowcase({
 
           <span className="absolute inset-x-0 top-0 h-1/2 rounded-t-[10px] sm:rounded-t-[13.5px] bg-gradient-to-b from-white/60 dark:from-white/[0.06] to-transparent pointer-events-none" />
 
-          <div className="relative z-10 w-5 h-5 sm:w-10 sm:h-10 shrink-0 [&>div]:!w-5 [&>div]:!h-5 sm:[&>div]:!w-10 sm:[&>div]:!h-10 transition-transform duration-200 group-hover:scale-110 drop-shadow-xs">
+          <div className="relative z-10 w-6 h-6 sm:w-10 sm:h-10 shrink-0 [&>div]:!w-6 [&>div]:!h-6 sm:[&>div]:!w-10 sm:[&>div]:!w-10 transition-transform duration-200 group-hover:scale-110 drop-shadow-xs">
             {illustration}
           </div>
 
           <span
-            className={`relative z-10 text-[10.5px] xs:text-xs sm:text-base lg:text-lg tracking-tight transition-colors duration-200 truncate sm:whitespace-nowrap ${
+            className={`relative z-10 text-xs xs:text-[13px] sm:text-base lg:text-lg tracking-tight transition-colors duration-200 truncate sm:whitespace-nowrap ${
               isSelected
                 ? "text-primary font-black"
                 : "text-text group-hover:text-primary font-bold"
@@ -786,7 +787,7 @@ export function CategoryCoursesShowcase({
           </span>
 
           {isSelected && (
-            <span className="relative z-10 w-1.5 h-1.5 sm:w-2.5 sm:h-2.5 rounded-full bg-primary animate-pulse shrink-0 ml-0.5 shadow-[0_0_8px_#FF5F00]" />
+            <span className="relative z-10 w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-primary animate-pulse shrink-0 ml-1 shadow-[0_0_8px_#FF5F00]" />
           )}
         </div>
       </motion.button>
@@ -841,7 +842,7 @@ export function CategoryCoursesShowcase({
   };
 
   return (
-    <section id="category-courses-section" className="relative pt-2 sm:pt-4 pb-10 sm:pb-14 lg:pb-16 bg-background overflow-hidden">
+    <section id="category-courses-section" className="relative pt-1 sm:pt-2 pb-1 sm:pb-2 bg-background overflow-hidden">
       {/* Ambient background glow (GPU-friendly radial gradient without expensive blur filter) */}
       <div
         className="hidden sm:block absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[350px] rounded-full opacity-20 dark:opacity-10 pointer-events-none"
@@ -858,14 +859,14 @@ export function CategoryCoursesShowcase({
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.2 }}
-          className="flex flex-col items-center justify-center gap-2 sm:gap-3.5 mb-5 sm:mb-7 w-full px-1 sm:px-0"
+          className="flex flex-col items-center justify-center gap-2.5 sm:gap-3.5 mb-5 sm:mb-7 w-full px-1.5 sm:px-0"
         >
-          <div className="grid grid-cols-3 gap-1.5 sm:gap-4 w-full max-w-sm sm:max-w-none sm:flex sm:flex-wrap sm:items-center sm:justify-center">
+          <div className="grid grid-cols-3 gap-2 sm:gap-4 w-full max-w-[430px] sm:max-w-none sm:flex sm:flex-wrap sm:items-center sm:justify-center">
             {topRowCategories.map((cat, idx) => renderCategoryPill(cat, idx))}
           </div>
 
           {bottomRowCategories.length > 0 && (
-            <div className="grid grid-cols-2 gap-1.5 sm:gap-4 w-full max-w-[245px] sm:max-w-none sm:flex sm:flex-wrap sm:items-center sm:justify-center">
+            <div className="grid grid-cols-2 gap-2 sm:gap-4 w-full max-w-[290px] sm:max-w-none sm:flex sm:flex-wrap sm:items-center sm:justify-center">
               {bottomRowCategories.map((cat, idx) =>
                 renderCategoryPill(cat, idx + topRowCategories.length)
               )}

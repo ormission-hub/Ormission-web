@@ -157,10 +157,10 @@ export function WhyChooseUs() {
   };
 
   return (
-    <SectionWrapper>
+    <SectionWrapper className="!pt-1 !pb-2 sm:!pt-2 sm:!pb-3">
       {/* Top Pill Badge */}
-      <div className="flex justify-center mb-3">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold font-bengali">
+      <div className="flex justify-center mb-1.5">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold font-bengali">
           <Sparkles className="w-3.5 h-3.5" />
           <span>আমাদের বিশেষত্ব ও মূল শক্তি (Core USPs)</span>
         </div>
@@ -169,6 +169,7 @@ export function WhyChooseUs() {
       <SectionHeading
         title="কেন Ormission বেছে নেবেন?"
         subtitle="কোচিং ছাড়া ঘরে বসেই কনসেপ্ট ক্লিয়ারিং, বিগত ২০ বছরের প্রশ্নব্যাংক অ্যানালাইসিস ও সঠিক স্টাডি স্ট্র্যাটেজিতে বোর্ড ও ভর্তি পরীক্ষার সেরা প্রস্তুতি"
+        className="mb-2 sm:mb-3"
       />
 
       {/* Mobile Slideshow View: Cards slide horizontally from the side with touch snap */}
@@ -246,7 +247,7 @@ export function WhyChooseUs() {
       </div>
 
       {/* 24/7 Personal Mentorship Trust Banner */}
-      <div className="mt-8 lg:mt-10 p-5 sm:p-6 rounded-2xl bg-surface-secondary/70 border border-border flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="mt-3.5 sm:mt-5 p-3.5 sm:p-5 rounded-2xl bg-surface-secondary/70 border border-border flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
         <div className="flex items-center gap-4 text-center sm:text-left">
           <div className="w-12 h-12 rounded-2xl bg-secondary/15 text-secondary border border-secondary/25 flex items-center justify-center shrink-0">
             <Headphones className="w-6 h-6" />

@@ -110,10 +110,10 @@ export function Testimonials({
   };
 
   return (
-    <SectionWrapper className="py-14 lg:py-20 overflow-hidden">
+    <SectionWrapper className="!pt-1 !pb-6 sm:!pt-2 sm:!pb-10 overflow-hidden">
       {/* Section Header */}
-      <div className="flex flex-col items-center justify-center mb-10 sm:mb-14 text-center">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold font-bengali mb-4">
+      <div className="flex flex-col items-center justify-center mb-2.5 sm:mb-3.5 text-center">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold font-bengali mb-1.5">
           <Sparkles className="w-3.5 h-3.5" />
           <span>সাফল্যের গল্প ও অনুপ্রেরণা</span>
         </div>
@@ -125,7 +125,7 @@ export function Testimonials({
           </h2>
           <div className="w-10 sm:w-16 h-0.5 bg-primary/30 rounded-full" />
         </div>
-        <p className="text-xs sm:text-sm text-text-muted font-bengali mt-2.5 max-w-md">
+        <p className="text-xs sm:text-sm text-text-muted font-bengali mt-2 max-w-md">
           অর্মিশনের মাধ্যমে প্রস্তুতি নিয়ে দেশের সেরা বিদ্যাপীঠে চান্স পাওয়া শিক্ষার্থীদের বাস্তব অভিজ্ঞতা
         </p>
       </div>

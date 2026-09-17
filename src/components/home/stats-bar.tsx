@@ -29,14 +29,15 @@ function AnimatedNumber({ target, suffix }: { target: number; suffix: string }) 
       return;
     }
 
-    let start = 0;
-    const duration = 1400;
+    // Slower, satisfying counting duration so large numbers like 12,500 roll smoothly
+    const duration = target > 1000 ? 3000 : 2000;
     const startTime = performance.now();
 
     function animate(currentTime: number) {
       const elapsed = currentTime - startTime;
       const progress = Math.min(elapsed / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
+      // Smooth easeOutQuad gives a steady, readable rolling count without rushing
+      const eased = progress * (2 - progress);
       const current = Math.round(eased * target);
 
       setCount(current);

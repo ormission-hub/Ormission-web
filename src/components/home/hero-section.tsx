@@ -1,12 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
   BookOpen,
-  ChevronLeft,
-  ChevronRight,
   Sparkles,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -196,6 +194,56 @@ export function HeroSection({
   const nextSlide = () => setCurrentIndex((prev) => (prev + 1) % slides.length);
   const prevSlide = () => setCurrentIndex((prev) => (prev - 1 + slides.length) % slides.length);
 
+  // Touch & Swipe gesture handling for mobile & desktop
+  const touchStartX = useRef<number | null>(null);
+  const touchEndX = useRef<number | null>(null);
+  const minSwipeDistance = 40;
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchEndX.current = null;
+    setIsPaused(true);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    setIsPaused(false);
+    if (touchStartX.current === null || touchEndX.current === null) return;
+    const distance = touchStartX.current - touchEndX.current;
+    if (distance > minSwipeDistance) {
+      nextSlide();
+    } else if (distance < -minSwipeDistance) {
+      prevSlide();
+    }
+    touchStartX.current = null;
+    touchEndX.current = null;
+  };
+
+  // Mouse drag support for desktop
+  const mouseStartX = useRef<number | null>(null);
+  const isMouseDown = useRef<boolean>(false);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.button !== 0) return;
+    mouseStartX.current = e.clientX;
+    isMouseDown.current = true;
+  };
+
+  const handleMouseUp = (e: React.MouseEvent) => {
+    if (!isMouseDown.current || mouseStartX.current === null) return;
+    const distance = mouseStartX.current - e.clientX;
+    if (distance > minSwipeDistance) {
+      nextSlide();
+    } else if (distance < -minSwipeDistance) {
+      prevSlide();
+    }
+    isMouseDown.current = false;
+    mouseStartX.current = null;
+  };
+
   // Dynamic autoplay duration per slide
   useEffect(() => {
     if (slides.length <= 1 || isPaused) return;
@@ -223,11 +271,20 @@ export function HeroSection({
       {/* 1. Full-Bleed Edge-to-Edge Banner Slider (Zero side gaps on all screens) */}
       <div className="w-full relative z-10">
         <div className="relative w-full">
-          {/* Banner Container: 100% full-width edge-to-edge */}
+          {/* Banner Container: 100% full-width edge-to-edge with touch/swipe support */}
           <div
-            className="relative w-full aspect-video overflow-hidden bg-surface rounded-none border-b border-border/80 shadow-md group select-none"
+            className="relative w-full aspect-video overflow-hidden bg-surface rounded-none border-b border-border/80 shadow-md select-none touch-pan-y cursor-grab active:cursor-grabbing"
             onMouseEnter={() => setIsPaused(true)}
-            onMouseLeave={() => setIsPaused(false)}
+            onMouseLeave={() => {
+              setIsPaused(false);
+              isMouseDown.current = false;
+              mouseStartX.current = null;
+            }}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            onMouseDown={handleMouseDown}
+            onMouseUp={handleMouseUp}
           >
             <AnimatePresence mode="wait">
               <motion.div
@@ -248,9 +305,6 @@ export function HeroSection({
                     className="object-cover object-top group-hover:scale-[1.015] transition-transform duration-500"
                   />
 
-                  {/* Cinematic Dark Gradient Overlay for optimal button contrast */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent pointer-events-none" />
-
                   {/* Over-Image CTA Buttons (Bottom-Left) */}
                   <div className="absolute bottom-3 sm:bottom-6 md:bottom-8 left-4 sm:left-8 md:left-12 lg:left-16 z-20 flex items-center gap-2 sm:gap-3.5 max-w-[calc(100%-85px)] sm:max-w-none">
                     <Link
@@ -265,7 +319,7 @@ export function HeroSection({
 
                     <Link
                       href={currentSlide.secondary_cta_url || heroData.secondary_cta_url || "/courses"}
-                      className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-1.5 sm:py-3 rounded-full text-[11px] sm:text-sm font-bold text-white bg-black/45 hover:bg-black/65 border border-white/30 hover:border-white/60 backdrop-blur-md shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer shrink-0"
+                      className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-1.5 sm:py-3 rounded-full text-[11px] sm:text-sm font-bold text-white bg-black/55 hover:bg-black/75 border border-white/35 hover:border-white/60 backdrop-blur-md shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer shrink-0"
                     >
                       <BookOpen className="w-3 h-3 sm:w-4 sm:h-4 text-white shrink-0" />
                       <span className="truncate max-w-[110px] sm:max-w-none">
@@ -277,54 +331,27 @@ export function HeroSection({
               </motion.div>
             </AnimatePresence>
 
-            {/* Netflix-Style Prev / Next Navigation Arrows */}
+            {/* Slider Dot Indicators on bottom right */}
             {slides.length > 1 && (
-              <>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    prevSlide();
-                  }}
-                  className="absolute left-2 sm:left-6 md:left-8 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-12 sm:h-12 rounded-full bg-black/45 hover:bg-black/80 text-white backdrop-blur-md flex items-center justify-center opacity-85 sm:opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 shadow-xl border border-white/20 cursor-pointer"
-                  aria-label="Previous Slide"
-                >
-                  <ChevronLeft className="w-4 h-4 sm:w-6 sm:h-6" />
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    nextSlide();
-                  }}
-                  className="absolute right-2 sm:right-6 md:right-8 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-12 sm:h-12 rounded-full bg-black/45 hover:bg-black/80 text-white backdrop-blur-md flex items-center justify-center opacity-85 sm:opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 shadow-xl border border-white/20 cursor-pointer"
-                  aria-label="Next Slide"
-                >
-                  <ChevronRight className="w-4 h-4 sm:w-6 sm:h-6" />
-                </button>
-
-                {/* Netflix-Style Progress Bar / Dot Indicators on bottom right */}
-                <div className="absolute bottom-3 sm:bottom-6 md:bottom-8 right-4 sm:right-8 md:right-12 lg:right-16 z-20 flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/20 shadow-lg">
-                  {slides.map((_, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setCurrentIndex(idx);
-                      }}
-                      className={`transition-all duration-300 rounded-full cursor-pointer ${idx === currentIndex
-                          ? "w-4 sm:w-7 h-1.5 sm:h-2 bg-primary shadow-sm shadow-primary/60"
-                          : "w-1.5 sm:w-2 h-1.5 sm:h-2 bg-white/40 hover:bg-white/70"
-                        }`}
-                      aria-label={`Slide ${idx + 1}`}
-                    />
-                  ))}
-                </div>
-              </>
+              <div className="absolute bottom-3 sm:bottom-6 md:bottom-8 right-4 sm:right-8 md:right-12 lg:right-16 z-20 flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/20 shadow-lg">
+                {slides.map((_, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setCurrentIndex(idx);
+                    }}
+                    className={`transition-all duration-300 rounded-full cursor-pointer ${
+                      idx === currentIndex
+                        ? "w-4 sm:w-7 h-1.5 sm:h-2 bg-primary shadow-sm shadow-primary/60"
+                        : "w-1.5 sm:w-2 h-1.5 sm:h-2 bg-white/40 hover:bg-white/70"
+                    }`}
+                    aria-label={`Slide ${idx + 1}`}
+                  />
+                ))}
+              </div>
             )}
           </div>
         </div>
