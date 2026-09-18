@@ -162,18 +162,10 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
               videoUrl: data.videoUrl,
               isFreePreview: data.isFreePreview,
             });
-          } else if (currentLesson?.isFreePreview && currentLesson?.videoUrl) {
-            // Free preview lessons are always playable
-            setAccessStatus({
-              checking: false,
-              authorized: true,
-              videoUrl: currentLesson.videoUrl,
-              isFreePreview: true,
-            });
           } else {
             setAccessStatus({
               checking: false,
-              authorized: false,
+              authorized: data.authorized || false,
               reason: data.reason || "locked",
               isPending: !!data.isPending,
               orderNumber: data.orderNumber,
@@ -184,12 +176,12 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
         }
       } catch (err) {
         if (isMounted) {
-          // Fallback to freePreview flag on static data if network fails
-          const isFree = currentLesson?.isFreePreview;
+          // SECURITY: No client-side videoUrl fallback — all URLs come from server API only
           setAccessStatus({
             checking: false,
-            authorized: !!isFree,
-            videoUrl: isFree ? currentLesson?.videoUrl : undefined,
+            authorized: false,
+            reason: "network_error",
+            message: "নেটওয়ার্ক সমস্যা হয়েছে। আবার চেষ্টা করুন।",
           });
         }
       }
