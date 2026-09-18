@@ -124,26 +124,55 @@ export function StickyPurchasePanel({ course }: StickyPurchasePanelProps) {
 
   const durationHours = course.durationHours || 45;
 
-  // Extract real free preview lessons from the DB-backed curriculum
+  // Extract real free preview lessons from the DB-backed curriculum (no videoUrl stored client-side)
   const previewChapters = course.curriculum
     .flatMap((section) =>
       section.lessons
         .filter((lesson) => lesson.isFreePreview)
         .map((lesson) => ({
+          lessonId: lesson.id,
           title: lesson.titleBn || lesson.title,
           duration: lesson.duration ? `${lesson.duration} মিনিট` : "",
-          videoUrl: lesson.videoUrl || "",
         }))
     );
 
-  // If no free preview lessons exist, use the course preview video as fallback
-  if (previewChapters.length === 0 && course.previewVideoUrl) {
-    previewChapters.push({
-      title: `${course.titleBn || course.title} — ট্রেলার`,
-      duration: "",
-      videoUrl: course.previewVideoUrl,
-    });
-  }
+  // State: video URL fetched securely from server API
+  const [previewVideoUrl, setPreviewVideoUrl] = useState("");
+  const [loadingPreview, setLoadingPreview] = useState(false);
+
+  // Fetch video URL from server API when modal opens or chapter changes
+  useEffect(() => {
+    if (!showVideoModal) return;
+
+    const chapter = previewChapters[activeChapterIndex];
+    if (!chapter?.lessonId) {
+      // Fallback: use course-level preview URL (if set in DB)
+      setPreviewVideoUrl(course.previewVideoUrl || "");
+      return;
+    }
+
+    let cancelled = false;
+    setLoadingPreview(true);
+    setPreviewVideoUrl("");
+
+    fetch("/api/course/access", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ courseSlug: course.slug, lessonId: chapter.lessonId }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (!cancelled && data.videoUrl) {
+          setPreviewVideoUrl(data.videoUrl);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLoadingPreview(false);
+      });
+
+    return () => { cancelled = true; };
+  }, [showVideoModal, activeChapterIndex]);
 
   return (
     <>
@@ -628,16 +657,22 @@ export function StickyPurchasePanel({ course }: StickyPurchasePanelProps) {
 
             {/* Custom Branded Video Player Container */}
             <div className="w-full bg-black relative">
-              <CustomVideoPlayer
-                videoUrlOrId={
-                  previewChapters[activeChapterIndex]?.videoUrl ||
-                  course.previewVideoUrl ||
-                  ""
-                }
-                title={`${previewChapters[activeChapterIndex]?.title || course.titleBn || course.title} — ফ্রি প্রিভিউ`}
-                thumbnailUrl={thumbnail}
-                autoPlay={true}
-              />
+              {loadingPreview ? (
+                <div className="aspect-video flex items-center justify-center">
+                  <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                </div>
+              ) : previewVideoUrl ? (
+                <CustomVideoPlayer
+                  videoUrlOrId={previewVideoUrl}
+                  title={`${previewChapters[activeChapterIndex]?.title || course.titleBn || course.title} — ফ্রি প্রিভিউ`}
+                  thumbnailUrl={thumbnail}
+                  autoPlay={true}
+                />
+              ) : (
+                <div className="aspect-video flex items-center justify-center text-text-muted font-bengali text-sm">
+                  ভিডিও লোড হচ্ছে না। পরে আবার চেষ্টা করুন।
+                </div>
+              )}
             </div>
 
             {/* Preview Chapters Navigation */}
