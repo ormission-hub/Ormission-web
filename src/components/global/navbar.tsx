@@ -158,6 +158,11 @@ export function Navbar() {
     }
   };
 
+  const isLearnPage = pathname?.includes("/learn/");
+  if (isLearnPage) {
+    return null;
+  }
+
   return (
     <>
       <header

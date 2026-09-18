@@ -5,7 +5,11 @@ import { NextResponse } from "next/server";
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const rawTarget = searchParams.get("redirect") || searchParams.get("next") || "/dashboard";
+  const type = searchParams.get("type");
+  
+  // For password recovery, redirect to reset-password page
+  const defaultTarget = type === "recovery" ? "/reset-password" : "/dashboard";
+  const rawTarget = searchParams.get("redirect") || searchParams.get("next") || defaultTarget;
   const targetPath = rawTarget.startsWith("/") ? rawTarget : `/${rawTarget}`;
 
   if (code) {

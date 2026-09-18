@@ -2,20 +2,50 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { KeyRound, ArrowRight, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { KeyRound, ArrowRight, ArrowLeft, CheckCircle2, AlertCircle } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 export default function ForgotPasswordPage() {
   const [identifier, setIdentifier] = useState("");
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+
+    try {
+      const supabase = createClient();
+
+      // Supabase resetPasswordForEmail requires an email address
+      const email = identifier.trim();
+
+      if (!email.includes("@")) {
+        setError("পাসওয়ার্ড রিসেট করতে আপনার রেজিস্টার্ড ইমেইল অ্যাড্রেস দিন।");
+        setLoading(false);
+        return;
+      }
+
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/callback?type=recovery`,
+      });
+
+      if (resetError) {
+        console.error("Password reset error:", resetError);
+        setError("রিসেট ইমেইল পাঠাতে সমস্যা হয়েছে। অনুগ্রহ করে কিছুক্ষণ পর আবার চেষ্টা করুন।");
+        setLoading(false);
+        return;
+      }
+
       setSent(true);
-    }, 600);
+    } catch (err) {
+      console.error("Forgot password exception:", err);
+      setError("একটি অপ্রত্যাশিত সমস্যা হয়েছে। অনুগ্রহ করে পরে আবার চেষ্টা করুন।");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -30,7 +60,7 @@ export default function ForgotPasswordPage() {
               পাসওয়ার্ড পুনরুদ্ধার
             </h1>
             <p className="text-xs text-text-muted font-bengali">
-              আপনার নিবন্ধিত মোবাইল নম্বর বা ইমেইল লিখুন
+              আপনার নিবন্ধিত ইমেইল অ্যাড্রেস লিখুন
             </p>
           </div>
 
@@ -41,7 +71,7 @@ export default function ForgotPasswordPage() {
                 রিসেট নির্দেশনা পাঠানো হয়েছে
               </h4>
               <p className="text-xs text-text-muted font-bengali leading-relaxed">
-                আপনার প্রদত্ত নম্বরে বা ইমেইলে পাসওয়ার্ড রিসেট লিংক ও ওটিপি পাঠিয়ে দেওয়া হয়েছে। অনুগ্রহ করে ইনবক্স চেক করুন।
+                আপনার ইমেইলে পাসওয়ার্ড রিসেট লিংক পাঠিয়ে দেওয়া হয়েছে। অনুগ্রহ করে ইনবক্স ও স্প্যাম ফোল্ডার চেক করুন।
               </p>
               <Link
                 href="/login"
@@ -52,14 +82,21 @@ export default function ForgotPasswordPage() {
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
+              {error && (
+                <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 flex items-start gap-2.5">
+                  <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                  <p className="text-xs text-red-600 dark:text-red-400 font-bengali">{error}</p>
+                </div>
+              )}
+
               <div>
                 <label className="block text-xs font-semibold text-text font-bengali mb-1.5">
-                  মোবাইল নম্বর বা ইমেইল *
+                  ইমেইল অ্যাড্রেস *
                 </label>
                 <input
-                  type="text"
+                  type="email"
                   required
-                  placeholder="017XXXXXXXX বা mail@example.com"
+                  placeholder="mail@example.com"
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
                   className="input text-sm font-sans w-full"
@@ -71,8 +108,8 @@ export default function ForgotPasswordPage() {
                 disabled={loading}
                 className="btn btn-primary font-bengali font-bold w-full py-3 flex items-center justify-center gap-2"
               >
-                <span>রিসেট কোড পাঠান</span>
-                <ArrowRight className="w-4 h-4" />
+                <span>{loading ? "পাঠানো হচ্ছে..." : "রিসেট লিংক পাঠান"}</span>
+                {!loading && <ArrowRight className="w-4 h-4" />}
               </button>
             </form>
           )}
@@ -91,3 +128,4 @@ export default function ForgotPasswordPage() {
     </div>
   );
 }
+

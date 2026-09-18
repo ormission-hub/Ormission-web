@@ -20,7 +20,23 @@ export async function getLiveCourseBySlug(
       .select(`
         *,
         categories:category_id (*),
-        instructors:instructor_id (*)
+        instructors:instructor_id (*),
+        course_sections (
+          id,
+          title,
+          title_bn,
+          sort_order,
+          lessons (
+            id,
+            title,
+            title_bn,
+            video_url,
+            video_duration,
+            is_preview,
+            is_published,
+            sort_order
+          )
+        )
       `)
       .eq("slug", slug)
       .maybeSingle();
@@ -37,13 +53,8 @@ export async function getLiveCourseBySlug(
     console.warn("Supabase fetch course by slug failed, falling back:", err);
   }
 
-  // Fallback to static
-  const course = COURSES.find((c) => c.slug === slug) || null;
-  const instructor = course
-    ? INSTRUCTORS.find((i) => i.id === course.instructorId) || INSTRUCTORS[0]
-    : null;
-
-  return { course, instructor };
+  // No static fallback — course must exist in the real DB
+  return { course: null, instructor: null };
 }
 
 export async function getLiveCourses(): Promise<Course[]> {
@@ -54,7 +65,23 @@ export async function getLiveCourses(): Promise<Course[]> {
       .select(`
         *,
         categories:category_id (*),
-        instructors:instructor_id (*)
+        instructors:instructor_id (*),
+        course_sections (
+          id,
+          title,
+          title_bn,
+          sort_order,
+          lessons (
+            id,
+            title,
+            title_bn,
+            video_url,
+            video_duration,
+            is_preview,
+            is_published,
+            sort_order
+          )
+        )
       `)
       .eq("status", "published")
       .order("created_at", { ascending: false });

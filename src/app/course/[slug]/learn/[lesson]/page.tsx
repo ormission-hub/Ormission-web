@@ -1,23 +1,28 @@
 "use client";
 
-import { useState, use } from "react";
+import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   CheckCircle2,
-  Circle,
   Play,
-  FileDown,
   ChevronLeft,
   ChevronRight,
-  Menu,
-  X,
   BookOpen,
-  Download,
-  Share2,
+  Clock,
+  Sparkles,
+  Layers,
+  Lock,
+  Unlock,
+  ShieldCheck,
+  Loader2,
+  Receipt,
 } from "lucide-react";
-import { getCourseBySlug, COURSES, type Lesson } from "@/lib/data/courses";
+import { getCourseBySlug, COURSES, type Course, type Lesson } from "@/lib/data/courses";
+import { CustomVideoPlayer } from "@/components/video/custom-video-player";
+import { createClient } from "@/lib/supabase/client";
+import { mapDbCourseToAppCourse } from "@/lib/supabase/course-mapper";
 
 interface PlayerPageProps {
   params: Promise<{ slug: string; lesson: string }>;
@@ -28,20 +33,176 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
   const resolvedParams = use(params);
   const { slug, lesson: lessonId } = resolvedParams;
 
-  const course = getCourseBySlug(slug) || COURSES[0];
+  const [course, setCourse] = useState<Course>(() => getCourseBySlug(slug) || COURSES[0]);
+
+  // Load live course from Supabase
+  useEffect(() => {
+    async function loadLiveCourse() {
+      try {
+        const supabase = createClient();
+        const { data: dbCourse } = await supabase
+          .from("courses")
+          .select(`
+            *,
+            categories:category_id (*),
+            instructors:instructor_id (*),
+            course_sections (
+              id,
+              title,
+              title_bn,
+              sort_order,
+              lessons (
+                id,
+                title,
+                title_bn,
+                video_url,
+                video_duration,
+                is_preview,
+                is_published,
+                sort_order
+              )
+            )
+          `)
+          .eq("slug", slug)
+          .maybeSingle();
+
+        if (dbCourse) {
+          const mapped = mapDbCourseToAppCourse(dbCourse);
+          setCourse(mapped);
+        }
+      } catch (err) {
+        console.warn("Could not load live course, using static fallback:", err);
+      }
+    }
+    loadLiveCourse();
+  }, [slug]);
+
+  // Find all lessons in flat order for prev/next navigation
+  const allLessons = course?.curriculum
+    ? course.curriculum.flatMap((s) => s.lessons || [])
+    : [];
 
   // Find current lesson across all sections
-  let currentLesson: Lesson = course.curriculum[0]?.lessons[0];
-  let currentSectionTitle = course.curriculum[0]?.titleBn || "";
+  let currentLesson: Lesson | undefined = undefined;
+  let currentSectionTitle = "";
 
-  for (const section of course.curriculum) {
-    const found = section.lessons.find((l) => l.id === lessonId);
-    if (found) {
-      currentLesson = found;
-      currentSectionTitle = section.titleBn;
-      break;
+  if (course?.curriculum && course.curriculum.length > 0) {
+    for (const section of course.curriculum) {
+      const found = section.lessons?.find((l) => l.id === lessonId);
+      if (found) {
+        currentLesson = found;
+        currentSectionTitle = section.titleBn || section.title || "";
+        break;
+      }
+    }
+
+    // Fallback: If requested lessonId was not found in curriculum, pick the first lesson
+    if (!currentLesson && allLessons.length > 0) {
+      currentLesson = allLessons[0];
+      const parentSection = course.curriculum.find((s) =>
+        s.lessons?.some((l) => l.id === currentLesson?.id)
+      );
+      currentSectionTitle =
+        parentSection?.titleBn || parentSection?.title || course.curriculum[0]?.titleBn || "";
     }
   }
+
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Strict Anti-Bypass Access State
+  const [accessStatus, setAccessStatus] = useState<{
+    checking: boolean;
+    authorized: boolean;
+    videoUrl?: string;
+    isFreePreview?: boolean;
+    reason?: string;
+    isPending?: boolean;
+    orderNumber?: string;
+    transactionId?: string;
+    message?: string;
+  }>({
+    checking: true,
+    authorized: false,
+  });
+
+  // Verify access for current lesson via backend server endpoint
+  useEffect(() => {
+    let isMounted = true;
+
+    async function checkLessonAccess() {
+      setAccessStatus({ checking: true, authorized: false });
+      try {
+        const supabase = createClient();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (isMounted) {
+          setIsLoggedIn(!!session?.user);
+        }
+
+        const res = await fetch("/api/course/access", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+          },
+          body: JSON.stringify({
+            courseSlug: slug,
+            lessonId: currentLesson?.id || lessonId,
+          }),
+        });
+
+        const data = await res.json();
+        if (isMounted) {
+          if (data.authorized && data.videoUrl) {
+            setAccessStatus({
+              checking: false,
+              authorized: true,
+              videoUrl: data.videoUrl,
+              isFreePreview: data.isFreePreview,
+            });
+          } else if (currentLesson?.isFreePreview && currentLesson?.videoUrl) {
+            // Free preview lessons are always playable
+            setAccessStatus({
+              checking: false,
+              authorized: true,
+              videoUrl: currentLesson.videoUrl,
+              isFreePreview: true,
+            });
+          } else {
+            setAccessStatus({
+              checking: false,
+              authorized: false,
+              reason: data.reason || "locked",
+              isPending: !!data.isPending,
+              orderNumber: data.orderNumber,
+              transactionId: data.transactionId,
+              message: data.message,
+            });
+          }
+        }
+      } catch (err) {
+        if (isMounted) {
+          // Fallback to freePreview flag on static data if network fails
+          const isFree = currentLesson?.isFreePreview;
+          setAccessStatus({
+            checking: false,
+            authorized: !!isFree,
+            videoUrl: isFree ? currentLesson?.videoUrl : undefined,
+          });
+        }
+      }
+    }
+
+    if (currentLesson) {
+      checkLessonAccess();
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [slug, currentLesson?.id, lessonId]);
 
   // Completed lessons state
   const [completedLessons, setCompletedLessons] = useState<Record<string, boolean>>({
@@ -58,19 +219,215 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
     }));
   };
 
-  // Find all lessons in flat order for prev/next navigation
-  const allLessons = course.curriculum.flatMap((s) => s.lessons);
+  // If no lessons are available at all for this course, render clean state
+  if (!currentLesson || allLessons.length === 0) {
+    return (
+      <div className="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-bengali">
+        <header className="h-14 sticky top-0 border-b border-slate-800 bg-slate-900 px-4 flex items-center justify-between shrink-0 z-40">
+          <div className="flex items-center gap-3">
+            <Link
+              href={`/course/${course.slug}`}
+              className="p-1.5 rounded hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+              title="কোর্সে ফিরে যান"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </Link>
+            <div className="border-l border-slate-800 pl-3">
+              <h1 className="font-bold text-xs lg:text-sm text-white truncate max-w-xs lg:max-w-md">
+                {course.titleBn || course.title}
+              </h1>
+              <span className="text-[11px] text-slate-400">অনলাইন ক্লাসরুম</span>
+            </div>
+          </div>
+
+          <Link
+            href="/dashboard/my-courses"
+            className="btn btn-sm btn-outline text-xs text-slate-200 border-slate-700 hover:bg-slate-800 flex items-center gap-1.5"
+          >
+            <span>আমার ড্যাশবোর্ড</span>
+          </Link>
+        </header>
+
+        <div className="flex-1 flex items-center justify-center p-6">
+          <div className="max-w-md w-full text-center space-y-5 bg-slate-900/60 border border-slate-800/80 rounded-3xl p-8 backdrop-blur-sm shadow-2xl">
+            <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/25 text-primary flex items-center justify-center mx-auto shadow-lg shadow-primary/10">
+              <BookOpen className="w-8 h-8 animate-pulse" />
+            </div>
+
+            <div className="space-y-2">
+              <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-primary/15 text-primary border border-primary/30">
+                শীঘ্রই ক্লাস শুরু হচ্ছে
+              </span>
+              <h2 className="text-xl sm:text-2xl font-black text-white">
+                ক্লাসসমূহ আপলোড প্রক্রিয়াধীন রয়েছে
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
+                '{course.titleBn || course.title}' কোর্সে এখনো কোনো ক্লাস বা ভিডিও আপলোড করা হয়নি। শিক্ষক ও মেন্টর দল খুব শীঘ্রই রুটিন অনুযায়ী ক্লাস আপলোড করবেন।
+              </p>
+            </div>
+
+            <div className="pt-3 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Link
+                href={`/course/${course.slug}`}
+                className="btn btn-primary font-bold w-full sm:w-auto px-5 py-2.5 text-xs flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span>কোর্সের বিবরণী দেখুন</span>
+              </Link>
+              <Link
+                href="/dashboard/my-courses"
+                className="btn btn-outline border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800 w-full sm:w-auto px-5 py-2.5 text-xs flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span>আমার কোর্সসমূহ</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const currentIndex = allLessons.findIndex((l) => l.id === currentLesson.id);
   const prevLesson = currentIndex > 0 ? allLessons[currentIndex - 1] : null;
   const nextLesson = currentIndex < allLessons.length - 1 ? allLessons[currentIndex + 1] : null;
 
   const totalCompleted = Object.values(completedLessons).filter(Boolean).length;
-  const progressPercent = Math.round((totalCompleted / allLessons.length) * 100);
+  const progressPercent = allLessons.length > 0
+    ? Math.round((totalCompleted / allLessons.length) * 100)
+    : 0;
+
+  // Modern Class Selector Playlist UI Renderer
+  const renderClassList = () => (
+    <div className="space-y-3.5">
+      {course.curriculum.map((section, sIdx) => {
+        const sectionCompletedCount = section.lessons.filter(
+          (l) => completedLessons[l.id]
+        ).length;
+        const isCurrentSection = section.lessons.some(
+          (l) => l.id === currentLesson.id
+        );
+
+        return (
+          <div
+            key={section.id}
+            className={`rounded-2xl border transition-all overflow-hidden ${
+              isCurrentSection
+                ? "border-primary/40 bg-slate-900/90 shadow-lg shadow-primary/5"
+                : "border-slate-800/80 bg-slate-900/40"
+            }`}
+          >
+            {/* Chapter Header */}
+            <div className="p-3.5 sm:p-4 bg-slate-900/95 border-b border-slate-800/80 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <span className="px-2 py-0.5 rounded-md bg-slate-800 border border-slate-700 text-slate-300 font-mono text-[11px] font-bold shrink-0">
+                  {sIdx + 1 < 10 ? `০${sIdx + 1}` : sIdx + 1}
+                </span>
+                <h4 className="font-bold text-xs sm:text-sm text-white font-bengali truncate">
+                  {section.titleBn}
+                </h4>
+              </div>
+              <span className="text-[11px] text-slate-400 font-bengali shrink-0">
+                {sectionCompletedCount}/{section.lessons.length} সম্পন্ন
+              </span>
+            </div>
+
+            {/* Lessons in Chapter */}
+            <div className="divide-y divide-slate-800/60 p-1.5 sm:p-2 space-y-1">
+              {section.lessons.map((lesson, lIdx) => {
+                const isActive = lesson.id === currentLesson.id;
+                const isDone = completedLessons[lesson.id];
+
+                return (
+                  <Link
+                    key={lesson.id}
+                    href={`/course/${course.slug}/learn/${lesson.id}`}
+                    className={`group flex items-center justify-between gap-3 p-3 rounded-xl transition-all cursor-pointer ${
+                      isActive
+                        ? "bg-slate-800/95 border-l-4 border-l-primary border-y border-r border-slate-700/80 shadow-md"
+                        : isDone
+                        ? "bg-slate-900/30 hover:bg-slate-800/50 border-l-4 border-l-emerald-500/70 border-y border-r border-slate-800/50"
+                        : "hover:bg-slate-800/60 border border-transparent hover:border-slate-800/80"
+                    }`}
+                  >
+                    {/* Left: Icon, Title, Subtitle */}
+                    <div className="flex items-center gap-3 min-w-0">
+                      {/* Completion Checkmark Button */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          toggleComplete(lesson.id);
+                        }}
+                        className="shrink-0 p-0.5 rounded hover:scale-110 transition-transform cursor-pointer"
+                        title={isDone ? "অসম্পন্ন করুন" : "সম্পন্ন হিসেবে চিহ্নিত করুন"}
+                      >
+                        {isDone ? (
+                          <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center">
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                          </div>
+                        ) : (
+                          <div className="w-6 h-6 rounded-full bg-slate-800 border border-slate-700 text-slate-400 group-hover:border-primary/40 flex items-center justify-center text-[10px] font-mono">
+                            {lIdx + 1}
+                          </div>
+                        )}
+                      </button>
+
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h5
+                            className={`text-xs sm:text-sm font-bengali leading-snug truncate ${
+                              isActive
+                                ? "text-white font-bold"
+                                : isDone
+                                ? "text-slate-300 group-hover:text-white"
+                                : "text-slate-300 group-hover:text-white"
+                            }`}
+                          >
+                            {lesson.titleBn}
+                          </h5>
+                          {isActive && (
+                            <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary border border-primary/30 text-[10px] font-bold font-bengali shrink-0 animate-pulse">
+                              এখন চলছে
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-[11px] text-slate-500 font-sans block mt-0.5">
+                          {lesson.title}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Right: Duration & Free/Paid badge */}
+                    <div className="flex items-center gap-2 shrink-0">
+                      {lesson.isFreePreview ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-bengali font-bold">
+                          <Unlock className="w-2.5 h-2.5" />
+                          <span>ফ্রি</span>
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/25 text-amber-400 text-[10px] font-bengali font-bold">
+                          <Lock className="w-2.5 h-2.5" />
+                          <span>পেইড</span>
+                        </span>
+                      )}
+                      <span className="text-[11px] font-mono text-slate-400 font-semibold bg-slate-800/80 px-2 py-0.5 rounded-md border border-slate-700/60">
+                        {lesson.duration}
+                      </span>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
 
   return (
     <div className="bg-slate-950 text-slate-100 min-h-screen flex flex-col">
       {/* Distraction-Free Top Bar */}
-      <header className="h-14 border-b border-slate-800 bg-slate-900/90 px-4 flex items-center justify-between shrink-0 z-30">
+      <header className="h-14 sticky top-0 border-b border-slate-800 bg-slate-900 px-4 flex items-center justify-between shrink-0 z-40">
         <div className="flex items-center gap-3">
           <Link
             href="/dashboard/my-courses"
@@ -112,193 +469,291 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
         </div>
       </header>
 
-      {/* Main Layout: Video on Left, Curriculum Sidebar on Right */}
+      {/* Main Layout: Video & Content on Left, Curriculum Sidebar on Right */}
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
-        {/* Video & Lesson Content (Left) */}
+        {/* Main Content Area */}
         <div className="flex-1 flex flex-col overflow-y-auto">
-          {/* Responsive Video Container */}
-          <div className="relative aspect-video w-full bg-black shrink-0">
-            <iframe
-              src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?rel=0&modestbranding=1"
-              title={currentLesson.titleBn}
-              className="w-full h-full border-0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            />
+          {/* Custom Branded Video Player OR High-End Anti-Bypass Locked Screen */}
+          <div className="w-full bg-black shrink-0 shadow-2xl">
+            {accessStatus.checking ? (
+              <div className="w-full aspect-video bg-slate-950 flex flex-col items-center justify-center gap-3 text-slate-400 font-bengali">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                <span className="text-xs font-medium">ক্লাসের সিকিউরিটি ভেরিফিকেশন চলছে...</span>
+              </div>
+            ) : accessStatus.authorized && accessStatus.videoUrl ? (
+              <CustomVideoPlayer
+                videoUrlOrId={accessStatus.videoUrl}
+                title={`${course.titleBn} — ${currentLesson.titleBn}`}
+                thumbnailUrl={course.thumbnail}
+                autoPlay={false}
+                onEnded={() => {
+                  setCompletedLessons((prev) => ({
+                    ...prev,
+                    [currentLesson.id]: true,
+                  }));
+                }}
+              />
+            ) : accessStatus.isPending ? (
+              /* Dedicated Pending Verification Review Screen - User already submitted order */
+              <div className="w-full aspect-video bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex flex-col items-center justify-center p-6 text-center relative overflow-hidden">
+                {/* Radiant Glow */}
+                <div className="absolute w-80 sm:w-96 h-80 sm:h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none -top-20" />
+                <div className="absolute w-64 h-64 bg-orange-500/10 rounded-full blur-2xl pointer-events-none -bottom-10" />
+
+                <div className="relative z-10 max-w-lg space-y-4 font-bengali">
+                  <div className="w-16 h-16 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto shadow-xl shadow-amber-500/10">
+                    <Clock className="w-8 h-8 animate-pulse" />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                      <Clock className="w-3.5 h-3.5" />
+                      <span>পেমেন্ট যাচাইকরণ প্রক্রিয়াধীন</span>
+                    </div>
+
+                    <h3 className="text-lg sm:text-2xl font-black text-white leading-tight">
+                      আপনার পেমেন্ট রিকোয়েস্ট যাচাই করা হচ্ছে
+                    </h3>
+
+                    <p className="text-xs sm:text-sm text-slate-300 max-w-md mx-auto leading-relaxed">
+                      {accessStatus.message ||
+                        "আপনার পেমেন্ট রিকোয়েস্ট যাচাইকরণ প্রক্রিয়াধীন রয়েছে। অ্যাডমিন যাচাই সম্পন্ন করলেই ক্লাসটি স্বয়ংক্রিয়ভাবে চালু হয়ে যাবে।"}
+                    </p>
+                  </div>
+
+                  {(accessStatus.orderNumber || accessStatus.transactionId) && (
+                    <div className="bg-slate-900/85 border border-amber-500/25 rounded-2xl p-3 text-xs text-slate-300 max-w-xs mx-auto space-y-1 font-sans">
+                      {accessStatus.orderNumber && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-slate-400 font-bengali">অর্ডার নং:</span>
+                          <span className="font-bold text-white font-mono">#{accessStatus.orderNumber}</span>
+                        </div>
+                      )}
+                      {accessStatus.transactionId && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-slate-400 font-bengali">TrxID:</span>
+                          <span className="font-bold text-amber-400 font-mono">{accessStatus.transactionId}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* CTAs for Pending */}
+                  <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+                    <Link
+                      href="/dashboard/my-courses"
+                      className="btn btn-primary bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 border-none px-6 py-2.5 text-xs sm:text-sm font-bold shadow-lg shadow-amber-500/20 hover:scale-105 transition-all flex items-center gap-2 w-full sm:w-auto justify-center text-white cursor-pointer"
+                    >
+                      <Receipt className="w-4 h-4" />
+                      <span>আমার কোর্স ড্যাশবোর্ড দেখুন</span>
+                    </Link>
+
+                    <Link
+                      href={`/course/${course.slug}`}
+                      className="btn btn-outline border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800 px-4 py-2.5 text-xs font-semibold w-full sm:w-auto justify-center"
+                    >
+                      কোর্স ওভারভিউতে ফিরে যান
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* Anti-Bypass Locked Class Screen - Absolutely NO Video URL leaked to DOM */
+              <div className="w-full aspect-video bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex flex-col items-center justify-center p-6 text-center relative overflow-hidden">
+                {/* Radiant Glow */}
+                <div className="absolute w-80 sm:w-96 h-80 sm:h-96 bg-primary/10 rounded-full blur-3xl pointer-events-none -top-20" />
+                <div className="absolute w-64 h-64 bg-amber-500/10 rounded-full blur-2xl pointer-events-none -bottom-10" />
+
+                <div className="relative z-10 max-w-lg space-y-4 font-bengali">
+                  <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto shadow-xl shadow-amber-500/10">
+                    <Lock className="w-8 h-8 animate-pulse" />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                      <span>লক করা প্রিমিয়াম ক্লাস</span>
+                    </div>
+
+                    <h3 className="text-lg sm:text-2xl font-black text-white leading-tight">
+                      এই ক্লাসটি শুধুমাত্র এনরোল্ড শিক্ষার্থীদের জন্য সংরক্ষিত
+                    </h3>
+
+                    <p className="text-xs sm:text-sm text-slate-300 max-w-md mx-auto leading-relaxed">
+                      সম্পূর্ণ কোর্সের কনসেপ্ট বিশ্লেষণ, এইচডি ক্লাস, স্পেশাল প্র্যাকটিস শিট ও মেন্টর সাপোর্ট পেতে এখনই ভর্তি সম্পন্ন করুন।
+                    </p>
+                  </div>
+
+                  {/* Pricing & CTA */}
+                  <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+                    <Link
+                      href={`/checkout/${course.slug}`}
+                      className="btn btn-primary px-6 py-2.5 text-xs sm:text-sm font-bold shadow-lg shadow-primary/25 hover:scale-105 transition-all flex items-center gap-2 w-full sm:w-auto justify-center"
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      <span>
+                        এখনই ভর্তি হোন ({course.price === 0 ? "ফ্রি" : `৳${course.price.toLocaleString()}`})
+                      </span>
+                    </Link>
+
+                    {isLoggedIn ? (
+                      <Link
+                        href="/dashboard/my-courses"
+                        className="btn btn-outline border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800 px-4 py-2.5 text-xs font-semibold w-full sm:w-auto justify-center"
+                      >
+                        আমার কোর্স ড্যাশবোর্ড
+                      </Link>
+                    ) : (
+                      <Link
+                        href={`/login?redirect=/course/${course.slug}/learn/${currentLesson.id}`}
+                        className="btn btn-outline border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800 px-4 py-2.5 text-xs font-semibold w-full sm:w-auto justify-center"
+                      >
+                        ইতিমধ্যে ভর্তি হলে লগইন করুন
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Player Controls Bar */}
-          <div className="bg-slate-900 border-b border-slate-800 p-4 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => toggleComplete(currentLesson.id)}
-                className={`btn btn-sm text-xs font-bengali flex items-center gap-1.5 transition-colors ${
-                  completedLessons[currentLesson.id]
-                    ? "bg-success/20 text-success border border-success/30 hover:bg-success/30"
-                    : "btn-outline border-slate-700 text-slate-300 hover:bg-slate-800"
+          {/* Sleek Action Bar Directly Under Video */}
+          <div className="bg-slate-900/95 border-b border-slate-800/90 px-4 py-3 sm:px-6 flex flex-wrap items-center justify-between gap-3 shadow-md">
+            {/* Completion Toggle Pill */}
+            <button
+              type="button"
+              onClick={() => toggleComplete(currentLesson.id)}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-bengali font-bold flex items-center gap-2 transition-all cursor-pointer shadow-sm ${
+                completedLessons[currentLesson.id]
+                  ? "bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25"
+                  : "bg-slate-800/90 hover:bg-slate-800 border border-slate-700/80 text-slate-300 hover:text-white"
+              }`}
+            >
+              <CheckCircle2
+                className={`w-4 h-4 transition-transform ${
+                  completedLessons[currentLesson.id] ? "text-emerald-400 scale-110" : "text-slate-400"
                 }`}
-              >
-                <CheckCircle2 className="w-4 h-4" />
-                <span>
-                  {completedLessons[currentLesson.id] ? "লেসন সম্পন্ন হয়েছে" : "সম্পন্ন হিসেবে চিহ্নিত করুন"}
-                </span>
-              </button>
-            </div>
+              />
+              <span>
+                {completedLessons[currentLesson.id] ? "ক্লাসটি সম্পন্ন হয়েছে" : "সম্পন্ন হিসেবে চিহ্নিত করুন"}
+              </span>
+            </button>
 
-            {/* Prev / Next buttons */}
+            {/* Prev / Next Navigation Buttons */}
             <div className="flex items-center gap-2">
               {prevLesson ? (
                 <Link
                   href={`/course/${course.slug}/learn/${prevLesson.id}`}
-                  className="btn btn-sm btn-outline border-slate-700 text-slate-300 hover:bg-slate-800 text-xs font-bengali flex items-center gap-1"
+                  className="px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-800 border border-slate-700/70 text-slate-200 hover:text-white text-xs font-bengali flex items-center gap-1.5 transition-colors cursor-pointer"
                 >
                   <ChevronLeft className="w-3.5 h-3.5" />
                   <span>পূর্ববর্তী ক্লাস</span>
                 </Link>
               ) : (
-                <button
-                  disabled
-                  className="btn btn-sm btn-outline border-slate-800 text-slate-600 text-xs font-bengali cursor-not-allowed opacity-50"
-                >
+                <span className="px-3 py-1.5 rounded-lg border border-slate-800 text-slate-600 text-xs font-bengali opacity-50 cursor-not-allowed">
                   পূর্ববর্তী ক্লাস
-                </button>
+                </span>
               )}
 
               {nextLesson ? (
                 <Link
                   href={`/course/${course.slug}/learn/${nextLesson.id}`}
-                  className="btn btn-sm btn-primary text-xs font-bengali flex items-center gap-1 font-bold"
+                  className="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-primary to-orange-500 hover:brightness-110 text-white text-xs font-bengali font-bold flex items-center gap-1.5 shadow-md shadow-primary/20 transition-all cursor-pointer"
                 >
                   <span>পরবর্তী ক্লাস</span>
                   <ChevronRight className="w-3.5 h-3.5" />
                 </Link>
               ) : (
-                <button
-                  disabled
-                  className="btn btn-sm btn-outline border-slate-800 text-slate-600 text-xs font-bengali cursor-not-allowed opacity-50"
-                >
+                <span className="px-3 py-1.5 rounded-lg border border-slate-800 text-slate-600 text-xs font-bengali opacity-50 cursor-not-allowed">
                   কোর্সের শেষ ক্লাস
-                </button>
+                </span>
               )}
             </div>
           </div>
 
-          {/* Lesson Details & Downloadable Resources */}
-          <div className="p-6 lg:p-8 space-y-6 max-w-4xl">
-            <div>
-              <span className="text-xs font-semibold text-primary font-bengali block mb-1">
-                বর্তমান ক্লাস:
-              </span>
-              <h2 className="text-xl lg:text-2xl font-bold text-white font-bengali">
+          {/* Lesson Details & Class Selector Section */}
+          <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-5xl">
+            {/* Lesson Title Header */}
+            <div className="bg-slate-900/60 rounded-2xl border border-slate-800/80 p-4 sm:p-6 backdrop-blur-xs space-y-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-full bg-primary/15 border border-primary/30 text-primary text-[11px] font-bold font-bengali">
+                  {currentSectionTitle}
+                </span>
+                <span className="px-2.5 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300 text-[11px] font-mono flex items-center gap-1">
+                  <Clock className="w-3 h-3 text-primary" />
+                  {currentLesson.duration}
+                </span>
+                <span className="px-2.5 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-amber-300 text-[11px] font-mono font-bold">
+                  HD 1080p
+                </span>
+                {currentLesson.isFreePreview && (
+                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[11px] font-bengali font-bold">
+                    ফ্রি প্রিভিউ
+                  </span>
+                )}
+              </div>
+
+              <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white font-bengali leading-tight">
                 {currentLesson.titleBn}
               </h2>
-              <p className="text-xs text-slate-400 font-sans mt-0.5">
-                {currentLesson.title} • সময়কাল: {currentLesson.duration}
+              <p className="text-xs sm:text-sm text-slate-400 font-sans">
+                {currentLesson.title}
               </p>
             </div>
 
-            {/* Lesson Resources Download Card */}
-            <div className="bg-slate-900 rounded-lg border border-slate-800 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-primary/15 text-primary flex items-center justify-center shrink-0">
-                  <FileDown className="w-5 h-5" />
+            {/* ========================================================================= */}
+            {/* CLASS SELECTOR (কোর্স কারিকুলাম ও সকল ক্লাস)                              */}
+            {/* ========================================================================= */}
+            <div className="space-y-4 pt-2">
+              {/* Selector Header & Progress Stats */}
+              <div className="bg-slate-900/80 rounded-2xl border border-slate-800/90 p-4 sm:p-5 backdrop-blur-sm shadow-md">
+                <div className="flex items-center justify-between gap-3 mb-2.5">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse" />
+                    <h3 className="font-bold text-sm sm:text-base text-white font-bengali">
+                      কোর্স কারিকুলাম ও সকল ক্লাস তালিকা
+                    </h3>
+                  </div>
+                  <span className="text-xs font-mono font-bold text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-full">
+                    {progressPercent}% সম্পন্ন
+                  </span>
                 </div>
-                <div>
-                  <h4 className="font-bold text-sm text-white font-bengali">
-                    ক্লাস লেকচার শিট ও প্র্যাকটিস নোট
-                  </h4>
-                  <p className="text-xs text-slate-400 font-sans">
-                    PDF Document • 4.2 MB • High Resolution
-                  </p>
+
+                {/* Progress Bar */}
+                <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden mb-2">
+                  <div
+                    className="h-full bg-gradient-to-r from-primary via-orange-500 to-amber-400 rounded-full transition-all duration-500"
+                    style={{ width: `${progressPercent}%` }}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between text-[11px] text-slate-400 font-bengali">
+                  <span>সর্বমোট {allLessons.length}টি ক্লাস</span>
+                  <span>{totalCompleted}টি ক্লাস সম্পন্ন হয়েছে</span>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => alert("লেকচার শিট PDF ডাউনলোড শুরু হচ্ছে...")}
-                className="btn btn-sm btn-outline border-slate-700 text-slate-200 hover:bg-slate-800 font-bengali text-xs font-semibold flex items-center gap-1.5 shrink-0"
-              >
-                <Download className="w-3.5 h-3.5" />
-                <span>পিডিএফ ডাউনলোড</span>
-              </button>
+
+              {/* Class Selector Playlist */}
+              {renderClassList()}
             </div>
           </div>
         </div>
 
-        {/* Curriculum Sidebar (Right) */}
+        {/* Curriculum Sidebar (Desktop only) */}
         {sidebarOpen && (
-          <aside className="w-full lg:w-96 bg-slate-900 border-l border-slate-800 flex flex-col shrink-0 overflow-y-auto">
-            <div className="p-4 border-b border-slate-800 flex items-center justify-between sticky top-0 bg-slate-900 z-10">
-              <h3 className="font-bold text-sm text-white font-bengali">
-                কোর্স কারিকুলাম
+          <aside className="hidden lg:flex w-96 bg-slate-900 border-l border-slate-800 flex-col shrink-0 overflow-y-auto">
+            <div className="p-4 border-b border-slate-800 flex items-center justify-between sticky top-0 bg-slate-900/95 backdrop-blur-md z-10">
+              <h3 className="font-bold text-sm text-white font-bengali flex items-center gap-2">
+                <Layers className="w-4 h-4 text-primary" />
+                <span>ক্লাস প্লেলিস্ট</span>
               </h3>
-              <span className="text-xs text-slate-400 font-sans">
+              <span className="text-xs text-slate-400 font-sans font-bold">
                 {allLessons.length} Lessons
               </span>
             </div>
 
-            <div className="divide-y divide-slate-800/80">
-              {course.curriculum.map((section, sIdx) => (
-                <div key={section.id} className="p-3">
-                  <h4 className="text-xs font-bold text-slate-300 font-bengali mb-2 px-2">
-                    {section.titleBn}
-                  </h4>
-                  <div className="space-y-1">
-                    {section.lessons.map((lesson) => {
-                      const isActive = lesson.id === currentLesson.id;
-                      const isDone = completedLessons[lesson.id];
-
-                      return (
-                        <Link
-                          key={lesson.id}
-                          href={`/course/${course.slug}/learn/${lesson.id}`}
-                          className={`flex items-start gap-2.5 p-2 rounded-md text-xs font-bengali transition-colors ${
-                            isActive
-                              ? "bg-primary text-white font-semibold"
-                              : "text-slate-300 hover:bg-slate-800/80"
-                          }`}
-                        >
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              toggleComplete(lesson.id);
-                            }}
-                            className="shrink-0 mt-0.5"
-                          >
-                            {isDone ? (
-                              <CheckCircle2
-                                className={`w-3.5 h-3.5 ${
-                                  isActive ? "text-white" : "text-success"
-                                }`}
-                              />
-                            ) : (
-                              <Circle
-                                className={`w-3.5 h-3.5 ${
-                                  isActive ? "text-white/60" : "text-slate-500"
-                                }`}
-                              />
-                            )}
-                          </button>
-                          <div className="flex-1 min-w-0">
-                            <span className="truncate block leading-tight">
-                              {lesson.titleBn}
-                            </span>
-                            <span
-                              className={`text-[11px] font-sans ${
-                                isActive ? "text-white/80" : "text-slate-500"
-                              }`}
-                            >
-                              {lesson.duration}
-                            </span>
-                          </div>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
+            <div className="p-3">
+              {renderClassList()}
             </div>
           </aside>
         )}

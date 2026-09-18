@@ -24,37 +24,43 @@ export function mapDbCourseToAppCourse(dbCourse: any): Course {
       ? dbCourse.thumbnail_url
       : DEFAULT_COURSE_THUMBNAIL;
 
-  const defaultCurriculum: CurriculumSection[] = [
-    {
-      id: `sec-${dbCourse.id || 1}`,
-      title: "অধ্যায় ১: মৌলিক ধারণা ও ভিত্তি তৈরি",
-      titleBn: "অধ্যায় ১: মৌলিক ধারণা ও ভিত্তি তৈরি",
-      lessons: [
-        {
-          id: `les-1`,
-          title: "Course Orientation & Guideline",
-          titleBn: "কোর্স ওরিয়েন্টেশন ও প্রস্তুতি কৌশল",
-          duration: "20:00",
-          isFreePreview: true,
-          videoUrl: dbCourse.preview_video_url || "https://www.youtube.com/embed/dQw4w9WgXcQ",
-        },
-        {
-          id: `les-2`,
-          title: "Core Concepts & Fundamentals",
-          titleBn: "মৌলিক অধ্যায় ও কনসেপ্ট বিশ্লেষণ",
-          duration: "45:00",
-          isFreePreview: false,
-        },
-        {
-          id: `les-3`,
-          title: "Previous Years Question Solutions",
-          titleBn: "বিগত বছরের প্রশ্ন সমাধান ও শর্টকাট টেকনিক",
-          duration: "50:00",
-          isFreePreview: false,
-        },
-      ],
-    },
-  ];
+  // Build curriculum from real DB sections and lessons only — no fake/mock fallback
+  let mappedCurriculum: CurriculumSection[] = [];
+  if (Array.isArray(dbCourse.course_sections) && dbCourse.course_sections.length > 0) {
+    const sortedSections = [...dbCourse.course_sections].sort(
+      (a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0)
+    );
+
+    const totalLessonsInSections = sortedSections.reduce(
+      (acc: number, sec: any) => acc + (Array.isArray(sec.lessons) ? sec.lessons.length : 0),
+      0
+    );
+
+    if (totalLessonsInSections > 0) {
+      mappedCurriculum = sortedSections.map((sec: any, sIdx: number) => {
+        const sortedLessons = Array.isArray(sec.lessons)
+          ? [...sec.lessons].sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0))
+          : [];
+
+        return {
+          id: String(sec.id || `sec-${sIdx + 1}`),
+          title: sec.title || sec.title_bn || `Chapter ${sIdx + 1}`,
+          titleBn: sec.title_bn || sec.title || `অধ্যায় ${sIdx + 1}`,
+          lessons: sortedLessons.map((les: any, lIdx: number) => ({
+            id: String(les.id || `les-${sIdx + 1}-${lIdx + 1}`),
+            title: les.title || les.title_bn || `Class ${lIdx + 1}`,
+            titleBn: les.title_bn || les.title || `ক্লাস ${lIdx + 1}`,
+            duration: les.video_duration
+              ? `${les.video_duration}:00`
+              : les.duration || "30:00",
+            isFreePreview: les.is_preview === true || les.isFreePreview === true,
+            videoUrl: les.video_url || les.videoUrl || "",
+          })),
+        };
+      });
+    }
+    // If sections exist but have 0 lessons, mappedCurriculum stays [] (empty)
+  }
 
   return {
     id: String(dbCourse.id),
@@ -80,11 +86,11 @@ export function mapDbCourseToAppCourse(dbCourse: any): Course {
     reviewsCount: 128,
     enrolledCount: Number(dbCourse.enrollment_count) || 1250,
     durationHours: Math.max(1, Math.round((Number(dbCourse.total_duration) || 2400) / 60)),
-    totalLessons: Number(dbCourse.total_lessons) || 35,
+    totalLessons: Number(dbCourse.total_lessons) || mappedCurriculum.reduce((acc, s) => acc + s.lessons.length, 0),
     level: "Intermediate",
     language: "বাংলা",
     thumbnail: thumbnail,
-    previewVideoUrl: dbCourse.preview_video_url || "https://www.youtube.com/embed/dQw4w9WgXcQ",
+    previewVideoUrl: dbCourse.preview_video_url || "",
     isFeatured: !!dbCourse.is_featured,
     isPopular: !!dbCourse.is_featured,
     badge: dbCourse.is_featured ? "জনপ্রিয় কোর্স" : undefined,
@@ -102,7 +108,7 @@ export function mapDbCourseToAppCourse(dbCourse: any): Course {
       "নিয়মিত ক্লাস ও প্র্যাকটিস শিট অনুশীলনের মানসিকতা",
       "ইন্টারনেট কানেকশন ও স্মার্টফোন বা কম্পিউটার",
     ],
-    curriculum: defaultCurriculum,
+    curriculum: mappedCurriculum,
     faqs: [
       {
         question: "ক্লাসগুলো কি রেকর্ডেড থাকবে?",

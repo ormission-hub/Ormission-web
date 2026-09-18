@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { BrandLogo } from "@/components/global/brand-logo";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +33,11 @@ const footerLinks = {
 };
 
 export function Footer() {
+  const pathname = usePathname();
+  if (pathname?.includes("/learn/")) {
+    return null;
+  }
+
   return (
     <footer className="bg-surface border-t border-border">
       <div className="container-main">

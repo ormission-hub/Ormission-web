@@ -148,6 +148,9 @@ export default function MyCoursesPage() {
             const thumb =
               order.courses?.thumbnail_url || COURSES[0].thumbnail;
 
+            const matchedCourse = COURSES.find((c) => c.slug === slug);
+            const firstLessonId = matchedCourse?.curriculum?.[0]?.lessons?.[0]?.id || "l-1-1";
+
             return (
               <div
                 key={order.id}
@@ -211,7 +214,7 @@ export default function MyCoursesPage() {
                 <div className="p-5 pt-0">
                   {isApproved ? (
                     <Link
-                      href={`/course/${slug}/learn/les-1`}
+                      href={`/course/${slug}/learn/${firstLessonId}`}
                       className="w-full py-2.5 px-4 rounded-xl font-bold text-xs text-white bg-primary hover:bg-primary-hover flex items-center justify-center gap-2 shadow-xs transition-colors"
                     >
                       <Play className="w-3.5 h-3.5 fill-white" />

@@ -24,6 +24,8 @@ import {
   LogOut,
   Wallet,
   Gift,
+  BookOpen,
+  Play,
 } from "lucide-react";
 import { getCourseBySlug, COURSES, type Course } from "@/lib/data/courses";
 import { createClient } from "@/lib/supabase/client";
@@ -101,6 +103,18 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
   const [appliedCouponName, setAppliedCouponName] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  // Enrollment & Order Status Check
+  const [enrollmentStatus, setEnrollmentStatus] = useState<{
+    checking: boolean;
+    isEnrolled: boolean;
+    isPending: boolean;
+    pendingOrder?: any;
+  }>({
+    checking: true,
+    isEnrolled: false,
+    isPending: false,
+  });
+
   // 1. Check Auth & Load Course & Admin Payment Settings
   useEffect(() => {
     let isMounted = true;
@@ -138,6 +152,26 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
 
         if (isMounted && !courseErr && dbCourse) {
           setCourse(mapDbCourseToAppCourse(dbCourse));
+        }
+
+        // C. Check if student already enrolled or has pending payment order
+        try {
+          const accessRes = await fetch(`/api/course/access?courseSlug=${courseSlug}`, {
+            headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
+          });
+          const accessData = await accessRes.json();
+          if (isMounted && accessData.success) {
+            setEnrollmentStatus({
+              checking: false,
+              isEnrolled: !!accessData.isEnrolled,
+              isPending: !!accessData.isPending,
+              pendingOrder: accessData.pendingOrder,
+            });
+          } else if (isMounted) {
+            setEnrollmentStatus((prev) => ({ ...prev, checking: false }));
+          }
+        } catch {
+          if (isMounted) setEnrollmentStatus((prev) => ({ ...prev, checking: false }));
         }
 
         // C. Load Admin Payment Settings from site_settings
@@ -295,7 +329,7 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId: currentUser.id,
-          courseId: course.id || 10,
+          courseId: course.id,
           courseSlug: course.slug,
           courseTitle: course.titleBn || course.title,
           studentName: studentDisplayName,
@@ -313,36 +347,150 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
 
       const result = await res.json();
       if (!res.ok || !result.success) {
-        console.warn("Order API returned note:", result?.error);
+        alert(result?.error || "অর্ডার প্রক্রিয়াকরণে সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।");
+        setSubmitting(false);
+        return;
       }
-    } catch (e) {
-      console.warn("Order submission note:", e);
-    }
 
-    setTimeout(() => {
       setSubmitting(false);
       router.push(
         `/checkout/success?orderId=${orderNumber}&txId=${encodeURIComponent(txIdValue)}&course=${course.slug}&amount=${finalPrice}&method=${paymentMethod}&sender=${encodeURIComponent(senderPhone)}&status=pending`
       );
-    }, 600);
+    } catch (e: unknown) {
+      console.error("Order submission error:", e);
+      const msg = e instanceof Error ? e.message : "নেটওয়ার্ক সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।";
+      alert(msg);
+      setSubmitting(false);
+    }
   };
 
   const userMeta = currentUser?.user_metadata || {};
   const studentDisplayName = userMeta.full_name || userMeta.name || currentUser?.email?.split("@")[0] || "শিক্ষার্থী";
 
   // If auth is not checked or user is not logged in (waiting for redirect), show sleek checking state
-  if (!authChecked || !currentUser) {
+  if (!authChecked || !currentUser || enrollmentStatus.checking) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background px-4">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background px-4 font-bengali">
         <div className="flex flex-col items-center gap-3 p-8 rounded-2xl bg-surface border border-border shadow-lg max-w-sm w-full text-center">
           <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary animate-pulse">
             <ShieldCheck className="w-6 h-6" />
           </div>
-          <h2 className="text-base font-bold text-text font-bengali">অ্যাকাউন্ট যাচাই করা হচ্ছে...</h2>
-          <p className="text-xs text-text-muted font-bengali">
+          <h2 className="text-base font-bold text-text">অ্যাকাউন্ট ও কোর্স স্ট্যাটাস যাচাই করা হচ্ছে...</h2>
+          <p className="text-xs text-text-muted">
             অনুগ্রহ করে অপেক্ষা করুন, নিরাপদ চেকআউটে প্রবেশ করা হচ্ছে।
           </p>
           <Loader2 className="w-5 h-5 text-primary animate-spin mt-1" />
+        </div>
+      </div>
+    );
+  }
+
+  // ALREADY ENROLLED GUARD SCREEN - DIRECT ACCESS TO CLASSROOM
+  if (enrollmentStatus.isEnrolled) {
+    return (
+      <div className="min-h-screen bg-background text-text flex items-center justify-center px-4 py-12 relative overflow-hidden font-bengali">
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="relative max-w-md w-full bg-surface/95 backdrop-blur-xl rounded-3xl border border-emerald-500/30 p-6 sm:p-8 text-center shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-200">
+          <div className="w-16 h-16 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-500 flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/20">
+            <CheckCircle2 className="w-9 h-9 animate-bounce" />
+          </div>
+
+          <div className="space-y-2">
+            <span className="px-3 py-1 rounded-full text-xs font-black bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25">
+              ইতিমধ্যে সক্রিয় শিক্ষার্থী
+            </span>
+            <h2 className="text-xl sm:text-2xl font-black text-text">
+              আপনি ইতিমধ্যে এই কোর্সে ভর্তি আছেন!
+            </h2>
+            <p className="text-xs sm:text-sm text-text-muted leading-relaxed">
+              <strong className="text-text">{course.titleBn || course.title}</strong>-এর সকল ক্লাস, স্টাডি ম্যাটেরিয়াল ও সাপোর্ট আপনার অ্যাকাউন্টে সক্রিয় রয়েছে। পুনরায় পেমেন্ট করার প্রয়োজন নেই।
+            </p>
+          </div>
+
+          <div className="pt-3 space-y-3">
+            <Link
+              href={`/course/${course.slug}/learn/les-1`}
+              className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 text-white font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
+            >
+              <Play className="w-4 h-4 fill-white" />
+              <span>সরাসরি ক্লাসরুমে প্রবেশ করুন</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+
+            <Link
+              href="/dashboard/my-courses"
+              className="w-full py-3 px-6 rounded-2xl border border-border/80 hover:border-primary/50 bg-surface-secondary/70 hover:bg-surface-secondary text-text font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
+            >
+              <BookOpen className="w-4 h-4 text-primary" />
+              <span>আমার কোর্স ড্যাশবোর্ডে যান</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // PENDING VERIFICATION GUARD SCREEN - AVOID DUPLICATE PURCHASES
+  if (enrollmentStatus.isPending) {
+    return (
+      <div className="min-h-screen bg-background text-text flex items-center justify-center px-4 py-12 relative overflow-hidden font-bengali">
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="relative max-w-md w-full bg-surface/95 backdrop-blur-xl rounded-3xl border border-amber-500/30 p-6 sm:p-8 text-center shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-200">
+          <div className="w-16 h-16 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-500 flex items-center justify-center mx-auto shadow-lg shadow-amber-500/20">
+            <Clock className="w-9 h-9 animate-pulse" />
+          </div>
+
+          <div className="space-y-2">
+            <span className="px-3 py-1 rounded-full text-xs font-black bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/25">
+              পেমেন্ট যাচাইকরণ অপেক্ষারত
+            </span>
+            <h2 className="text-xl sm:text-2xl font-black text-text">
+              একটি অর্ডার ইতিমধ্যে প্রক্রিয়াধীন রয়েছে!
+            </h2>
+            <p className="text-xs sm:text-sm text-text-muted leading-relaxed">
+              <strong className="text-text">{course.titleBn || course.title}</strong>-এর জন্য আপনার একটি পেমেন্ট রিকোয়েস্ট অ্যাডমিন টিম যাচাই করছে। অনুগ্রহ করে অনুমোদন হওয়া পর্যন্ত অপেক্ষা করুন, ডুপ্লিকেট পেমেন্ট করবেন না।
+            </p>
+          </div>
+
+          {(enrollmentStatus.pendingOrder?.order_number || enrollmentStatus.pendingOrder?.transaction_id) && (
+            <div className="bg-surface-secondary/70 border border-amber-500/20 rounded-2xl p-3.5 text-xs text-text-muted space-y-1.5 font-sans">
+              {enrollmentStatus.pendingOrder?.order_number && (
+                <div className="flex justify-between items-center">
+                  <span className="text-text-muted font-bengali">অর্ডার নম্বর:</span>
+                  <span className="font-bold text-text font-mono">#{enrollmentStatus.pendingOrder.order_number}</span>
+                </div>
+              )}
+              {enrollmentStatus.pendingOrder?.transaction_id && (
+                <div className="flex justify-between items-center">
+                  <span className="text-text-muted font-bengali">ট্রানজ্যাকশন আইডি (TrxID):</span>
+                  <span className="font-bold text-primary font-mono">{enrollmentStatus.pendingOrder.transaction_id}</span>
+                </div>
+              )}
+              {enrollmentStatus.pendingOrder?.payment_method && (
+                <div className="flex justify-between items-center">
+                  <span className="text-text-muted font-bengali">পেমেন্ট মেথড:</span>
+                  <span className="font-bold text-text uppercase">{enrollmentStatus.pendingOrder.payment_method}</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="pt-3 space-y-3">
+            <Link
+              href="/dashboard/my-courses"
+              className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
+            >
+              <span>অর্ডারের অবস্থা দেখুন</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+
+            <Link
+              href={`/course/${course.slug}`}
+              className="w-full py-3 px-6 rounded-2xl border border-border/80 hover:border-primary/50 bg-surface-secondary/70 hover:bg-surface-secondary text-text font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
+            >
+              <span>কোর্স বিবরণীতে ফিরে যান</span>
+            </Link>
+          </div>
         </div>
       </div>
     );
