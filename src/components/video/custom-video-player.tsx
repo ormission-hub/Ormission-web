@@ -16,7 +16,14 @@ import {
   Sliders,
 } from "lucide-react";
 
-interface CustomVideoPlayerProps {
+declare global {
+  interface Window {
+    YT?: any;
+    onYouTubeIframeAPIReady?: () => void;
+  }
+}
+
+export interface CustomVideoPlayerProps {
   videoUrlOrId: string;
   title?: string;
   thumbnailUrl?: string;
@@ -24,6 +31,25 @@ interface CustomVideoPlayerProps {
   onEnded?: () => void;
   onProgress?: (progressPercent: number) => void;
   className?: string;
+  initialDuration?: string | number;
+}
+
+// Helper: Parse duration string ("35:00", "01:20:00", "45") or number to seconds
+export function parseDurationToSeconds(durationInput?: string | number): number {
+  if (typeof durationInput === "number") return durationInput > 0 ? durationInput : 0;
+  if (!durationInput) return 0;
+  const parts = String(durationInput).trim().split(":").map(Number);
+  if (parts.some(isNaN)) return 0;
+  if (parts.length === 3) {
+    return parts[0] * 3600 + parts[1] * 60 + parts[2];
+  }
+  if (parts.length === 2) {
+    return parts[0] * 60 + parts[1];
+  }
+  if (parts.length === 1) {
+    return parts[0];
+  }
+  return 0;
 }
 
 // Helper: Extract YouTube Video ID from any URL format or raw ID
@@ -82,6 +108,7 @@ export function CustomVideoPlayer({
   onEnded,
   onProgress,
   className = "",
+  initialDuration,
 }: CustomVideoPlayerProps) {
   const videoId = extractYouTubeId(videoUrlOrId);
 
@@ -98,7 +125,7 @@ export function CustomVideoPlayer({
   const [isBuffering, setIsBuffering] = useState(false);
   const [isIframeLoaded, setIsIframeLoaded] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
+  const [duration, setDuration] = useState<number>(() => parseDurationToSeconds(initialDuration));
   const [loadedFraction, setLoadedFraction] = useState(0);
   const [volume, setVolume] = useState(90);
   const [isMuted, setIsMuted] = useState(false);
@@ -108,6 +135,9 @@ export function CustomVideoPlayer({
   const [showControls, setShowControls] = useState(true);
   const [showSpeedMenu, setShowSpeedMenu] = useState(false);
   const [showQualityMenu, setShowQualityMenu] = useState(false);
+
+  // Scrubber drag tracking
+  const isDraggingScrubber = useRef(false);
 
   // Center feedback ripple
   const [actionFeedback, setActionFeedback] = useState<
@@ -125,15 +155,24 @@ export function CustomVideoPlayer({
     }
   }, []);
 
+  // Update duration if initialDuration prop updates
+  useEffect(() => {
+    const parsed = parseDurationToSeconds(initialDuration);
+    if (parsed > 0) {
+      setDuration((prev) => (prev > 0 ? prev : parsed));
+    }
+  }, [initialDuration, videoUrlOrId]);
+
   // PostMessage command sender to YouTube iframe
   const sendCommand = useCallback((func: string, args: any = []) => {
+    const argList = Array.isArray(args) ? args : [args];
     if (iframeRef.current && iframeRef.current.contentWindow) {
       try {
         iframeRef.current.contentWindow.postMessage(
           JSON.stringify({
             event: "command",
             func,
-            args: Array.isArray(args) ? args : [args],
+            args: argList,
           }),
           "*"
         );
@@ -183,19 +222,31 @@ export function CustomVideoPlayer({
       }
 
       // YouTube Info delivery (time, duration, quality)
-      if (payload.event === "infoDelivery" && payload.info) {
-        const info = payload.info;
-        if (typeof info.currentTime === "number") {
-          setCurrentTime(info.currentTime);
+      if (
+        (payload.event === "infoDelivery" || payload.event === "initialDelivery") &&
+        payload.info
+      ) {
+        let info = payload.info;
+        if (typeof info === "string") {
+          try {
+            info = JSON.parse(info);
+          } catch {
+            // ignore
+          }
         }
-        if (typeof info.duration === "number" && info.duration > 0) {
-          setDuration(info.duration);
-        }
-        if (typeof info.videoLoadedFraction === "number") {
-          setLoadedFraction(info.videoLoadedFraction);
-        }
-        if (typeof info.playbackQuality === "string") {
-          setCurrentQuality(info.playbackQuality);
+        if (info && typeof info === "object") {
+          if (typeof info.currentTime === "number" && !isDraggingScrubber.current) {
+            setCurrentTime(info.currentTime);
+          }
+          if (typeof info.duration === "number" && info.duration > 0) {
+            setDuration(info.duration);
+          }
+          if (typeof info.videoLoadedFraction === "number") {
+            setLoadedFraction(info.videoLoadedFraction);
+          }
+          if (typeof info.playbackQuality === "string") {
+            setCurrentQuality(info.playbackQuality);
+          }
         }
       }
     };
@@ -210,10 +261,22 @@ export function CustomVideoPlayer({
     if (iframeRef.current?.contentWindow) {
       try {
         iframeRef.current.contentWindow.postMessage(
+          JSON.stringify({ event: "listening" }),
+          "*"
+        );
+        iframeRef.current.contentWindow.postMessage(
           JSON.stringify({
-            event: "listening",
-            id: 1,
-            channel: "widget",
+            event: "command",
+            func: "addEventListener",
+            args: ["onStateChange"],
+          }),
+          "*"
+        );
+        iframeRef.current.contentWindow.postMessage(
+          JSON.stringify({
+            event: "command",
+            func: "addEventListener",
+            args: ["infoDelivery"],
           }),
           "*"
         );
@@ -229,23 +292,25 @@ export function CustomVideoPlayer({
     if (!isPlaying) return;
 
     const interval = setInterval(() => {
-      setCurrentTime((prev) => {
-        const next = prev + 0.5 * playbackRate;
-        if (duration > 0) {
-          if (next >= duration) return duration;
-          if (onProgress) {
-            onProgress(Math.round((next / duration) * 100));
+      if (!isDraggingScrubber.current) {
+        setCurrentTime((prev) => {
+          const next = prev + 0.5 * playbackRate;
+          if (duration > 0) {
+            if (next >= duration) return duration;
+            if (onProgress) {
+              onProgress(Math.round((next / duration) * 100));
+            }
           }
-        }
-        return next;
-      });
+          return next;
+        });
+      }
     }, 500);
 
     return () => clearInterval(interval);
   }, [isPlaying, playbackRate, duration, onProgress]);
 
-  // Auto-hide controls timer
-  const handleMouseMove = useCallback(() => {
+  // Show controls and schedule auto-hide countdown (2.5s)
+  const showAndScheduleHide = useCallback(() => {
     setShowControls(true);
     if (hideControlsTimer.current) {
       clearTimeout(hideControlsTimer.current);
@@ -257,6 +322,30 @@ export function CustomVideoPlayer({
         setShowQualityMenu(false);
       }, 2500);
     }
+  }, [isPlaying]);
+
+  // Auto-hide controls whenever video starts/resumes playing
+  useEffect(() => {
+    if (isPlaying) {
+      if (hideControlsTimer.current) {
+        clearTimeout(hideControlsTimer.current);
+      }
+      hideControlsTimer.current = setTimeout(() => {
+        setShowControls(false);
+        setShowSpeedMenu(false);
+        setShowQualityMenu(false);
+      }, 2500);
+    } else {
+      if (hideControlsTimer.current) {
+        clearTimeout(hideControlsTimer.current);
+      }
+      setShowControls(true);
+    }
+    return () => {
+      if (hideControlsTimer.current) {
+        clearTimeout(hideControlsTimer.current);
+      }
+    };
   }, [isPlaying]);
 
   const handleMouseLeave = () => {
@@ -336,24 +425,46 @@ export function CustomVideoPlayer({
     sendCommand("setPlaybackQualityRange", [qLevel, qLevel]);
   };
 
-  // Scrubber drag / click
-  const handleScrubberClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!progressBarRef.current || duration <= 0) return;
+  // Scrubber drag & click handlers (works for both mouse & mobile touch)
+  const calculateScrubberTime = (clientX: number) => {
+    if (!progressBarRef.current || duration <= 0) return 0;
     const rect = progressBarRef.current.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
+    const clickX = clientX - rect.left;
     const ratio = Math.max(0, Math.min(1, clickX / rect.width));
-    const targetTime = ratio * duration;
-    sendCommand("seekTo", [targetTime, true]);
-    setCurrentTime(targetTime);
+    return ratio * duration;
   };
 
-  const handleScrubberHover = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleScrubberPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (duration <= 0) return;
+    isDraggingScrubber.current = true;
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    const targetTime = calculateScrubberTime(e.clientX);
+    setCurrentTime(targetTime);
+    sendCommand("seekTo", [targetTime, true]);
+  };
+
+  const handleScrubberPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!progressBarRef.current || duration <= 0) return;
     const rect = progressBarRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const ratio = Math.max(0, Math.min(1, x / rect.width));
-    setHoverTime(ratio * duration);
-    setHoverX(x);
+    const targetTime = ratio * duration;
+    setHoverTime(targetTime);
+    setHoverX(Math.max(0, Math.min(rect.width, x)));
+
+    if (isDraggingScrubber.current) {
+      setCurrentTime(targetTime);
+      sendCommand("seekTo", [targetTime, true]);
+    }
+  };
+
+  const handleScrubberPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (isDraggingScrubber.current) {
+      isDraggingScrubber.current = false;
+      const targetTime = calculateScrubberTime(e.clientX);
+      setCurrentTime(targetTime);
+      sendCommand("seekTo", [targetTime, true]);
+    }
   };
 
   // Fullscreen
@@ -420,7 +531,7 @@ export function CustomVideoPlayer({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isPlaying, volume, isMuted, duration, currentTime, hasStarted]);
 
-  // Screen click: 1 click = play/pause, 2 clicks = rewind/forward
+  // Screen click: 1 click = show controls or toggle play/pause; 2 clicks = rewind/forward
   const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const handleScreenClick = (e: React.MouseEvent<HTMLDivElement>) => {
     e.stopPropagation();
@@ -428,11 +539,7 @@ export function CustomVideoPlayer({
     const clickX = e.clientX - rect.left;
     const ratio = clickX / rect.width;
 
-    if (e.detail === 1) {
-      clickTimeoutRef.current = setTimeout(() => {
-        togglePlay();
-      }, 220);
-    } else if (e.detail === 2) {
+    if (e.detail === 2) {
       if (clickTimeoutRef.current) {
         clearTimeout(clickTimeoutRef.current);
       }
@@ -443,7 +550,23 @@ export function CustomVideoPlayer({
       } else {
         toggleFullscreen();
       }
+      return;
     }
+
+    // Single click / tap
+    if (clickTimeoutRef.current) {
+      clearTimeout(clickTimeoutRef.current);
+    }
+    clickTimeoutRef.current = setTimeout(() => {
+      if (!showControls) {
+        // If controls were hidden, tap brings them back and schedules auto-hide
+        showAndScheduleHide();
+      } else {
+        // If controls were already visible, clicking toggles play/pause
+        togglePlay();
+        showAndScheduleHide();
+      }
+    }, 220);
   };
 
   // Block right click context menu
@@ -476,9 +599,9 @@ export function CustomVideoPlayer({
   return (
     <div
       ref={containerRef}
-      onMouseMove={handleMouseMove}
+      onMouseMove={showAndScheduleHide}
       onMouseLeave={handleMouseLeave}
-      onTouchStart={handleMouseMove}
+      onTouchStart={showAndScheduleHide}
       onContextMenu={handleContextMenu}
       className={`relative aspect-video w-full bg-black overflow-hidden select-none group font-sans ${className}`}
     >
@@ -492,14 +615,7 @@ export function CustomVideoPlayer({
             src={iframeSrc}
             onLoad={handleIframeLoad}
             title={title || "Video Lecture"}
-            className="border-0 pointer-events-none absolute"
-            style={{
-              /* Slightly oversized iframe: crops YouTube's thin top/bottom bars */
-              width: "106%",
-              height: "106%",
-              top: "-3%",
-              left: "-3%",
-            }}
+            className="border-0 pointer-events-none absolute w-full h-full inset-0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           />
         )}
@@ -531,24 +647,6 @@ export function CustomVideoPlayer({
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* 3. PERMANENT TOP SHIELD (Physically Blocks YouTube Title & Copy Link Bar) */}
-      {/* ========================================================================= */}
-      <div
-        onClick={handleScreenClick}
-        className={`absolute top-0 inset-x-0 h-16 sm:h-20 z-20 bg-gradient-to-b from-slate-950 via-slate-950/90 to-transparent pointer-events-auto cursor-pointer transition-all duration-300 ${
-          showControls || !isPlaying ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
-        title="প্লে অথবা পজ করতে ক্লিক করুন"
-      />
-
-      <div
-        onClick={handleScreenClick}
-        className={`absolute bottom-0 inset-x-0 h-12 sm:h-14 z-15 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent pointer-events-auto cursor-pointer transition-all duration-300 ${
-          showControls || !isPlaying ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
-      />
-
       {/* END-SCREEN BLOCKER — Covers YouTube's share/more-videos overlay when video ends */}
       {hasEnded && (
         <div
@@ -567,7 +665,7 @@ export function CustomVideoPlayer({
       )}
 
       {/* ========================================================================= */}
-      {/* 4. INTERACTIVE CLICK SHIELD (Screen Click to Play / Pause)                */}
+      {/* 3. INTERACTIVE CLICK SHIELD (Screen Click to Play / Pause)                */}
       {/* ========================================================================= */}
       <div
         onClick={handleScreenClick}
@@ -603,11 +701,11 @@ export function CustomVideoPlayer({
         </div>
       )}
 
-      {/* Center Play Button When Paused (ZERO FLOATING TEXT) */}
+      {/* Center Play Button When Paused */}
       {hasStarted && !isPlaying && (
         <div
           onClick={togglePlay}
-          className="absolute inset-0 z-20 flex items-center justify-center cursor-pointer bg-black/50 backdrop-blur-[1px] transition-all"
+          className="absolute inset-0 z-20 flex items-center justify-center cursor-pointer transition-all"
         >
           <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-gradient-to-tr from-primary to-orange-500 text-white flex items-center justify-center shadow-2xl transition-transform hover:scale-110 border-2 border-white/30">
             <Play className="w-8 h-8 sm:w-9 sm:h-9 fill-white text-white ml-1" />
@@ -616,9 +714,17 @@ export function CustomVideoPlayer({
       )}
 
       {/* ========================================================================= */}
-      {/* 4. BOTTOM CONTROLS BAR (Physically Covers YouTube Watermark Logo)         */}
+      {/* 4. BOTTOM CONTROLS BAR                                                    */}
       {/* ========================================================================= */}
       <div
+        onClick={(e) => {
+          e.stopPropagation();
+          showAndScheduleHide();
+        }}
+        onTouchStart={(e) => {
+          e.stopPropagation();
+          showAndScheduleHide();
+        }}
         className={`absolute bottom-0 inset-x-0 z-30 px-3 py-2.5 sm:px-4 sm:py-3.5 bg-gradient-to-t from-slate-950 via-slate-950/95 to-transparent transition-all duration-300 ${
           showControls || !isPlaying
             ? "opacity-100 translate-y-0"
@@ -628,23 +734,27 @@ export function CustomVideoPlayer({
         {/* Scrubber Timeline */}
         <div
           ref={progressBarRef}
-          onClick={handleScrubberClick}
-          onMouseMove={handleScrubberHover}
-          onMouseLeave={() => setHoverTime(null)}
-          className="relative h-1.5 sm:h-2 w-full bg-white/20 rounded-full cursor-pointer mb-2 sm:mb-2.5 group/progress transition-all hover:h-2.5"
+          onPointerDown={handleScrubberPointerDown}
+          onPointerMove={handleScrubberPointerMove}
+          onPointerUp={handleScrubberPointerUp}
+          onPointerCancel={handleScrubberPointerUp}
+          onMouseLeave={() => {
+            if (!isDraggingScrubber.current) setHoverTime(null);
+          }}
+          className="relative h-2 sm:h-2.5 w-full bg-white/25 rounded-full cursor-pointer mb-2 sm:mb-2.5 group/progress transition-all hover:h-3 touch-none select-none"
         >
           {/* Buffered */}
           <div
-            className="absolute top-0 left-0 h-full bg-white/30 rounded-full transition-all duration-150"
+            className="absolute top-0 left-0 h-full bg-white/30 rounded-full pointer-events-none transition-all duration-150"
             style={{ width: `${bufferPercent}%` }}
           />
 
           {/* Played */}
           <div
-            className="absolute top-0 left-0 h-full bg-gradient-to-r from-primary via-orange-500 to-amber-400 rounded-full"
+            className="absolute top-0 left-0 h-full bg-gradient-to-r from-primary via-orange-500 to-amber-400 rounded-full pointer-events-none"
             style={{ width: `${progressPercent}%` }}
           >
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-white shadow-lg border-2 border-primary scale-0 group-hover/progress:scale-100 transition-transform" />
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-white shadow-md border-2 border-primary transition-transform group-hover/progress:scale-110" />
           </div>
 
           {/* Hover Time Tooltip */}

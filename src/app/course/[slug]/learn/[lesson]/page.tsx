@@ -20,7 +20,7 @@ import {
   Receipt,
 } from "lucide-react";
 import { getCourseBySlug, COURSES, type Course, type Lesson } from "@/lib/data/courses";
-import { CustomVideoPlayer } from "@/components/video/custom-video-player";
+import { CustomVideoPlayer, extractYouTubeId } from "@/components/video/custom-video-player";
 import { createClient } from "@/lib/supabase/client";
 import { mapDbCourseToAppCourse } from "@/lib/supabase/course-mapper";
 
@@ -59,7 +59,15 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
                 video_duration,
                 is_preview,
                 is_published,
-                sort_order
+                sort_order,
+                lesson_servers (
+                  id,
+                  server_name,
+                  server_type,
+                  video_url,
+                  is_enabled,
+                  sort_order
+                )
               )
             )
           `)
@@ -399,11 +407,6 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
                           >
                             {lesson.titleBn}
                           </h5>
-                          {isActive && (
-                            <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary border border-primary/30 text-[10px] font-bold font-bengali shrink-0 animate-pulse">
-                              এখন চলছে
-                            </span>
-                          )}
                         </div>
                         <span className="text-[11px] text-slate-500 font-sans block mt-0.5">
                           {lesson.title}
@@ -506,12 +509,29 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
                   const activeType = activeServer.type || "youtube";
 
                   if (activeType === "youtube") {
+                    // Free/preview → simple YouTube iframe; Paid → CustomVideoPlayer with protection
+                    const isFreeVideo = Boolean(currentLesson?.isFreePreview || accessStatus?.isFreePreview);
+                    if (isFreeVideo) {
+                      const ytId = extractYouTubeId(activeUrl);
+                      return (
+                        <div className="w-full aspect-video bg-black">
+                          <iframe
+                            src={`https://www.youtube.com/embed/${ytId}?rel=0`}
+                            className="w-full h-full border-0"
+                            allowFullScreen
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            title={`${currentLesson.titleBn} — ফ্রি প্রিভিউ`}
+                          />
+                        </div>
+                      );
+                    }
                     return (
                       <CustomVideoPlayer
                         videoUrlOrId={activeUrl}
                         title={`${course.titleBn} — ${currentLesson.titleBn}`}
                         thumbnailUrl={course.thumbnail}
                         autoPlay={false}
+                        initialDuration={currentLesson.duration}
                         onEnded={() => {
                           setCompletedLessons((prev) => ({
                             ...prev,
@@ -527,8 +547,7 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
                           src={activeUrl}
                           className="w-full h-full border-0"
                           allowFullScreen
-                          allow="autoplay; encrypted-media; picture-in-picture"
-                          sandbox="allow-scripts allow-same-origin allow-popups allow-presentation"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                           title={`${currentLesson.titleBn} — ${activeServer.name}`}
                         />
                       </div>
@@ -555,21 +574,21 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
                   }
                 })()}
 
-                {/* Server Switcher Bar — only when multiple servers exist */}
+                {/* Server Switcher Bar — only when multiple servers */}
                 {accessStatus.servers && accessStatus.servers.length > 1 && (
-                  <div className="w-full bg-slate-900/90 backdrop-blur-sm border-t border-slate-800 px-3 py-1.5 flex items-center gap-2 overflow-x-auto">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider shrink-0 mr-1 font-bengali">সার্ভার:</span>
+                  <div className="w-full bg-slate-900/95 backdrop-blur-md border-t border-slate-800/90 px-3 sm:px-4 py-1.5 flex items-center gap-2 overflow-x-auto no-scrollbar">
                     {accessStatus.servers.map((srv, idx) => (
                       <button
                         key={idx}
+                        type="button"
                         onClick={() => setSelectedServerIndex(idx)}
-                        className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all whitespace-nowrap flex items-center gap-1.5 border ${
+                        className={`px-3 py-1 rounded-full text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 border cursor-pointer ${
                           selectedServerIndex === idx
                             ? "bg-primary text-white border-primary shadow-lg shadow-primary/30"
-                            : "bg-slate-800/70 text-slate-300 border-slate-700 hover:bg-slate-700 hover:text-white"
+                            : "bg-slate-800/70 text-slate-300 border-slate-700/80 hover:bg-slate-700 hover:text-white"
                         }`}
                       >
-                        {srv.type === "youtube" ? "🎬" : srv.type === "streamtape" ? "📺" : "🌐"}
+                        <span>{srv.type === "youtube" ? "🎬" : srv.type === "streamtape" ? "📺" : "🌐"}</span>
                         <span>{srv.name}</span>
                       </button>
                     ))}

@@ -1,6 +1,13 @@
 import { INSTRUCTORS, type Instructor } from "./instructors";
 import { CATEGORIES } from "./categories";
 
+export interface LessonServer {
+  id?: string;
+  name: string;
+  type?: string;
+  url: string;
+}
+
 export interface Lesson {
   id: string;
   title: string;
@@ -8,6 +15,7 @@ export interface Lesson {
   duration: string; // e.g. "24:15"
   isFreePreview: boolean;
   videoUrl?: string;
+  servers?: LessonServer[];
   resourcesCount?: number;
 }
 

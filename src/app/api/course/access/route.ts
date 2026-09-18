@@ -89,13 +89,27 @@ export async function POST(request: Request) {
                   url: s.video_url,
                 }));
 
-              // Primary videoUrl: first enabled server, or legacy video_url
-              const primaryUrl = enabledServers.length > 0 ? enabledServers[0].url : (found.video_url || "");
+              // Build final servers list — deduplicate by URL
+              let finalServers = enabledServers.length > 0
+                ? enabledServers
+                : (found.video_url ? [{ name: "YouTube", type: "youtube", url: found.video_url }] : []);
+
+              // Deduplicate by URL (case-insensitive)
+              const seenUrls = new Set<string>();
+              finalServers = finalServers.filter((s: any) => {
+                const key = (s.url || "").toLowerCase().trim();
+                if (!key || seenUrls.has(key)) return false;
+                seenUrls.add(key);
+                return true;
+              });
+
+              // Primary videoUrl: first server
+              const primaryUrl = finalServers.length > 0 ? finalServers[0].url : (found.video_url || "");
 
               targetLesson = {
                 id: String(found.id),
                 videoUrl: primaryUrl,
-                servers: enabledServers.length > 0 ? enabledServers : (found.video_url ? [{ name: "YouTube", type: "youtube", url: found.video_url }] : []),
+                servers: finalServers,
                 isFreePreview: found.is_preview === true,
               };
               break;
@@ -134,7 +148,26 @@ export async function POST(request: Request) {
       });
     }
 
-    // 4. Paid / Locked Lesson Verification
+    // 4. Admin Preview Bypass: Admins & superadmins have full access to inspect/test all lessons & servers
+    if (user) {
+      const { data: userProfile } = await supabaseAdmin
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (userProfile?.role === "admin" || userProfile?.role === "superadmin") {
+        return NextResponse.json({
+          authorized: true,
+          isFreePreview: false,
+          isAdmin: true,
+          videoUrl: targetLesson.videoUrl,
+          servers: targetLesson.servers,
+        });
+      }
+    }
+
+    // 5. Paid / Locked Lesson Verification
     // Unauthenticated user -> DENY (Zero video leak)
     if (!user) {
       return NextResponse.json({

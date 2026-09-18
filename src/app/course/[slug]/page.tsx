@@ -342,7 +342,7 @@ export default async function CourseDetailPage({ params }: PageProps) {
                   {durationHours} ঘণ্টার পূর্ণাঙ্গ সিলেবাস
                 </span>
               </div>
-              <CurriculumAccordion curriculum={course.curriculum || []} />
+              <CurriculumAccordion curriculum={course.curriculum || []} courseSlug={slug} />
             </div>
 
             {/* Instructor Bio Profile */}

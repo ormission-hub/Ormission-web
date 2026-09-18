@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { type Course } from "@/lib/data/courses";
-import { CustomVideoPlayer } from "@/components/video/custom-video-player";
+import { extractYouTubeId } from "@/components/video/custom-video-player";
 
 interface StickyPurchasePanelProps {
   course: Course;
@@ -136,11 +136,13 @@ export function StickyPurchasePanel({ course }: StickyPurchasePanelProps) {
         }))
     );
 
-  // State: video URL fetched securely from server API
+  // State: video URL and servers fetched securely from server API
   const [previewVideoUrl, setPreviewVideoUrl] = useState("");
+  const [previewServers, setPreviewServers] = useState<{ name: string; type: string; url: string }[]>([]);
+  const [selectedServerIdx, setSelectedServerIdx] = useState(0);
   const [loadingPreview, setLoadingPreview] = useState(false);
 
-  // Fetch video URL from server API when modal opens or chapter changes
+  // Fetch video URL and servers from server API when modal opens or chapter changes
   useEffect(() => {
     if (!showVideoModal) return;
 
@@ -148,12 +150,16 @@ export function StickyPurchasePanel({ course }: StickyPurchasePanelProps) {
     if (!chapter?.lessonId) {
       // Fallback: use course-level preview URL (if set in DB)
       setPreviewVideoUrl(course.previewVideoUrl || "");
+      setPreviewServers([]);
+      setSelectedServerIdx(0);
       return;
     }
 
     let cancelled = false;
     setLoadingPreview(true);
     setPreviewVideoUrl("");
+    setPreviewServers([]);
+    setSelectedServerIdx(0);
 
     fetch("/api/course/access", {
       method: "POST",
@@ -162,8 +168,13 @@ export function StickyPurchasePanel({ course }: StickyPurchasePanelProps) {
     })
       .then((res) => res.json())
       .then((data) => {
-        if (!cancelled && data.videoUrl) {
-          setPreviewVideoUrl(data.videoUrl);
+        if (!cancelled) {
+          if (data.videoUrl) {
+            setPreviewVideoUrl(data.videoUrl);
+          }
+          if (Array.isArray(data.servers)) {
+            setPreviewServers(data.servers);
+          }
         }
       })
       .catch(() => {})
@@ -661,19 +672,72 @@ export function StickyPurchasePanel({ course }: StickyPurchasePanelProps) {
                 <div className="aspect-video flex items-center justify-center">
                   <Loader2 className="w-8 h-8 text-primary animate-spin" />
                 </div>
-              ) : previewVideoUrl ? (
-                <CustomVideoPlayer
-                  videoUrlOrId={previewVideoUrl}
-                  title={`${previewChapters[activeChapterIndex]?.title || course.titleBn || course.title} — ফ্রি প্রিভিউ`}
-                  thumbnailUrl={thumbnail}
-                  autoPlay={true}
-                />
-              ) : (
-                <div className="aspect-video flex items-center justify-center text-text-muted font-bengali text-sm">
-                  ভিডিও লোড হচ্ছে না। পরে আবার চেষ্টা করুন।
-                </div>
-              )}
+              ) : (() => {
+                const activeServer = previewServers[selectedServerIdx] || {
+                  name: "YouTube",
+                  type: "youtube",
+                  url: previewVideoUrl,
+                };
+                const activeUrl = activeServer.url || previewVideoUrl;
+                const activeType = activeServer.type || "youtube";
+
+                if (!activeUrl) {
+                  return (
+                    <div className="aspect-video flex items-center justify-center text-text-muted font-bengali text-sm">
+                      ভিডিও লোড হচ্ছে না। পরে আবার চেষ্টা করুন।
+                    </div>
+                  );
+                }
+
+                if (activeType === "youtube") {
+                  const ytId = extractYouTubeId(activeUrl);
+                  return (
+                    <div className="w-full aspect-video bg-black">
+                      <iframe
+                        src={`https://www.youtube.com/embed/${ytId}?rel=0&autoplay=1`}
+                        className="w-full h-full border-0"
+                        allowFullScreen
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        title={`${previewChapters[activeChapterIndex]?.title || course.titleBn || course.title} — ফ্রি প্রিভিউ`}
+                      />
+                    </div>
+                  );
+                } else {
+                  return (
+                    <div className="w-full aspect-video bg-black">
+                      <iframe
+                        src={activeUrl}
+                        className="w-full h-full border-0"
+                        allowFullScreen
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        title={`${previewChapters[activeChapterIndex]?.title || course.titleBn || course.title} — ${activeServer.name}`}
+                      />
+                    </div>
+                  );
+                }
+              })()}
             </div>
+
+            {/* Server Switcher Bar — only when multiple servers */}
+            {previewServers.length > 1 && (
+              <div className="w-full bg-surface-secondary/80 border-t border-border px-4 py-1.5 flex items-center gap-2 overflow-x-auto no-scrollbar">
+                {previewServers.map((srv, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setSelectedServerIdx(idx)}
+                    className={`px-3 py-1 rounded-full text-xs font-bold font-bengali whitespace-nowrap flex items-center gap-1.5 border transition-all cursor-pointer ${
+                      selectedServerIdx === idx
+                        ? "bg-primary text-white border-primary shadow-xs"
+                        : "bg-surface text-text-muted hover:text-text border-border"
+                    }`}
+                  >
+                    <span>{srv.type === "youtube" ? "🎬" : srv.type === "streamtape" ? "📺" : "🌐"}</span>
+                    <span>{srv.name}</span>
+                  </button>
+                ))}
+              </div>
+            )}
 
             {/* Preview Chapters Navigation */}
             <div className="p-4 bg-surface-secondary/40 border-t border-border">

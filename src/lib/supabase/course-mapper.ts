@@ -48,6 +48,23 @@ export function mapDbCourseToAppCourse(dbCourse: any): Course {
           titleBn: sec.title_bn || sec.title || `অধ্যায় ${sIdx + 1}`,
           lessons: sortedLessons.map((les: any, lIdx: number) => {
             const isFree = les.is_preview === true || les.isFreePreview === true;
+            const rawServers = Array.isArray(les.lesson_servers) ? les.lesson_servers : [];
+            const mappedServers = rawServers
+              .filter((srv: any) => srv.is_enabled !== false)
+              .sort((a: any, b: any) => (a.sort_order || 1) - (b.sort_order || 1))
+              .map((srv: any) => ({
+                id: String(srv.id),
+                name: srv.server_name || "Server",
+                type: srv.server_type || "youtube",
+                url: srv.video_url || "",
+              }));
+
+            const fallbackServers = mappedServers.length > 0
+              ? mappedServers
+              : (les.video_url ? [{ id: `srv-${les.id}-1`, name: "YouTube", type: "youtube", url: les.video_url }] : []);
+
+            const primaryUrl = fallbackServers.length > 0 ? fallbackServers[0].url : (les.video_url || les.videoUrl || "");
+
             return {
               id: String(les.id || `les-${sIdx + 1}-${lIdx + 1}`),
               title: les.title || les.title_bn || `Class ${lIdx + 1}`,
@@ -56,9 +73,12 @@ export function mapDbCourseToAppCourse(dbCourse: any): Course {
                 ? `${les.video_duration}:00`
                 : les.duration || "30:00",
               isFreePreview: isFree,
-              // SECURITY: Only expose videoUrl for free preview lessons
+              // SECURITY: Only expose videoUrl and full server URLs for free preview lessons
               // Paid lesson URLs are ONLY served via /api/course/access after auth check
-              videoUrl: isFree ? (les.video_url || les.videoUrl || "") : undefined,
+              videoUrl: isFree ? primaryUrl : undefined,
+              servers: isFree
+                ? fallbackServers
+                : (fallbackServers.length > 0 ? fallbackServers.map((s: any) => ({ id: s.id, name: s.name, type: s.type, url: "" })) : undefined),
             };
           }),
         };

@@ -33,7 +33,15 @@ export async function getLiveCourseBySlug(
             video_duration,
             is_preview,
             is_published,
-            sort_order
+            sort_order,
+            lesson_servers (
+              id,
+              server_name,
+              server_type,
+              video_url,
+              is_enabled,
+              sort_order
+            )
           )
         )
       `)
@@ -77,7 +85,15 @@ export async function getLiveCourses(): Promise<Course[]> {
             video_duration,
             is_preview,
             is_published,
-            sort_order
+            sort_order,
+            lesson_servers (
+              id,
+              server_name,
+              server_type,
+              video_url,
+              is_enabled,
+              sort_order
+            )
           )
         )
       `)

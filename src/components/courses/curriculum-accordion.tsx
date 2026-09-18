@@ -1,14 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { ChevronDown, PlayCircle, FileText, Lock, Video } from "lucide-react";
 import { type CurriculumSection } from "@/lib/data/courses";
 
 interface CurriculumAccordionProps {
   curriculum: CurriculumSection[];
+  courseSlug?: string;
 }
 
-export function CurriculumAccordion({ curriculum }: CurriculumAccordionProps) {
+export function CurriculumAccordion({ curriculum, courseSlug }: CurriculumAccordionProps) {
   // First section open by default
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     [curriculum[0]?.id || ""]: true,
@@ -103,45 +105,56 @@ export function CurriculumAccordion({ curriculum }: CurriculumAccordionProps) {
             {/* Lessons List */}
             {isOpen && (
               <div className="border-t border-border/80 bg-surface divide-y divide-border/50">
-                {section.lessons.map((lesson) => (
-                  <div
-                    key={lesson.id}
-                    className="flex items-center justify-between px-4 sm:px-6 py-3.5 text-xs sm:text-sm hover:bg-surface-secondary/40 transition-colors"
-                  >
-                    <div className="flex items-center gap-3 min-w-0 pr-3">
-                      {lesson.isFreePreview ? (
-                        <div className="w-6 h-6 rounded-lg bg-emerald-500/15 text-emerald-500 flex items-center justify-center shrink-0">
-                          <PlayCircle className="w-4 h-4" />
+                {section.lessons.map((lesson) => {
+                  const lessonContent = (
+                    <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 text-xs sm:text-sm hover:bg-surface-secondary/40 transition-colors group cursor-pointer">
+                      <div className="flex items-center gap-3 min-w-0 pr-3">
+                        {lesson.isFreePreview ? (
+                          <div className="w-6 h-6 rounded-lg bg-emerald-500/15 text-emerald-500 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                            <PlayCircle className="w-4 h-4" />
+                          </div>
+                        ) : (
+                          <div className="w-6 h-6 rounded-lg bg-surface-secondary text-text-muted/60 flex items-center justify-center shrink-0">
+                            <Lock className="w-3.5 h-3.5" />
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <span className="text-text font-bengali font-medium block truncate group-hover:text-primary transition-colors">
+                            {lesson.titleBn}
+                          </span>
+                          {lesson.title && lesson.title !== lesson.titleBn && (
+                            <span className="text-[11px] text-text-muted font-sans block truncate">
+                              {lesson.title}
+                            </span>
+                          )}
                         </div>
-                      ) : (
-                        <div className="w-6 h-6 rounded-lg bg-surface-secondary text-text-muted/60 flex items-center justify-center shrink-0">
-                          <Lock className="w-3.5 h-3.5" />
-                        </div>
-                      )}
-                      <div className="min-w-0">
-                        <span className="text-text font-bengali font-medium block truncate">
-                          {lesson.titleBn}
-                        </span>
-                        {lesson.title && lesson.title !== lesson.titleBn && (
-                          <span className="text-[11px] text-text-muted font-sans block truncate">
-                            {lesson.title}
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        {lesson.isFreePreview && (
+                          <span className="px-2 py-0.5 rounded-md text-[10.5px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-bengali">
+                            ফ্রি প্রিভিউ
                           </span>
                         )}
+                        <span className="text-xs font-semibold text-text-muted font-sans tabular-nums">
+                          {lesson.duration}
+                        </span>
                       </div>
                     </div>
+                  );
 
-                    <div className="flex items-center gap-2.5 shrink-0">
-                      {lesson.isFreePreview && (
-                        <span className="px-2 py-0.5 rounded-md text-[10.5px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-bengali">
-                          ফ্রি প্রিভিউ
-                        </span>
-                      )}
-                      <span className="text-xs font-semibold text-text-muted font-sans tabular-nums">
-                        {lesson.duration}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+                  return courseSlug ? (
+                    <Link
+                      key={lesson.id}
+                      href={`/course/${courseSlug}/learn/${lesson.id}`}
+                      className="block"
+                    >
+                      {lessonContent}
+                    </Link>
+                  ) : (
+                    <div key={lesson.id}>{lessonContent}</div>
+                  );
+                })}
               </div>
             )}
           </div>
