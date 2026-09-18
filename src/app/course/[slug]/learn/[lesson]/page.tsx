@@ -33,7 +33,8 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
   const resolvedParams = use(params);
   const { slug, lesson: lessonId } = resolvedParams;
 
-  const [course, setCourse] = useState<Course>(() => getCourseBySlug(slug) || COURSES[0]);
+  const [course, setCourse] = useState<Course | null>(null);
+  const [courseLoading, setCourseLoading] = useState(true);
 
   // Load live course from Supabase
   useEffect(() => {
@@ -55,7 +56,6 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
                 id,
                 title,
                 title_bn,
-                video_url,
                 video_duration,
                 is_preview,
                 is_published,
@@ -71,7 +71,12 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
           setCourse(mapped);
         }
       } catch (err) {
-        console.warn("Could not load live course, using static fallback:", err);
+        console.warn("Could not load live course:", err);
+        // Only use static fallback if DB failed entirely
+        const staticFallback = getCourseBySlug(slug);
+        if (staticFallback) setCourse(staticFallback);
+      } finally {
+        setCourseLoading(false);
       }
     }
     loadLiveCourse();
@@ -114,6 +119,7 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
     checking: boolean;
     authorized: boolean;
     videoUrl?: string;
+    servers?: { name: string; type: string; url: string }[];
     isFreePreview?: boolean;
     reason?: string;
     isPending?: boolean;
@@ -124,6 +130,8 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
     checking: true,
     authorized: false,
   });
+
+  const [selectedServerIndex, setSelectedServerIndex] = useState(0);
 
   // Verify access for current lesson via backend server endpoint
   useEffect(() => {
@@ -160,8 +168,10 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
               checking: false,
               authorized: true,
               videoUrl: data.videoUrl,
+              servers: Array.isArray(data.servers) ? data.servers : [],
               isFreePreview: data.isFreePreview,
             });
+            setSelectedServerIndex(0);
           } else {
             setAccessStatus({
               checking: false,
@@ -210,6 +220,18 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
       [id]: !prev[id],
     }));
   };
+
+  // Loading guard — prevent mock data flash
+  if (courseLoading || !course) {
+    return (
+      <div className="bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <span className="text-sm text-slate-400 font-bengali">কোর্স লোড হচ্ছে...</span>
+        </div>
+      </div>
+    );
+  }
 
   // If no lessons are available at all for this course, render clean state
   if (!currentLesson || allLessons.length === 0) {
@@ -416,6 +438,8 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
     </div>
   );
 
+
+
   return (
     <div className="bg-slate-950 text-slate-100 min-h-screen flex flex-col">
       {/* Distraction-Free Top Bar */}
@@ -473,18 +497,85 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
                 <span className="text-xs font-medium">ক্লাসের সিকিউরিটি ভেরিফিকেশন চলছে...</span>
               </div>
             ) : accessStatus.authorized && accessStatus.videoUrl ? (
-              <CustomVideoPlayer
-                videoUrlOrId={accessStatus.videoUrl}
-                title={`${course.titleBn} — ${currentLesson.titleBn}`}
-                thumbnailUrl={course.thumbnail}
-                autoPlay={false}
-                onEnded={() => {
-                  setCompletedLessons((prev) => ({
-                    ...prev,
-                    [currentLesson.id]: true,
-                  }));
-                }}
-              />
+              <div className="w-full">
+                {/* Video Player — uses selected server */}
+                {(() => {
+                  const servers = accessStatus.servers || [];
+                  const activeServer = servers[selectedServerIndex] || { name: "YouTube", type: "youtube", url: accessStatus.videoUrl };
+                  const activeUrl = activeServer.url || accessStatus.videoUrl || "";
+                  const activeType = activeServer.type || "youtube";
+
+                  if (activeType === "youtube") {
+                    return (
+                      <CustomVideoPlayer
+                        videoUrlOrId={activeUrl}
+                        title={`${course.titleBn} — ${currentLesson.titleBn}`}
+                        thumbnailUrl={course.thumbnail}
+                        autoPlay={false}
+                        onEnded={() => {
+                          setCompletedLessons((prev) => ({
+                            ...prev,
+                            [currentLesson.id]: true,
+                          }));
+                        }}
+                      />
+                    );
+                  } else if (activeType === "streamtape" || activeType === "embed") {
+                    return (
+                      <div className="w-full aspect-video bg-black">
+                        <iframe
+                          src={activeUrl}
+                          className="w-full h-full border-0"
+                          allowFullScreen
+                          allow="autoplay; encrypted-media; picture-in-picture"
+                          sandbox="allow-scripts allow-same-origin allow-popups allow-presentation"
+                          title={`${currentLesson.titleBn} — ${activeServer.name}`}
+                        />
+                      </div>
+                    );
+                  } else {
+                    // Direct URL — HTML5 video
+                    return (
+                      <div className="w-full aspect-video bg-black">
+                        <video
+                          src={activeUrl}
+                          className="w-full h-full"
+                          controls
+                          controlsList="nodownload"
+                          onContextMenu={(e) => e.preventDefault()}
+                          onEnded={() => {
+                            setCompletedLessons((prev) => ({
+                              ...prev,
+                              [currentLesson.id]: true,
+                            }));
+                          }}
+                        />
+                      </div>
+                    );
+                  }
+                })()}
+
+                {/* Server Switcher Bar — only when multiple servers exist */}
+                {accessStatus.servers && accessStatus.servers.length > 1 && (
+                  <div className="w-full bg-slate-900/90 backdrop-blur-sm border-t border-slate-800 px-3 py-1.5 flex items-center gap-2 overflow-x-auto">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider shrink-0 mr-1 font-bengali">সার্ভার:</span>
+                    {accessStatus.servers.map((srv, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setSelectedServerIndex(idx)}
+                        className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all whitespace-nowrap flex items-center gap-1.5 border ${
+                          selectedServerIndex === idx
+                            ? "bg-primary text-white border-primary shadow-lg shadow-primary/30"
+                            : "bg-slate-800/70 text-slate-300 border-slate-700 hover:bg-slate-700 hover:text-white"
+                        }`}
+                      >
+                        {srv.type === "youtube" ? "🎬" : srv.type === "streamtape" ? "📺" : "🌐"}
+                        <span>{srv.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             ) : accessStatus.isPending ? (
               /* Dedicated Pending Verification Review Screen - User already submitted order */
               <div className="w-full aspect-video bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex flex-col items-center justify-center p-6 text-center relative overflow-hidden">

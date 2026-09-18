@@ -55,7 +55,17 @@ export async function POST(request: Request) {
         is_free,
         course_sections (
           id,
-          lessons (*)
+          lessons (
+            *,
+            lesson_servers (
+              id,
+              server_name,
+              server_type,
+              video_url,
+              is_enabled,
+              sort_order
+            )
+          )
         )
       `)
       .eq("slug", courseSlug)
@@ -68,9 +78,24 @@ export async function POST(request: Request) {
           if (Array.isArray(sec.lessons)) {
             const found = sec.lessons.find((l: any) => String(l.id) === String(lessonId));
             if (found) {
+              // Build servers array from lesson_servers (enabled only, sorted)
+              const rawServers = Array.isArray(found.lesson_servers) ? found.lesson_servers : [];
+              const enabledServers = rawServers
+                .filter((s: any) => s.is_enabled)
+                .sort((a: any, b: any) => (a.sort_order || 1) - (b.sort_order || 1))
+                .map((s: any) => ({
+                  name: s.server_name,
+                  type: s.server_type,
+                  url: s.video_url,
+                }));
+
+              // Primary videoUrl: first enabled server, or legacy video_url
+              const primaryUrl = enabledServers.length > 0 ? enabledServers[0].url : (found.video_url || "");
+
               targetLesson = {
                 id: String(found.id),
-                videoUrl: found.video_url || "",
+                videoUrl: primaryUrl,
+                servers: enabledServers.length > 0 ? enabledServers : (found.video_url ? [{ name: "YouTube", type: "youtube", url: found.video_url }] : []),
                 isFreePreview: found.is_preview === true,
               };
               break;
@@ -95,6 +120,7 @@ export async function POST(request: Request) {
         authorized: true,
         isFreePreview: true,
         videoUrl: targetLesson.videoUrl,
+        servers: targetLesson.servers,
       });
     }
 
@@ -104,6 +130,7 @@ export async function POST(request: Request) {
         authorized: true,
         isFreePreview: false,
         videoUrl: targetLesson.videoUrl,
+        servers: targetLesson.servers,
       });
     }
 
@@ -210,6 +237,7 @@ export async function POST(request: Request) {
         isFreePreview: false,
         isEnrolled: true,
         videoUrl: targetLesson.videoUrl,
+        servers: targetLesson.servers,
       });
     }
 

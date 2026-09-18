@@ -177,6 +177,7 @@ export function CustomVideoPlayer({
         } else if (payload.info === 0) {
           setIsPlaying(false);
           setIsBuffering(false);
+          setHasEnded(true);
           onEnded?.();
         }
       }
@@ -463,13 +464,21 @@ export function CustomVideoPlayer({
 
   // Build clean YouTube embed URL with exact origin matching
   const originParam = origin ? `&origin=${encodeURIComponent(origin)}&widget_referrer=${encodeURIComponent(origin)}` : "";
-  const iframeSrc = `https://www.youtube.com/embed/${videoId}?enablejsapi=1${originParam}&controls=0&rel=0&modestbranding=1&disablekb=1&iv_load_policy=3&playsinline=1&fs=0`;
+  const iframeSrc = `https://www.youtube.com/embed/${videoId}?enablejsapi=1${originParam}&controls=0&rel=0&showinfo=0&modestbranding=1&disablekb=1&iv_load_policy=3&playsinline=1&fs=0&cc_load_policy=0`;
+
+  // Track if video has ended — to block YouTube's end-screen overlay
+  const [hasEnded, setHasEnded] = useState(false);
+  // Reset hasEnded if video plays again
+  useEffect(() => {
+    if (isPlaying) setHasEnded(false);
+  }, [isPlaying]);
 
   return (
     <div
       ref={containerRef}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
+      onTouchStart={handleMouseMove}
       onContextMenu={handleContextMenu}
       className={`relative aspect-video w-full bg-black overflow-hidden select-none group font-sans ${className}`}
     >
@@ -483,7 +492,14 @@ export function CustomVideoPlayer({
             src={iframeSrc}
             onLoad={handleIframeLoad}
             title={title || "Video Lecture"}
-            className="w-full h-full border-0 pointer-events-none"
+            className="border-0 pointer-events-none absolute"
+            style={{
+              /* Slightly oversized iframe: crops YouTube's thin top/bottom bars */
+              width: "106%",
+              height: "106%",
+              top: "-3%",
+              left: "-3%",
+            }}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           />
         )}
@@ -520,9 +536,35 @@ export function CustomVideoPlayer({
       {/* ========================================================================= */}
       <div
         onClick={handleScreenClick}
-        className="absolute top-0 inset-x-0 h-14 sm:h-16 z-20 bg-gradient-to-b from-slate-950 via-slate-950/85 to-transparent pointer-events-auto cursor-pointer"
+        className={`absolute top-0 inset-x-0 h-16 sm:h-20 z-20 bg-gradient-to-b from-slate-950 via-slate-950/90 to-transparent pointer-events-auto cursor-pointer transition-all duration-300 ${
+          showControls || !isPlaying ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
         title="প্লে অথবা পজ করতে ক্লিক করুন"
       />
+
+      <div
+        onClick={handleScreenClick}
+        className={`absolute bottom-0 inset-x-0 h-12 sm:h-14 z-15 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent pointer-events-auto cursor-pointer transition-all duration-300 ${
+          showControls || !isPlaying ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+      />
+
+      {/* END-SCREEN BLOCKER — Covers YouTube's share/more-videos overlay when video ends */}
+      {hasEnded && (
+        <div
+          onClick={() => {
+            sendCommand("seekTo", [0, true]);
+            sendCommand("playVideo");
+            setHasEnded(false);
+          }}
+          className="absolute inset-0 z-25 flex flex-col items-center justify-center bg-slate-950/95 backdrop-blur-sm cursor-pointer"
+        >
+          <div className="w-18 h-18 sm:w-22 sm:h-22 rounded-full bg-gradient-to-tr from-primary to-orange-500 text-white flex items-center justify-center shadow-2xl border-2 border-white/30 mb-4 transition-transform hover:scale-110">
+            <RotateCcw className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+          </div>
+          <p className="text-white/80 text-sm font-medium font-bengali">আবার দেখুন</p>
+        </div>
+      )}
 
       {/* ========================================================================= */}
       {/* 4. INTERACTIVE CLICK SHIELD (Screen Click to Play / Pause)                */}
