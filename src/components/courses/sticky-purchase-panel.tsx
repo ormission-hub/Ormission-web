@@ -709,12 +709,13 @@ export function StickyPurchasePanel({ course }: StickyPurchasePanelProps) {
                   );
                 } else {
                   const isYt = /youtu\.be|youtube\.com|youtube-nocookie\.com/i.test(activeUrl);
+                  const isStreamtape = /streamtape\.(com|to|net|pe|xyz|site|cash|cc)|streamta\.pe/i.test(activeUrl);
                   return (
                     <div className="w-full aspect-video bg-black relative flex items-center justify-center overflow-hidden">
                       <iframe
                         src={getEmbedUrl(activeUrl)}
                         className="w-full h-full border-0 absolute inset-0"
-                        sandbox={isYt ? undefined : "allow-scripts allow-same-origin allow-presentation allow-forms"}
+                        sandbox={isYt || isStreamtape ? undefined : "allow-scripts allow-same-origin allow-presentation allow-forms"}
                         referrerPolicy="strict-origin-when-cross-origin"
                         allowFullScreen
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"

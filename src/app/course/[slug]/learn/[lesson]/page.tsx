@@ -665,11 +665,12 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
 
                           {(() => {
                             const isYt = /youtu\.be|youtube\.com|youtube-nocookie\.com/i.test(activeUrl);
+                            const isStreamtape = activeType === "streamtape" || /streamtape\.(com|to|net|pe|xyz|site|cash|cc)|streamta\.pe/i.test(activeUrl);
                             return (
                               <iframe
                                 src={getEmbedUrl(activeUrl)}
                                 className="w-full h-full border-0 absolute inset-0"
-                                sandbox={isYt ? undefined : "allow-scripts allow-same-origin allow-presentation allow-forms"}
+                                sandbox={isYt || isStreamtape ? undefined : "allow-scripts allow-same-origin allow-presentation allow-forms"}
                                 referrerPolicy="strict-origin-when-cross-origin"
                                 allowFullScreen
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -727,10 +728,10 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
                       })}
                     </div>
 
-                    {/* Adblock Shield Protection Indicator for Embed/Streamtape servers */}
+                    {/* Adblock Shield Protection Indicator for sandboxed Embed servers */}
                     {Boolean(
-                      accessStatus.servers[selectedServerIndex]?.type === "streamtape" ||
-                      accessStatus.servers[selectedServerIndex]?.type === "embed"
+                      accessStatus.servers[selectedServerIndex]?.type === "embed" &&
+                      !/streamtape\.(com|to|net|pe|xyz|site|cash|cc)|streamta\.pe/i.test(accessStatus.servers[selectedServerIndex]?.url || "")
                     ) && (
                       <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-[11px] font-bengali font-semibold shadow-2xs">
                         <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
