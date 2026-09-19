@@ -701,19 +701,21 @@ export function StickyPurchasePanel({ course }: StickyPurchasePanelProps) {
                         src={`https://www.youtube.com/embed/${ytId}?rel=0&autoplay=1`}
                         className="w-full h-full border-0"
                         allowFullScreen
+                        referrerPolicy="strict-origin-when-cross-origin"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                         title={`${previewChapters[activeChapterIndex]?.title || course.titleBn || course.title} — ফ্রি প্রিভিউ`}
                       />
                     </div>
                   );
                 } else {
+                  const isYt = /youtu\.be|youtube\.com|youtube-nocookie\.com/i.test(activeUrl);
                   return (
                     <div className="w-full aspect-video bg-black relative flex items-center justify-center overflow-hidden">
                       <iframe
                         src={getEmbedUrl(activeUrl)}
                         className="w-full h-full border-0 absolute inset-0"
-                        sandbox="allow-scripts allow-same-origin allow-presentation allow-forms"
-                        referrerPolicy="no-referrer"
+                        sandbox={isYt ? undefined : "allow-scripts allow-same-origin allow-presentation allow-forms"}
+                        referrerPolicy="strict-origin-when-cross-origin"
                         allowFullScreen
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                         scrolling="no"

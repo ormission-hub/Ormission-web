@@ -662,6 +662,7 @@ export function CustomVideoPlayer({
             onLoad={handleIframeLoad}
             title={title || "Video Lecture"}
             className="border-0 pointer-events-none absolute w-full h-full inset-0"
+            referrerPolicy="strict-origin-when-cross-origin"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           />
         )}

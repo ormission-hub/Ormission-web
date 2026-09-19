@@ -618,6 +618,7 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
                               src={`https://www.youtube.com/embed/${extractYouTubeId(activeUrl)}?rel=0&autoplay=1`}
                               className="w-full h-full border-0"
                               allowFullScreen
+                              referrerPolicy="strict-origin-when-cross-origin"
                               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                               title={`${course.titleBn} — ${currentLesson.titleBn} — ফ্রি ক্লাস`}
                             />
@@ -662,16 +663,21 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
                             />
                           </div>
 
-                          <iframe
-                            src={getEmbedUrl(activeUrl)}
-                            className="w-full h-full border-0 absolute inset-0"
-                            sandbox="allow-scripts allow-same-origin allow-presentation allow-forms"
-                            referrerPolicy="no-referrer"
-                            allowFullScreen
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                            scrolling="no"
-                            title={`${course.titleBn} — ${currentLesson.titleBn} — ${activeServer.name}`}
-                          />
+                          {(() => {
+                            const isYt = /youtu\.be|youtube\.com|youtube-nocookie\.com/i.test(activeUrl);
+                            return (
+                              <iframe
+                                src={getEmbedUrl(activeUrl)}
+                                className="w-full h-full border-0 absolute inset-0"
+                                sandbox={isYt ? undefined : "allow-scripts allow-same-origin allow-presentation allow-forms"}
+                                referrerPolicy="strict-origin-when-cross-origin"
+                                allowFullScreen
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                scrolling="no"
+                                title={`${course.titleBn} — ${currentLesson.titleBn} — ${activeServer.name}`}
+                              />
+                            );
+                          })()}
                         </div>
                       ) : (
                         <div className="w-full aspect-video bg-black">
