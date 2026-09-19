@@ -33,7 +33,6 @@ export interface CustomVideoPlayerProps {
   onProgress?: (progressPercent: number) => void;
   className?: string;
   initialDuration?: string | number;
-  watermarkText?: string;
   enableDevToolsProtection?: boolean;
 }
 
@@ -112,7 +111,6 @@ export function CustomVideoPlayer({
   onProgress,
   className = "",
   initialDuration,
-  watermarkText,
   enableDevToolsProtection = true,
 }: CustomVideoPlayerProps) {
   const videoId = extractYouTubeId(videoUrlOrId);

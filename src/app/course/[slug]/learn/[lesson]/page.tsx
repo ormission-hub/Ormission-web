@@ -142,7 +142,7 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
     servers?: { name: string; type: string; url: string }[];
     isFreePreview?: boolean;
     isEncrypted?: boolean;
-    watermark?: { text: string; userId?: string };
+    videoSessionToken?: string;
     reason?: string;
     isPending?: boolean;
     orderNumber?: string;
@@ -197,7 +197,11 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
                   headers: {
                     "Content-Type": "application/json",
                     ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+                    ...(data.videoSessionToken ? { "X-Video-Session-Token": data.videoSessionToken } : {}),
                   },
+                  body: JSON.stringify({
+                    videoSessionToken: data.videoSessionToken,
+                  }),
                 });
                 if (keyRes.ok) {
                   const keyData = await keyRes.json();
@@ -223,7 +227,7 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
               servers: finalServers,
               isFreePreview: data.isFreePreview,
               isEncrypted: data.isEncrypted,
-              watermark: data.watermark,
+              videoSessionToken: data.videoSessionToken,
             });
             setSelectedServerIndex(0);
           } else {
@@ -631,7 +635,6 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
                             autoPlay={false}
                             initialDuration={currentLesson.duration}
                             enableDevToolsProtection={true}
-                            watermarkText={accessStatus.watermark?.text}
                             onEnded={() => {
                               setCompletedLessons((prev) => ({
                                 ...prev,

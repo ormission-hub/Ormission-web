@@ -16,12 +16,13 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { getEncryptionKeyHex } from "@/lib/crypto/encrypt-video";
+import { verifyVideoSessionToken } from "@/lib/crypto/jwt-video-token";
 
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   try {
-    // 1. Authenticate user
+    // 1. Authenticate user via Supabase User JWT
     const supabase = await createClient();
     let user = null;
 
@@ -47,12 +48,40 @@ export async function POST(request: Request) {
 
     if (!user) {
       return NextResponse.json(
-        { error: "Authentication required" },
+        { error: "Authentication required", code: "JWT_AUTH_REQUIRED" },
         { status: 401 }
       );
     }
 
-    // 2. Deliver the encryption key
+    // 2. Cryptographically verify Video Session JWT
+    let sessionToken = request.headers.get("X-Video-Session-Token");
+    if (!sessionToken) {
+      try {
+        const cloned = request.clone();
+        const body = await cloned.json();
+        sessionToken = body?.videoSessionToken || null;
+      } catch {}
+    }
+
+    if (sessionToken) {
+      const payload = verifyVideoSessionToken(sessionToken);
+      if (!payload) {
+        return NextResponse.json(
+          { error: "Invalid or expired video session JWT", code: "INVALID_SESSION_JWT" },
+          { status: 401 }
+        );
+      }
+
+      // Ensure the session JWT was issued for this specific user
+      if (payload.sub !== user.id) {
+        return NextResponse.json(
+          { error: "Video session JWT subject mismatch", code: "JWT_SUBJECT_MISMATCH" },
+          { status: 403 }
+        );
+      }
+    }
+
+    // 3. Deliver the encryption key
     const keyHex = getEncryptionKeyHex();
 
     // Return key with strict no-cache headers

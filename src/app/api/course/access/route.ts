@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { encryptVideoUrl, encryptServersArray, DECOY_HONEYPOT_URL } from "@/lib/crypto/encrypt-video";
+import { signVideoSessionToken } from "@/lib/crypto/jwt-video-token";
 import { cleanAndNormalizeVideoUrl } from "@/lib/video-helpers";
 
 
@@ -161,6 +162,14 @@ export async function POST(request: Request) {
         .maybeSingle();
 
       if (userProfile?.role === "admin" || userProfile?.role === "superadmin") {
+        const videoSessionToken = signVideoSessionToken({
+          sub: user.id,
+          email: user.email,
+          courseId: courseData?.id || courseSlug,
+          courseSlug: courseSlug,
+          lessonId: targetLesson.id,
+        }, 7200);
+
         return NextResponse.json({
           authorized: true,
           isFreePreview: false,
@@ -169,22 +178,23 @@ export async function POST(request: Request) {
           decoyUrl: DECOY_HONEYPOT_URL,
           videoUrl: encryptVideoUrl(targetLesson.videoUrl),
           servers: encryptServersArray(targetLesson.servers),
-          watermark: {
-            text: `${userProfile?.full_name || user.email || "Admin"} • অ্যাডমিন প্রিভিউ`,
-            userId: user.id,
-          },
+          videoSessionToken,
         });
       }
     }
 
     // 5. Paid / Locked Lesson Verification
-    // Unauthenticated user -> DENY (Zero video leak)
+    // Unauthenticated user -> DENY (Strict JWT Authentication required)
     if (!user) {
-      return NextResponse.json({
-        authorized: false,
-        reason: "unauthenticated",
-        message: "অনুগ্রহ করে লগইন করুন।",
-      });
+      return NextResponse.json(
+        {
+          authorized: false,
+          reason: "unauthenticated",
+          error: "JWT_AUTH_REQUIRED",
+          message: "পেইড ক্লাস দেখার জন্য বৈধ JWT অথেনটিকেশন টোকেন আবশ্যক। অনুগ্রহ করে লগইন করুন।",
+        },
+        { status: 401 }
+      );
     }
 
     // Authenticated user -> Verify paid order or active enrollment in Supabase
@@ -273,20 +283,15 @@ export async function POST(request: Request) {
       }
     }
 
-    // If user is verified enrolled: GRANT ACCESS with encrypted videoUrl & watermark
+    // If user is verified enrolled: GRANT ACCESS with signed Video Session JWT
     if (isEnrolled) {
-      const { data: studentProfile } = await supabaseAdmin
-        .from("profiles")
-        .select("full_name, phone")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      const studentName = studentProfile?.full_name || "";
-      const studentPhone = studentProfile?.phone || user.phone || "";
-      const studentEmail = user.email || "";
-      const studentIdentifier =
-        [studentName, studentPhone || studentEmail].filter(Boolean).join(" • ") ||
-        `Student ID: ${user.id.slice(0, 8)}`;
+      const videoSessionToken = signVideoSessionToken({
+        sub: user.id,
+        email: user.email,
+        courseId: courseData?.id || courseSlug,
+        courseSlug: courseSlug,
+        lessonId: targetLesson.id,
+      }, 7200);
 
       return NextResponse.json({
         authorized: true,
@@ -296,10 +301,7 @@ export async function POST(request: Request) {
         decoyUrl: DECOY_HONEYPOT_URL,
         videoUrl: encryptVideoUrl(targetLesson.videoUrl),
         servers: encryptServersArray(targetLesson.servers),
-        watermark: {
-          text: studentIdentifier,
-          userId: user.id,
-        },
+        videoSessionToken,
       });
     }
 
