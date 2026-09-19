@@ -127,19 +127,28 @@ export function DevToolsDetector({
     window.addEventListener("keydown", handleKeyDown, true);
     window.addEventListener("contextmenu", handleContextMenu, true);
 
-    // --- 4. Initialize disable-devtool engine ---
+    // --- 4. Initialize disable-devtool engine with ALL detectors enabled ---
     try {
-      DisableDevtool({
-        ondevtoolopen: () => {
+      const runner = typeof DisableDevtool === "function" ? DisableDevtool : (DisableDevtool as any)?.default;
+      if (typeof runner === "function") {
+        runner({
+          ondevtoolopen: () => {
+            setIsDevToolsOpen(true);
+          },
+          ondevtoolclose: () => {
+            setIsDevToolsOpen(false);
+          },
+          interval: 100,
+          disableMenu: true,
+          clearLog: true,
+          detectors: "all" as any,
+        });
+
+        // Check immediately if already open
+        if (typeof runner.isDevToolOpened === "function" && runner.isDevToolOpened()) {
           setIsDevToolsOpen(true);
-        },
-        ondevtoolclose: () => {
-          setIsDevToolsOpen(false);
-        },
-        interval: 200,
-        disableMenu: true,
-        clearLog: true,
-      });
+        }
+      }
     } catch (err) {
       console.warn("disableDevtool init:", err);
     }
@@ -156,11 +165,11 @@ export function DevToolsDetector({
         // ignore
       }
       const elapsed = performance.now() - start;
-      // If DevTools is open, the browser pauses at debugger statement causing elapsed > 50ms
-      if (elapsed > 50) {
+      // If DevTools is open, the browser pauses at debugger statement causing elapsed > 40ms
+      if (elapsed > 40) {
         setIsDevToolsOpen(true);
       }
-    }, 400);
+    }, 250);
 
     // --- 6. Console ID Getter Trap ---
     const idTrapInterval = setInterval(() => {
