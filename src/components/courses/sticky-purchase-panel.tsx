@@ -25,6 +25,7 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { type Course } from "@/lib/data/courses";
 import { extractYouTubeId } from "@/components/video/custom-video-player";
+import { getEmbedUrl } from "@/lib/video-helpers";
 
 interface StickyPurchasePanelProps {
   course: Course;
@@ -704,12 +705,13 @@ export function StickyPurchasePanel({ course }: StickyPurchasePanelProps) {
                   );
                 } else {
                   return (
-                    <div className="w-full aspect-video bg-black">
+                    <div className="w-full aspect-video bg-black relative flex items-center justify-center overflow-hidden">
                       <iframe
-                        src={activeUrl}
-                        className="w-full h-full border-0"
+                        src={getEmbedUrl(activeUrl)}
+                        className="w-full h-full border-0 absolute inset-0"
                         allowFullScreen
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        scrolling="no"
                         title={`${previewChapters[activeChapterIndex]?.title || course.titleBn || course.title} — ${activeServer.name}`}
                       />
                     </div>

@@ -24,6 +24,7 @@ import { CustomVideoPlayer, extractYouTubeId } from "@/components/video/custom-v
 import { decryptVideoUrlClient, decryptServersArray } from "@/lib/crypto/decrypt-video-client";
 import { createClient } from "@/lib/supabase/client";
 import { mapDbCourseToAppCourse } from "@/lib/supabase/course-mapper";
+import { getEmbedUrl } from "@/lib/video-helpers";
 
 interface PlayerPageProps {
   params: Promise<{ slug: string; lesson: string }>;
@@ -579,7 +580,7 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
                 {/* Video Player — uses selected server */}
                 {(() => {
                   const servers = accessStatus.servers || [];
-                  const activeServer = servers[selectedServerIndex] || { name: "YouTube", type: "youtube", url: accessStatus.videoUrl };
+                  const activeServer = servers[selectedServerIndex] || { name: "Server 1", type: "youtube", url: accessStatus.videoUrl };
                   const activeUrl = activeServer.url || accessStatus.videoUrl || "";
                   const activeType = activeServer.type || "youtube";
 
@@ -622,14 +623,16 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
                       />
                     );
                   } else if (activeType === "streamtape" || activeType === "embed") {
+                    const embedSrc = getEmbedUrl(activeUrl);
                     return (
-                      <div className="w-full aspect-video bg-black">
+                      <div className="w-full aspect-video bg-black relative flex items-center justify-center overflow-hidden shadow-2xl">
                         <iframe
-                          src={activeUrl}
-                          className="w-full h-full border-0"
+                          src={embedSrc}
+                          className="w-full h-full border-0 absolute inset-0"
                           allowFullScreen
                           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                          title={`${currentLesson.titleBn} — ${activeServer.name}`}
+                          scrolling="no"
+                          title={`${course.titleBn} — ${currentLesson.titleBn} — ${activeServer.name}`}
                         />
                       </div>
                     );
@@ -657,22 +660,30 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
 
                 {/* Server Switcher Bar — only when multiple servers */}
                 {accessStatus.servers && accessStatus.servers.length > 1 && (
-                  <div className="w-full bg-slate-900/95 backdrop-blur-md border-t border-slate-800/90 px-3 sm:px-4 py-1.5 flex items-center gap-2 overflow-x-auto no-scrollbar">
-                    {accessStatus.servers.map((srv, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => setSelectedServerIndex(idx)}
-                        className={`px-3 py-1 rounded-full text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 border cursor-pointer ${
-                          selectedServerIndex === idx
-                            ? "bg-primary text-white border-primary shadow-lg shadow-primary/30"
-                            : "bg-slate-800/70 text-slate-300 border-slate-700/80 hover:bg-slate-700 hover:text-white"
-                        }`}
-                      >
-                        <span>{srv.type === "youtube" ? "🎬" : srv.type === "streamtape" ? "📺" : "🌐"}</span>
-                        <span>{srv.name}</span>
-                      </button>
-                    ))}
+                  <div className="w-full bg-slate-900/95 backdrop-blur-md border-t border-slate-800/90 px-3 sm:px-5 py-2.5 flex items-center justify-between gap-2 shadow-inner">
+                    <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
+                      <span className="text-[11px] font-bold text-slate-400 font-bengali shrink-0">
+                        সার্ভার নির্বাচন:
+                      </span>
+                      {accessStatus.servers.map((srv, idx) => {
+                        const isSelected = selectedServerIndex === idx;
+                        return (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => setSelectedServerIndex(idx)}
+                            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap flex items-center gap-2 border cursor-pointer ${
+                              isSelected
+                                ? "bg-primary text-white border-primary shadow-md shadow-primary/25 font-bold scale-[1.02]"
+                                : "bg-slate-800/80 text-slate-300 border-slate-700/80 hover:bg-slate-700/90 hover:text-white"
+                            }`}
+                          >
+                            <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? "bg-white animate-pulse" : "bg-slate-500"}`} />
+                            <span>{srv.name}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </div>

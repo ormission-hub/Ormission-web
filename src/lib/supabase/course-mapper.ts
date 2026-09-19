@@ -54,14 +54,14 @@ export function mapDbCourseToAppCourse(dbCourse: any): Course {
               .sort((a: any, b: any) => (a.sort_order || 1) - (b.sort_order || 1))
               .map((srv: any) => ({
                 id: String(srv.id),
-                name: srv.server_name || "Server",
+                name: (srv.server_name && srv.server_name.trim()) ? srv.server_name.trim() : `Server ${srv.sort_order || 1}`,
                 type: srv.server_type || "youtube",
                 url: srv.video_url || "",
               }));
 
             const fallbackServers = mappedServers.length > 0
               ? mappedServers
-              : (les.video_url ? [{ id: `srv-${les.id}-1`, name: "YouTube", type: "youtube", url: les.video_url }] : []);
+              : (les.video_url ? [{ id: `srv-${les.id}-1`, name: "Server 1", type: "youtube", url: les.video_url }] : []);
 
             const primaryUrl = fallbackServers.length > 0 ? fallbackServers[0].url : (les.video_url || les.videoUrl || "");
 

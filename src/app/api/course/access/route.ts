@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { encryptVideoUrl, encryptServersArray } from "@/lib/crypto/encrypt-video";
+import { cleanAndNormalizeVideoUrl } from "@/lib/video-helpers";
 
 
 export const runtime = "nodejs";
@@ -85,15 +86,15 @@ export async function POST(request: Request) {
                 .filter((s: any) => s.is_enabled)
                 .sort((a: any, b: any) => (a.sort_order || 1) - (b.sort_order || 1))
                 .map((s: any) => ({
-                  name: s.server_name,
+                  name: (s.server_name && s.server_name.trim()) ? s.server_name.trim() : `Server ${s.sort_order || 1}`,
                   type: s.server_type,
-                  url: s.video_url,
+                  url: cleanAndNormalizeVideoUrl(s.video_url || ""),
                 }));
 
               // Build final servers list — deduplicate by URL
               let finalServers = enabledServers.length > 0
                 ? enabledServers
-                : (found.video_url ? [{ name: "YouTube", type: "youtube", url: found.video_url }] : []);
+                : (found.video_url ? [{ name: "Server 1", type: "youtube", url: cleanAndNormalizeVideoUrl(found.video_url) }] : []);
 
               // Deduplicate by URL (case-insensitive)
               const seenUrls = new Set<string>();
@@ -105,7 +106,7 @@ export async function POST(request: Request) {
               });
 
               // Primary videoUrl: first server
-              const primaryUrl = finalServers.length > 0 ? finalServers[0].url : (found.video_url || "");
+              const primaryUrl = finalServers.length > 0 ? finalServers[0].url : cleanAndNormalizeVideoUrl(found.video_url || "");
 
               targetLesson = {
                 id: String(found.id),
