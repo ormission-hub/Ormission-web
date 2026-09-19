@@ -45,6 +45,7 @@ export async function GET(request: Request) {
           {
             id: data.user.id,
             full_name: metadata.full_name || metadata.name || data.user.email?.split("@")[0] || "শিক্ষার্থী",
+            avatar_url: metadata.avatar_url || metadata.picture || null,
             phone: metadata.phone || null,
             role: "student",
             is_active: true,

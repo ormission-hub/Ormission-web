@@ -20,6 +20,7 @@ import {
   Check,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 
 function RegisterContent() {
   const router = useRouter();
@@ -440,6 +441,24 @@ function RegisterContent() {
                         <span>{errorMessage}</span>
                       </div>
                     )}
+
+                    {/* Google One-Click Register */}
+                    <div className="mb-5 space-y-4">
+                      <GoogleSignInButton
+                        text="গুগল দিয়ে রেজিস্ট্রেশন করুন"
+                        redirectUrl={targetDestination}
+                        onError={(err) => setErrorMessage(err)}
+                      />
+
+                      <div className="relative flex items-center justify-center">
+                        <div className="absolute inset-0 flex items-center">
+                          <div className="w-full border-t border-slate-200 dark:border-slate-800" />
+                        </div>
+                        <div className="relative px-3 bg-white dark:bg-slate-900 text-[11px] font-bold text-slate-400 dark:text-slate-500 font-bengali uppercase tracking-wider">
+                          অথবা তথ্য দিয়ে অ্যাকাউন্ট খুলুন
+                        </div>
+                      </div>
+                    </div>
 
                     {/* Form */}
                     <form onSubmit={handleRegister} className="space-y-4 font-bengali">

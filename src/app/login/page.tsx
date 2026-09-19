@@ -19,6 +19,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 
 function LoginContent() {
   const router = useRouter();
@@ -238,6 +239,24 @@ function LoginContent() {
                   )}
                 </div>
               )}
+
+              {/* Google One-Click Login */}
+              <div className="mb-5 space-y-4">
+                <GoogleSignInButton
+                  text="গুগল দিয়ে লগইন করুন"
+                  redirectUrl={redirectUrl}
+                  onError={(err) => setErrorMessage(err)}
+                />
+
+                <div className="relative flex items-center justify-center">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-slate-200 dark:border-slate-800" />
+                  </div>
+                  <div className="relative px-3 bg-white dark:bg-slate-900 text-[11px] font-bold text-slate-400 dark:text-slate-500 font-bengali uppercase tracking-wider">
+                    অথবা ইমেইল দিয়ে
+                  </div>
+                </div>
+              </div>
 
               {/* Form */}
               <form onSubmit={handleLogin} className="space-y-4 font-bengali">
