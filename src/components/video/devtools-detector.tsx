@@ -22,6 +22,7 @@ let disableDevtoolGlobalRunner: any = null;
 let disableDevtoolStarted = false;
 
 function broadcastDevTools(isOpen: boolean) {
+  if (isGlobalDevToolsDetected === isOpen) return;
   isGlobalDevToolsDetected = isOpen;
   devToolsSubscribers.forEach((cb) => {
     try {
@@ -33,16 +34,15 @@ function broadcastDevTools(isOpen: boolean) {
 /**
  * DevToolsDetector
  * 
- * Military-Grade Anti-Inspection & DevTools Shield for Paid Lectures:
- * 1. Global singleton subscriber architecture (never loses listener across Next.js page transitions)
- * 2. Modern Chromium/Brave RegExp & Function .toString() formatting traps
- * 3. Active debugger timing trap (detects DevTools & Device Toolbar emulators)
- * 4. Console rendering latency delta trap (catches detached/undocked DevTools in Brave)
- * 5. Window dimension differential & resize listeners
- * 6. Aggressive keyboard shortcut blocking (F12, Ctrl+Shift+I/J/C, Ctrl+U, Ctrl+S)
- * 7. Right-click context menu blocking
- * 8. MediaSession lockdown (blocks Brave/Chrome toolbar media popup from leaking video titles)
- * 9. Complete DOM unmounting when DevTools is open (ZERO video tags or iframes in DOM)
+ * Professional Anti-Inspection & DevTools Shield for Paid Lectures:
+ * 1. Global singleton subscriber architecture (syncs state across tabs & components)
+ * 2. DisableDevtool engine with stable detectors (excluding Size to eliminate DPI/sidebar false positives)
+ * 3. Two-phase debugger pause verification (prevents React hydration/CPU stutter false positives)
+ * 4. Keyboard shortcut blocking (F12, Ctrl+Shift+I/J/C, Ctrl+U, Ctrl+S)
+ * 5. Right-click context menu blocking
+ * 6. MediaSession lockdown (blocks Brave/Chrome toolbar media popup from leaking video titles)
+ * 7. Self-healing: Automatically restores video when DevTools is closed
+ * 8. Complete DOM unmounting when DevTools is open (ZERO video tags or iframes in DOM)
  */
 export function DevToolsDetector({
   children,
@@ -65,9 +65,7 @@ export function DevToolsDetector({
 
     // Register this instance with global subscriber set
     devToolsSubscribers.add(setIsDevToolsOpen);
-    if (isGlobalDevToolsDetected) {
-      setIsDevToolsOpen(true);
-    }
+    setIsDevToolsOpen(isGlobalDevToolsDetected);
 
     // --- 0. Block Chromium/Brave Global Media Session toolbar popups ---
     if ("mediaSession" in navigator) {
@@ -80,12 +78,11 @@ export function DevToolsDetector({
       } catch {}
     }
 
-    // --- 1. Console Sanitization: Block YouTube & ad scripts from logging video IDs ---
+    // --- 1. Console Sanitization: Filter out video IDs from debug logs ---
     const originalLog = console.log;
     const originalWarn = console.warn;
     const originalError = console.error;
     const originalInfo = console.info;
-    const originalClear = console.clear;
 
     const sanitizeArgs = (args: any[]) => {
       return args.filter((a) => {
@@ -161,6 +158,7 @@ export function DevToolsDetector({
     window.addEventListener("contextmenu", handleContextMenu, true);
 
     // --- 4. Initialize disable-devtool engine globally once ---
+    // Uses stable detectors [1, 3, 4, 5, 6, 7], avoiding Size (detector 2) which triggers on DPI scaling and browser sidebars
     if (!disableDevtoolStarted) {
       disableDevtoolStarted = true;
       try {
@@ -174,10 +172,11 @@ export function DevToolsDetector({
             ondevtoolclose: () => {
               broadcastDevTools(false);
             },
-            interval: 100,
+            interval: 500,
             disableMenu: true,
             clearLog: true,
-            detectors: "all" as any,
+            // Exclude DetectorType.Size to prevent false positives on Windows zoom (125%, 150%) & Brave/Edge sidebars
+            detectors: [1, 3, 4, 5, 6, 7] as any,
           });
         }
       } catch (err) {
@@ -185,92 +184,52 @@ export function DevToolsDetector({
       }
     }
 
-    // --- 5. Modern Chromium/Brave RegExp .toString() trap ---
-    const regTrap = /./;
-    regTrap.toString = function () {
-      broadcastDevTools(true);
-      return "";
-    };
-
-    // --- 6. Modern Chromium/Brave Function .toString() trap ---
-    const fnTrap = function () {};
-    fnTrap.toString = function () {
-      broadcastDevTools(true);
-      return "";
-    };
-
-    // Periodic detection heartbeat
+    // --- 5. Reliable Debugger Pause Verification ---
+    // A genuine DevTools breakpoint halts the thread for > 200ms.
+    // We require 2 consecutive slow ticks to filter out any single React hydration frame stutter.
+    let consecutivePauseCount = 0;
     const heartbeatInterval = setInterval(() => {
-      // A. Check runner state directly
-      if (typeof disableDevtoolGlobalRunner?.isDevToolOpened === "function" && disableDevtoolGlobalRunner.isDevToolOpened()) {
-        broadcastDevTools(true);
+      // Check DisableDevtool state
+      if (typeof disableDevtoolGlobalRunner?.isDevToolOpened === "function") {
+        if (disableDevtoolGlobalRunner.isDevToolOpened()) {
+          broadcastDevTools(true);
+          return;
+        }
       }
 
-      // B. Trigger Chromium formatting traps
-      try {
-        originalLog.call(console, "%c", regTrap);
-        originalLog.call(console, "%c", fnTrap);
-        originalClear.call(console);
-      } catch {}
-
-      // C. Active Debugger Timing Trap
-      const start = performance.now();
+      // Timing check: Debugger breakpoint detection
+      const tStart = performance.now();
       try {
         (function () {
           return false;
         }["constructor"]("debugger")());
       } catch {}
-      const elapsed = performance.now() - start;
-      if (elapsed > 40) {
-        broadcastDevTools(true);
-      }
+      const elapsed = performance.now() - tStart;
 
-      // D. Latency delta trap for undocked/detached DevTools in Brave
-      const t0 = performance.now();
-      try {
-        originalLog.call(console, "%c", "color: transparent;");
-        originalClear.call(console);
-      } catch {}
-      const delta = performance.now() - t0;
-      if (delta > 20) {
-        broadcastDevTools(true);
-      }
-
-      // E. Anti-Scraper & Automated Driver Trap (Puppeteer, Playwright, Selenium, Headless Chrome)
-      try {
-        const isAutomated =
-          navigator.webdriver === true ||
-          Boolean((window as any)._phantom) ||
-          Boolean((window as any).__nightmare) ||
-          Boolean((window as any).callPhantom) ||
-          Boolean((window as any).cdc_adoQpoasnfa76pfcZLmcfl_Array) ||
-          Boolean(window.document.documentElement.getAttribute("webdriver")) ||
-          navigator.userAgent.toLowerCase().includes("headless");
-
-        if (isAutomated) {
+      if (elapsed > 200) {
+        consecutivePauseCount++;
+        if (consecutivePauseCount >= 2) {
           broadcastDevTools(true);
         }
-      } catch {}
-    }, 250);
-
-    // --- 7. Window Dimension Difference Check ---
-    const checkDimensions = () => {
-      const widthDiff = window.outerWidth - window.innerWidth;
-      const heightDiff = window.outerHeight - window.innerHeight;
-      const threshold = 160;
-
-      if (widthDiff > threshold || heightDiff > threshold) {
-        broadcastDevTools(true);
+      } else {
+        if (consecutivePauseCount > 0) {
+          consecutivePauseCount = 0;
+        }
+        // If runner reports closed and thread execution is fast, auto-heal
+        if (
+          isGlobalDevToolsDetected &&
+          typeof disableDevtoolGlobalRunner?.isDevToolOpened === "function" &&
+          !disableDevtoolGlobalRunner.isDevToolOpened()
+        ) {
+          broadcastDevTools(false);
+        }
       }
-    };
-
-    window.addEventListener("resize", checkDimensions);
+    }, 1000);
 
     return () => {
       devToolsSubscribers.delete(setIsDevToolsOpen);
       window.removeEventListener("keydown", handleKeyDown, true);
       window.removeEventListener("contextmenu", handleContextMenu, true);
-      window.removeEventListener("resize", checkDimensions);
       clearInterval(heartbeatInterval);
 
       // Restore original console methods
@@ -278,7 +237,6 @@ export function DevToolsDetector({
       console.warn = originalWarn;
       console.error = originalError;
       console.info = originalInfo;
-      console.clear = originalClear;
     };
   }, [enabled]);
 
@@ -313,6 +271,7 @@ export function DevToolsDetector({
         <button
           type="button"
           onClick={() => {
+            isGlobalDevToolsDetected = false;
             setIsDevToolsOpen(false);
             window.location.reload();
           }}
