@@ -257,7 +257,7 @@ function SuccessContent() {
           <div className="space-y-2.5 font-bengali">
             {isApproved ? (
               <Link
-                href={`/course/${course.slug}/learn/${course.curriculum?.[0]?.lessons?.[0]?.id || "l-1-1"}`}
+                href={`/course/${course.slug}/learn`}
                 className="w-full py-3 px-5 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-primary to-orange-500 hover:from-primary-hover hover:to-orange-600 flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all"
               >
                 <span>কোর্সের ক্লাস শুরু করুন</span>

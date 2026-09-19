@@ -231,7 +231,7 @@ export default function DashboardOverviewPage() {
             </div>
 
             <Link
-              href={`/course/${activePaidOrder.courses?.slug || "test-course"}/learn/les-1`}
+              href={`/course/${activePaidOrder.courses?.slug || "test-course"}/learn`}
               className="px-6 py-3 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-primary to-orange-500 hover:from-primary-hover hover:to-orange-600 flex items-center gap-2 shrink-0 shadow-sm transition-all"
             >
               <Play className="w-4 h-4 fill-white" />
@@ -341,7 +341,7 @@ export default function DashboardOverviewPage() {
                     </span>
 
                     <Link
-                      href={`/course/${slug}/learn/les-1`}
+                      href={`/course/${slug}/learn`}
                       className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline"
                     >
                       <span>ক্লাসরুমে যান</span>

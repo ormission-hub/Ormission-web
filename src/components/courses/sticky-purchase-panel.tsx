@@ -86,7 +86,10 @@ export function StickyPurchasePanel({ course }: StickyPurchasePanelProps) {
   }, [course.slug]);
 
   const firstLessonId =
-    course.curriculum?.[0]?.lessons?.[0]?.id || "les-1";
+    course.curriculum?.[0]?.lessons?.[0]?.id;
+  const classroomHref = firstLessonId
+    ? `/course/${course.slug}/learn/${firstLessonId}`
+    : `/course/${course.slug}/learn`;
 
   const handleEnroll = async (e?: React.MouseEvent) => {
     if (e) e.preventDefault();
@@ -290,7 +293,7 @@ export function StickyPurchasePanel({ course }: StickyPurchasePanelProps) {
 
               {/* Classroom Access Button */}
               <Link
-                href={`/course/${course.slug}/learn/${firstLessonId}`}
+                href={classroomHref}
                 className="group relative w-full p-[2px] rounded-2xl overflow-hidden shadow-[0_10px_28px_rgba(16,185,129,0.35)] hover:shadow-[0_14px_36px_rgba(16,185,129,0.55)] active:scale-[0.98] transition-all duration-300 block mb-3 cursor-pointer"
               >
                 <div className="relative z-10 w-full py-4 px-6 rounded-[14px] bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 text-white flex items-center justify-center gap-2.5 overflow-hidden font-bengali">
@@ -550,7 +553,7 @@ export function StickyPurchasePanel({ course }: StickyPurchasePanelProps) {
             </div>
 
             <Link
-              href={`/course/${course.slug}/learn/${firstLessonId}`}
+              href={classroomHref}
               className="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-black text-white bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:opacity-95 shadow-lg shadow-emerald-500/25 font-bengali flex items-center gap-1.5 cursor-pointer active:scale-95 shrink-0"
             >
               <Play className="w-3.5 h-3.5 fill-white" />
@@ -782,7 +785,7 @@ export function StickyPurchasePanel({ course }: StickyPurchasePanelProps) {
                   </div>
 
                   <Link
-                    href={`/course/${course.slug}/learn/${firstLessonId}`}
+                    href={classroomHref}
                     onClick={() => setShowVideoModal(false)}
                     className="px-6 py-2.5 rounded-xl text-xs sm:text-sm font-black text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:opacity-95 shadow-md shadow-emerald-500/30 font-bengali flex items-center gap-2 cursor-pointer"
                   >

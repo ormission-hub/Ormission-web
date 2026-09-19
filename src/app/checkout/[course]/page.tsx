@@ -409,7 +409,7 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
 
           <div className="pt-3 space-y-3">
             <Link
-              href={`/course/${course.slug}/learn/les-1`}
+              href={`/course/${course.slug}/learn`}
               className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 text-white font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
             >
               <Play className="w-4 h-4 fill-white" />

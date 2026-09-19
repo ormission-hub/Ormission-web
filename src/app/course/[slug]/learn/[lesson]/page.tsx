@@ -113,6 +113,25 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
     }
   }
 
+  // AUTO-RECOVERY: If the requested lessonId (e.g. "l-1-1" or "les-1") does not exist in the course,
+  // but the course DOES have lessons, auto-select the first lesson so the student never sees a 404!
+  if (!currentLesson && allLessons.length > 0) {
+    currentLesson = allLessons[0];
+    for (const section of (course?.curriculum || [])) {
+      if (section.lessons?.some((l) => String(l.id) === String(currentLesson?.id))) {
+        currentSectionTitle = section.titleBn || section.title || "";
+        break;
+      }
+    }
+  }
+
+  // Silently update the browser URL to match the auto-recovered lesson ID
+  useEffect(() => {
+    if (course && allLessons.length > 0 && currentLesson && String(lessonId) !== String(currentLesson.id)) {
+      router.replace(`/course/${slug}/learn/${currentLesson.id}`);
+    }
+  }, [course, allLessons, currentLesson, lessonId, slug, router]);
+
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   // Strict Anti-Bypass Access State
