@@ -629,6 +629,8 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
                         <iframe
                           src={embedSrc}
                           className="w-full h-full border-0 absolute inset-0"
+                          sandbox="allow-scripts allow-same-origin allow-presentation allow-forms"
+                          referrerPolicy="no-referrer"
                           allowFullScreen
                           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                           scrolling="no"
@@ -660,7 +662,7 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
 
                 {/* Server Switcher Bar — only when multiple servers */}
                 {accessStatus.servers && accessStatus.servers.length > 1 && (
-                  <div className="w-full bg-slate-900/95 backdrop-blur-md border-t border-slate-800/90 px-3 sm:px-5 py-2.5 flex items-center justify-between gap-2 shadow-inner">
+                  <div className="w-full bg-slate-900/95 backdrop-blur-md border-t border-slate-800/90 px-3 sm:px-5 py-2.5 flex flex-wrap items-center justify-between gap-2 shadow-inner">
                     <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
                       <span className="text-[11px] font-bold text-slate-400 font-bengali shrink-0">
                         সার্ভার নির্বাচন:
@@ -684,6 +686,17 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
                         );
                       })}
                     </div>
+
+                    {/* Adblock Shield Protection Indicator for Embed/Streamtape servers */}
+                    {Boolean(
+                      accessStatus.servers[selectedServerIndex]?.type === "streamtape" ||
+                      accessStatus.servers[selectedServerIndex]?.type === "embed"
+                    ) && (
+                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-[11px] font-bengali font-semibold shadow-2xs">
+                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                        <span>অ্যাড-ব্লকার সক্রিয় (পপআপ ও বিজ্ঞাপন ব্লকড)</span>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

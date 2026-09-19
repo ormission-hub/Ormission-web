@@ -709,6 +709,8 @@ export function StickyPurchasePanel({ course }: StickyPurchasePanelProps) {
                       <iframe
                         src={getEmbedUrl(activeUrl)}
                         className="w-full h-full border-0 absolute inset-0"
+                        sandbox="allow-scripts allow-same-origin allow-presentation allow-forms"
+                        referrerPolicy="no-referrer"
                         allowFullScreen
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                         scrolling="no"
@@ -734,7 +736,7 @@ export function StickyPurchasePanel({ course }: StickyPurchasePanelProps) {
                         : "bg-surface text-text-muted hover:text-text border-border"
                     }`}
                   >
-                    <span>{srv.type === "youtube" ? "🎬" : srv.type === "streamtape" ? "📺" : "🌐"}</span>
+                    <span className={`w-1.5 h-1.5 rounded-full ${selectedServerIdx === idx ? "bg-white" : "bg-text-muted"}`} />
                     <span>{srv.name}</span>
                   </button>
                 ))}
