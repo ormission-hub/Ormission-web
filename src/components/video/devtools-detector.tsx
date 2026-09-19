@@ -235,6 +235,22 @@ export function DevToolsDetector({
       if (delta > 20) {
         broadcastDevTools(true);
       }
+
+      // E. Anti-Scraper & Automated Driver Trap (Puppeteer, Playwright, Selenium, Headless Chrome)
+      try {
+        const isAutomated =
+          navigator.webdriver === true ||
+          Boolean((window as any)._phantom) ||
+          Boolean((window as any).__nightmare) ||
+          Boolean((window as any).callPhantom) ||
+          Boolean((window as any).cdc_adoQpoasnfa76pfcZLmcfl_Array) ||
+          Boolean(window.document.documentElement.getAttribute("webdriver")) ||
+          navigator.userAgent.toLowerCase().includes("headless");
+
+        if (isAutomated) {
+          broadcastDevTools(true);
+        }
+      } catch {}
     }, 250);
 
     // --- 7. Window Dimension Difference Check ---

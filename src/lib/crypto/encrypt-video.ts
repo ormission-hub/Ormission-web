@@ -108,9 +108,9 @@ export function encryptVideoUrl(plaintext: string, expiresInMs: number = 10 * 60
     decoy: serverDecoy,
   };
 
-  // 3-Way Fragmentation for YouTube IDs & Universal URLs (Server 2 & 3)
+  // 3-Way Fragmentation for YouTube IDs only
   if (ytId && ytId.length === 11) {
-    // 1. YouTube 11-char ID
+    // YouTube 11-char ID
     const p1 = ytId.slice(0, 4);
     const p2 = ytId.slice(4, 8);
     const p3 = ytId.slice(8);
@@ -124,24 +124,6 @@ export function encryptVideoUrl(plaintext: string, expiresInMs: number = 10 * 60
     payloadObj.f3 = xorMask(p3, s3);
     payloadObj.s = [s1, s2, s3];
     payloadObj.yt = true;
-  } else if (plaintext && plaintext.length > 5) {
-    // 2. Universal 3-Way Fragmentation for Server 2 & 3 (Streamtape, AVCaption, Embeds)
-    const len = plaintext.length;
-    const split1 = Math.floor(len / 3);
-    const split2 = Math.floor((2 * len) / 3);
-    const p1 = plaintext.slice(0, split1);
-    const p2 = plaintext.slice(split1, split2);
-    const p3 = plaintext.slice(split2);
-
-    const s1 = randomBytes(4).toString("hex");
-    const s2 = randomBytes(4).toString("hex");
-    const s3 = randomBytes(4).toString("hex");
-
-    payloadObj.f1 = xorMask(p1, s1);
-    payloadObj.f2 = xorMask(p2, s2);
-    payloadObj.f3 = xorMask(p3, s3);
-    payloadObj.s = [s1, s2, s3];
-    payloadObj.yt = false;
   }
 
   const payload = JSON.stringify(payloadObj);
