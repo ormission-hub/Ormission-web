@@ -15,6 +15,7 @@ import {
   Check,
   Sliders,
 } from "lucide-react";
+import { DevToolsDetector } from "@/components/video/devtools-detector";
 
 declare global {
   interface Window {
@@ -32,6 +33,8 @@ export interface CustomVideoPlayerProps {
   onProgress?: (progressPercent: number) => void;
   className?: string;
   initialDuration?: string | number;
+  watermarkText?: string;
+  enableDevToolsProtection?: boolean;
 }
 
 // Helper: Parse duration string ("35:00", "01:20:00", "45") or number to seconds
@@ -109,6 +112,8 @@ export function CustomVideoPlayer({
   onProgress,
   className = "",
   initialDuration,
+  watermarkText,
+  enableDevToolsProtection = true,
 }: CustomVideoPlayerProps) {
   const videoId = extractYouTubeId(videoUrlOrId);
 
@@ -119,9 +124,13 @@ export function CustomVideoPlayer({
   const hideControlsTimer = useRef<NodeJS.Timeout | null>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
 
+  // Auto-hide controls duration: 6 seconds (6000ms)
+  const CONTROLS_AUTOHIDE_MS = 6000;
+
   // Player state
   const [hasStarted, setHasStarted] = useState(autoPlay);
   const [isPlaying, setIsPlaying] = useState(false);
+  const isPlayingRef = useRef(false);
   const [isBuffering, setIsBuffering] = useState(false);
   const [isIframeLoaded, setIsIframeLoaded] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -205,15 +214,25 @@ export function CustomVideoPlayer({
       // -1: unstarted, 0: ended, 1: playing, 2: paused, 3: buffering, 5: cued
       if (payload.event === "onStateChange") {
         if (payload.info === 1) {
+          isPlayingRef.current = true;
           setIsPlaying(true);
           setIsBuffering(false);
           setHasStarted(true);
+          setShowControls(true);
+          scheduleHide(CONTROLS_AUTOHIDE_MS);
         } else if (payload.info === 2) {
+          isPlayingRef.current = false;
           setIsPlaying(false);
           setIsBuffering(false);
+          setShowControls(true);
+          if (hideControlsTimer.current) {
+            clearTimeout(hideControlsTimer.current);
+            hideControlsTimer.current = null;
+          }
         } else if (payload.info === 3) {
           setIsBuffering(true);
         } else if (payload.info === 0) {
+          isPlayingRef.current = false;
           setIsPlaying(false);
           setIsBuffering(false);
           setHasEnded(true);
@@ -309,50 +328,46 @@ export function CustomVideoPlayer({
     return () => clearInterval(interval);
   }, [isPlaying, playbackRate, duration, onProgress]);
 
-  // Show controls and schedule auto-hide countdown (2.5s)
-  const showAndScheduleHide = useCallback(() => {
-    setShowControls(true);
+  // Centralized schedule hide function (defaults to 6 seconds)
+  const scheduleHide = useCallback((delay: number = CONTROLS_AUTOHIDE_MS) => {
     if (hideControlsTimer.current) {
       clearTimeout(hideControlsTimer.current);
     }
-    if (isPlaying) {
-      hideControlsTimer.current = setTimeout(() => {
-        setShowControls(false);
-        setShowSpeedMenu(false);
-        setShowQualityMenu(false);
-      }, 2500);
-    }
-  }, [isPlaying]);
-
-  // Auto-hide controls whenever video starts/resumes playing
-  useEffect(() => {
-    if (isPlaying) {
-      if (hideControlsTimer.current) {
-        clearTimeout(hideControlsTimer.current);
-      }
-      hideControlsTimer.current = setTimeout(() => {
-        setShowControls(false);
-        setShowSpeedMenu(false);
-        setShowQualityMenu(false);
-      }, 2500);
-    } else {
-      if (hideControlsTimer.current) {
-        clearTimeout(hideControlsTimer.current);
-      }
-      setShowControls(true);
-    }
-    return () => {
-      if (hideControlsTimer.current) {
-        clearTimeout(hideControlsTimer.current);
-      }
-    };
-  }, [isPlaying]);
-
-  const handleMouseLeave = () => {
-    if (isPlaying) {
+    hideControlsTimer.current = setTimeout(() => {
       setShowControls(false);
       setShowSpeedMenu(false);
       setShowQualityMenu(false);
+    }, delay);
+  }, []);
+
+  // Show controls and schedule auto-hide countdown (6s duration)
+  const showAndScheduleHide = useCallback(() => {
+    setShowControls(true);
+    if (isPlayingRef.current) {
+      scheduleHide(CONTROLS_AUTOHIDE_MS);
+    }
+  }, [scheduleHide]);
+
+  // Keep isPlayingRef and auto-hide timer in sync with isPlaying
+  useEffect(() => {
+    isPlayingRef.current = isPlaying;
+    if (isPlaying) {
+      setShowControls(true);
+      scheduleHide(CONTROLS_AUTOHIDE_MS);
+    } else {
+      if (hideControlsTimer.current) {
+        clearTimeout(hideControlsTimer.current);
+        hideControlsTimer.current = null;
+      }
+      setShowControls(true);
+    }
+  }, [isPlaying, scheduleHide]);
+
+  const handleMouseLeave = () => {
+    // When the mouse leaves the player, do NOT cut the timer down to 1.5s!
+    // Maintain the full 6 seconds so user has time to view the lecture without abrupt hiding.
+    if (isPlayingRef.current && !hideControlsTimer.current) {
+      scheduleHide(CONTROLS_AUTOHIDE_MS);
     }
   };
 
@@ -367,13 +382,22 @@ export function CustomVideoPlayer({
       setHasStarted(true);
     }
 
-    if (isPlaying) {
+    if (isPlayingRef.current) {
       sendCommand("pauseVideo");
+      isPlayingRef.current = false;
       setIsPlaying(false);
+      setShowControls(true);
+      if (hideControlsTimer.current) {
+        clearTimeout(hideControlsTimer.current);
+        hideControlsTimer.current = null;
+      }
       triggerActionFeedback("pause");
     } else {
       sendCommand("playVideo");
+      isPlayingRef.current = true;
       setIsPlaying(true);
+      setShowControls(true);
+      scheduleHide(CONTROLS_AUTOHIDE_MS);
       triggerActionFeedback("play");
     }
   };
@@ -553,20 +577,13 @@ export function CustomVideoPlayer({
       return;
     }
 
-    // Single click / tap
+    // Single click / tap toggles play/pause immediately
     if (clickTimeoutRef.current) {
       clearTimeout(clickTimeoutRef.current);
     }
     clickTimeoutRef.current = setTimeout(() => {
-      if (!showControls) {
-        // If controls were hidden, tap brings them back and schedules auto-hide
-        showAndScheduleHide();
-      } else {
-        // If controls were already visible, clicking toggles play/pause
-        togglePlay();
-        showAndScheduleHide();
-      }
-    }, 220);
+      togglePlay();
+    }, 200);
   };
 
   // Block right click context menu
@@ -597,16 +614,17 @@ export function CustomVideoPlayer({
   }, [isPlaying]);
 
   return (
-    <div
-      ref={containerRef}
-      onMouseMove={showAndScheduleHide}
-      onMouseLeave={handleMouseLeave}
-      onTouchStart={showAndScheduleHide}
-      onContextMenu={handleContextMenu}
-      className={`relative aspect-video w-full bg-black overflow-hidden select-none group font-sans ${className}`}
-    >
+    <DevToolsDetector enabled={enableDevToolsProtection}>
+      <div
+        ref={containerRef}
+        onMouseMove={showAndScheduleHide}
+        onMouseLeave={handleMouseLeave}
+        onTouchStart={showAndScheduleHide}
+        onContextMenu={handleContextMenu}
+        className={`relative aspect-video w-full bg-black overflow-hidden select-none group font-sans ${className}`}
+      >
       {/* ========================================================================= */}
-      {/* 1. NATIVE YOUTUBE EMBED (Exact 16:9 Pristine Ratio - 0% Distortion)       */}
+      {/* 1. NATIVE YOUTUBE EMBED (Exact 16:9 Pristine Native Ratio - 0% Zoom)     */}
       {/* ========================================================================= */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none select-none">
         {mounted && (
@@ -701,20 +719,58 @@ export function CustomVideoPlayer({
         </div>
       )}
 
-      {/* Center Play Button When Paused */}
-      {hasStarted && !isPlaying && (
+      {/* Center Play & Frosted Shield When Paused (100% Covers YouTube's Pause Screen) */}
+      {hasStarted && !isPlaying && !hasEnded && (
         <div
-          onClick={togglePlay}
-          className="absolute inset-0 z-20 flex items-center justify-center cursor-pointer transition-all"
+          onClick={(e) => {
+            e.stopPropagation();
+            togglePlay();
+          }}
+          className="absolute inset-0 z-20 flex flex-col items-center justify-center cursor-pointer transition-all bg-slate-950/90 backdrop-blur-md"
         >
-          <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-gradient-to-tr from-primary to-orange-500 text-white flex items-center justify-center shadow-2xl transition-transform hover:scale-110 border-2 border-white/30">
-            <Play className="w-8 h-8 sm:w-9 sm:h-9 fill-white text-white ml-1" />
+          <div className="relative z-10 flex flex-col items-center gap-2.5 text-center px-4">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-tr from-primary to-orange-500 text-white flex items-center justify-center shadow-2xl transition-transform hover:scale-110 border-2 border-white/30">
+              <Play className="w-8 h-8 sm:w-10 sm:h-10 fill-white text-white ml-1" />
+            </div>
+            {title && (
+              <p className="text-white text-xs sm:text-sm font-bold font-bengali max-w-md line-clamp-1">
+                {title}
+              </p>
+            )}
+            <span className="text-slate-400 text-[11px] sm:text-xs font-bengali">
+              চালিয়ে যেতে ক্লিক করুন
+            </span>
           </div>
         </div>
       )}
 
       {/* ========================================================================= */}
-      {/* 4. BOTTOM CONTROLS BAR                                                    */}
+      {/* TOP HEADER BAR (Synchronized with Bottom Controls: 3.5s auto-hide)        */}
+      {/* Completely covers YouTube's top title, channel name, and share button    */}
+      {/* ========================================================================= */}
+      <div
+        className={`absolute top-0 inset-x-0 z-30 h-16 px-4 bg-gradient-to-b from-slate-950 via-slate-950/90 to-transparent transition-all duration-300 pointer-events-none flex items-center justify-between ${
+          showControls || !isPlaying
+            ? "opacity-100 translate-y-0"
+            : "opacity-0 -translate-y-2"
+        }`}
+      >
+        <div className="flex items-center gap-2 max-w-[75%] sm:max-w-[80%]">
+          <span className="w-2 h-2 rounded-full bg-primary animate-pulse shrink-0" />
+          <p className="text-white text-xs sm:text-sm font-bold font-bengali truncate drop-shadow">
+            {title || "ক্লাস লেকচার"}
+          </p>
+        </div>
+        <div className="shrink-0 flex items-center gap-2">
+          <span className="text-[10px] sm:text-xs font-semibold px-2.5 py-0.5 rounded-full bg-white/10 text-white/90 backdrop-blur-sm border border-white/15">
+            ORMISSION
+          </span>
+        </div>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* 4. BOTTOM CONTROLS BAR (Synchronized: 3.5s auto-hide)                     */}
+      {/* Completely covers YouTube's logo and controls at the bottom               */}
       {/* ========================================================================= */}
       <div
         onClick={(e) => {
@@ -725,7 +781,7 @@ export function CustomVideoPlayer({
           e.stopPropagation();
           showAndScheduleHide();
         }}
-        className={`absolute bottom-0 inset-x-0 z-30 px-3 py-2.5 sm:px-4 sm:py-3.5 bg-gradient-to-t from-slate-950 via-slate-950/95 to-transparent transition-all duration-300 ${
+        className={`absolute bottom-0 inset-x-0 z-30 px-3 py-3 sm:px-4 sm:py-3.5 bg-gradient-to-t from-slate-950 via-slate-950/95 to-transparent transition-all duration-300 ${
           showControls || !isPlaying
             ? "opacity-100 translate-y-0"
             : "opacity-0 translate-y-2 pointer-events-none"
@@ -939,5 +995,6 @@ export function CustomVideoPlayer({
         </div>
       </div>
     </div>
+    </DevToolsDetector>
   );
 }

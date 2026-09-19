@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { encryptVideoUrl, encryptServersArray } from "@/lib/crypto/encrypt-video";
 
 
 export const runtime = "nodejs";
@@ -133,6 +134,7 @@ export async function POST(request: Request) {
       return NextResponse.json({
         authorized: true,
         isFreePreview: true,
+        isEncrypted: false,
         videoUrl: targetLesson.videoUrl,
         servers: targetLesson.servers,
       });
@@ -143,6 +145,7 @@ export async function POST(request: Request) {
       return NextResponse.json({
         authorized: true,
         isFreePreview: false,
+        isEncrypted: false,
         videoUrl: targetLesson.videoUrl,
         servers: targetLesson.servers,
       });
@@ -152,7 +155,7 @@ export async function POST(request: Request) {
     if (user) {
       const { data: userProfile } = await supabaseAdmin
         .from("profiles")
-        .select("role")
+        .select("role, full_name")
         .eq("id", user.id)
         .maybeSingle();
 
@@ -161,8 +164,13 @@ export async function POST(request: Request) {
           authorized: true,
           isFreePreview: false,
           isAdmin: true,
-          videoUrl: targetLesson.videoUrl,
-          servers: targetLesson.servers,
+          isEncrypted: true,
+          videoUrl: encryptVideoUrl(targetLesson.videoUrl),
+          servers: encryptServersArray(targetLesson.servers),
+          watermark: {
+            text: `${userProfile?.full_name || user.email || "Admin"} • অ্যাডমিন প্রিভিউ`,
+            userId: user.id,
+          },
         });
       }
     }
@@ -263,14 +271,32 @@ export async function POST(request: Request) {
       }
     }
 
-    // If user is verified enrolled: GRANT ACCESS with videoUrl
+    // If user is verified enrolled: GRANT ACCESS with encrypted videoUrl & watermark
     if (isEnrolled) {
+      const { data: studentProfile } = await supabaseAdmin
+        .from("profiles")
+        .select("full_name, phone")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      const studentName = studentProfile?.full_name || "";
+      const studentPhone = studentProfile?.phone || user.phone || "";
+      const studentEmail = user.email || "";
+      const studentIdentifier =
+        [studentName, studentPhone || studentEmail].filter(Boolean).join(" • ") ||
+        `Student ID: ${user.id.slice(0, 8)}`;
+
       return NextResponse.json({
         authorized: true,
         isFreePreview: false,
         isEnrolled: true,
-        videoUrl: targetLesson.videoUrl,
-        servers: targetLesson.servers,
+        isEncrypted: true,
+        videoUrl: encryptVideoUrl(targetLesson.videoUrl),
+        servers: encryptServersArray(targetLesson.servers),
+        watermark: {
+          text: studentIdentifier,
+          userId: user.id,
+        },
       });
     }
 

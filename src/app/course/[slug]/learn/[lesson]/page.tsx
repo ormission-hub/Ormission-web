@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, notFound } from "next/navigation";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { getCourseBySlug, COURSES, type Course, type Lesson } from "@/lib/data/courses";
 import { CustomVideoPlayer, extractYouTubeId } from "@/components/video/custom-video-player";
+import { decryptVideoUrlClient, decryptServersArray } from "@/lib/crypto/decrypt-video-client";
 import { createClient } from "@/lib/supabase/client";
 import { mapDbCourseToAppCourse } from "@/lib/supabase/course-mapper";
 
@@ -101,22 +102,12 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
 
   if (course?.curriculum && course.curriculum.length > 0) {
     for (const section of course.curriculum) {
-      const found = section.lessons?.find((l) => l.id === lessonId);
+      const found = section.lessons?.find((l) => String(l.id) === String(lessonId));
       if (found) {
         currentLesson = found;
         currentSectionTitle = section.titleBn || section.title || "";
         break;
       }
-    }
-
-    // Fallback: If requested lessonId was not found in curriculum, pick the first lesson
-    if (!currentLesson && allLessons.length > 0) {
-      currentLesson = allLessons[0];
-      const parentSection = course.curriculum.find((s) =>
-        s.lessons?.some((l) => l.id === currentLesson?.id)
-      );
-      currentSectionTitle =
-        parentSection?.titleBn || parentSection?.title || course.curriculum[0]?.titleBn || "";
     }
   }
 
@@ -129,6 +120,8 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
     videoUrl?: string;
     servers?: { name: string; type: string; url: string }[];
     isFreePreview?: boolean;
+    isEncrypted?: boolean;
+    watermark?: { text: string; userId?: string };
     reason?: string;
     isPending?: boolean;
     orderNumber?: string;
@@ -172,12 +165,44 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
         const data = await res.json();
         if (isMounted) {
           if (data.authorized && data.videoUrl) {
+            let finalVideoUrl = data.videoUrl;
+            let finalServers = Array.isArray(data.servers) ? data.servers : [];
+
+            // If video is encrypted (AES-256-GCM), fetch key and decrypt in memory
+            if (data.isEncrypted) {
+              try {
+                const keyRes = await fetch("/api/course/video-key", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+                  },
+                });
+                if (keyRes.ok) {
+                  const keyData = await keyRes.json();
+                  if (keyData.k) {
+                    const decryptedUrl = await decryptVideoUrlClient(data.videoUrl, keyData.k);
+                    if (decryptedUrl) {
+                      finalVideoUrl = decryptedUrl;
+                    }
+                    if (finalServers.length > 0) {
+                      finalServers = await decryptServersArray(finalServers, keyData.k);
+                    }
+                  }
+                }
+              } catch (decryptErr) {
+                console.error("Video decryption error:", decryptErr);
+              }
+            }
+
             setAccessStatus({
               checking: false,
               authorized: true,
-              videoUrl: data.videoUrl,
-              servers: Array.isArray(data.servers) ? data.servers : [],
+              videoUrl: finalVideoUrl,
+              servers: finalServers,
               isFreePreview: data.isFreePreview,
+              isEncrypted: data.isEncrypted,
+              watermark: data.watermark,
             });
             setSelectedServerIndex(0);
           } else {
@@ -229,8 +254,8 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
     }));
   };
 
-  // Loading guard — prevent mock data flash
-  if (courseLoading || !course) {
+  // 1. Loading guard
+  if (courseLoading) {
     return (
       <div className="bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
@@ -241,8 +266,58 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
     );
   }
 
-  // If no lessons are available at all for this course, render clean state
-  if (!currentLesson || allLessons.length === 0) {
+  // 2. Course does not exist -> 404
+  if (!course) {
+    notFound();
+  }
+
+  // 3. Lesson does not exist in this course -> 404 Not Found
+  if (!currentLesson) {
+    return (
+      <div className="bg-slate-950 text-slate-100 min-h-screen flex flex-col items-center justify-center p-6 text-center font-bengali">
+        <div className="max-w-md w-full flex flex-col items-center">
+          <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-center mb-5 shadow-xl">
+            <BookOpen className="w-8 h-8" />
+          </div>
+
+          <span className="text-5xl font-extrabold text-primary font-sans block mb-2">
+            404
+          </span>
+
+          <h1 className="text-xl sm:text-2xl font-bold text-white mb-2">
+            লেসনটি খুঁজে পাওয়া যায়নি
+          </h1>
+
+          <p className="text-xs sm:text-sm text-slate-400 leading-relaxed mb-6">
+            আপনি যে লেসন আইডি (<code className="text-primary font-mono px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800">{lessonId}</code>) খুঁজছেন তা এই কোর্সে বিদ্যমান নেই।
+          </p>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full">
+            {allLessons.length > 0 && (
+              <Link
+                href={`/course/${slug}/learn/${allLessons[0].id}`}
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-white text-xs font-bold transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Play className="w-4 h-4 fill-white" />
+                <span>প্রথম লেসন দেখুন</span>
+              </Link>
+            )}
+
+            <Link
+              href={`/course/${slug}`}
+              className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium transition-all border border-slate-700 flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>কোর্সের বিস্তারিত পাতা</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 4. If course has no lessons at all yet
+  if (allLessons.length === 0) {
     return (
       <div className="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-bengali">
         <header className="h-14 sticky top-0 border-b border-slate-800 bg-slate-900 px-4 flex items-center justify-between shrink-0 z-40">
@@ -508,23 +583,27 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
                   const activeUrl = activeServer.url || accessStatus.videoUrl || "";
                   const activeType = activeServer.type || "youtube";
 
+                  // Free class & preview videos use normal YouTube embed
+                  // Only paid classes use CustomVideoPlayer with custom UI & security logic
+                  const isPaidCourse = (course.price || 0) > 0 && !(course as any).is_free;
+                  const isFreeClass = Boolean(accessStatus.isFreePreview || currentLesson.isFreePreview || !isPaidCourse);
+
                   if (activeType === "youtube") {
-                    // Free/preview → simple YouTube iframe; Paid → CustomVideoPlayer with protection
-                    const isFreeVideo = Boolean(currentLesson?.isFreePreview || accessStatus?.isFreePreview);
-                    if (isFreeVideo) {
+                    if (isFreeClass) {
                       const ytId = extractYouTubeId(activeUrl);
                       return (
                         <div className="w-full aspect-video bg-black">
                           <iframe
-                            src={`https://www.youtube.com/embed/${ytId}?rel=0`}
+                            src={`https://www.youtube.com/embed/${ytId}?rel=0&autoplay=1`}
                             className="w-full h-full border-0"
                             allowFullScreen
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                            title={`${currentLesson.titleBn} — ফ্রি প্রিভিউ`}
+                            title={`${course.titleBn} — ${currentLesson.titleBn} — ফ্রি ক্লাস`}
                           />
                         </div>
                       );
                     }
+
                     return (
                       <CustomVideoPlayer
                         videoUrlOrId={activeUrl}
@@ -532,6 +611,8 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
                         thumbnailUrl={course.thumbnail}
                         autoPlay={false}
                         initialDuration={currentLesson.duration}
+                        enableDevToolsProtection={true}
+                        watermarkText={accessStatus.watermark?.text}
                         onEnded={() => {
                           setCompletedLessons((prev) => ({
                             ...prev,
