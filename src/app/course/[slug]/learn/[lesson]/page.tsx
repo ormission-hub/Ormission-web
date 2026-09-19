@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { getCourseBySlug, COURSES, type Course, type Lesson } from "@/lib/data/courses";
 import { CustomVideoPlayer, extractYouTubeId } from "@/components/video/custom-video-player";
+import { DevToolsDetector } from "@/components/video/devtools-detector";
 import { decryptVideoUrlClient, decryptServersArray } from "@/lib/crypto/decrypt-video-client";
 import { createClient } from "@/lib/supabase/client";
 import { mapDbCourseToAppCourse } from "@/lib/supabase/course-mapper";
@@ -577,7 +578,7 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
               </div>
             ) : accessStatus.authorized && accessStatus.videoUrl ? (
               <div className="w-full">
-                {/* Video Player — uses selected server */}
+                {/* Video Player — wrapped in active DevToolsDetector for all paid servers */}
                 {(() => {
                   const servers = accessStatus.servers || [];
                   const activeServer = servers[selectedServerIndex] || { name: "Server 1", type: "youtube", url: accessStatus.videoUrl };
@@ -589,75 +590,68 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
                   const isPaidCourse = (course.price || 0) > 0 && !(course as any).is_free;
                   const isFreeClass = Boolean(accessStatus.isFreePreview || currentLesson.isFreePreview || !isPaidCourse);
 
-                  if (activeType === "youtube") {
-                    if (isFreeClass) {
-                      const ytId = extractYouTubeId(activeUrl);
-                      return (
-                        <div className="w-full aspect-video bg-black">
+                  return (
+                    <DevToolsDetector enabled={!isFreeClass}>
+                      {activeType === "youtube" ? (
+                        isFreeClass ? (
+                          <div className="w-full aspect-video bg-black">
+                            <iframe
+                              src={`https://www.youtube.com/embed/${extractYouTubeId(activeUrl)}?rel=0&autoplay=1`}
+                              className="w-full h-full border-0"
+                              allowFullScreen
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                              title={`${course.titleBn} — ${currentLesson.titleBn} — ফ্রি ক্লাস`}
+                            />
+                          </div>
+                        ) : (
+                          <CustomVideoPlayer
+                            videoUrlOrId={activeUrl}
+                            title={`${course.titleBn} — ${currentLesson.titleBn}`}
+                            thumbnailUrl={course.thumbnail}
+                            autoPlay={false}
+                            initialDuration={currentLesson.duration}
+                            enableDevToolsProtection={true}
+                            watermarkText={accessStatus.watermark?.text}
+                            onEnded={() => {
+                              setCompletedLessons((prev) => ({
+                                ...prev,
+                                [currentLesson.id]: true,
+                              }));
+                            }}
+                          />
+                        )
+                      ) : activeType === "streamtape" || activeType === "embed" ? (
+                        <div className="w-full aspect-video bg-black relative flex items-center justify-center overflow-hidden shadow-2xl">
                           <iframe
-                            src={`https://www.youtube.com/embed/${ytId}?rel=0&autoplay=1`}
-                            className="w-full h-full border-0"
+                            src={getEmbedUrl(activeUrl)}
+                            className="w-full h-full border-0 absolute inset-0"
+                            sandbox="allow-scripts allow-same-origin allow-presentation allow-forms"
+                            referrerPolicy="no-referrer"
                             allowFullScreen
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                            title={`${course.titleBn} — ${currentLesson.titleBn} — ফ্রি ক্লাস`}
+                            scrolling="no"
+                            title={`${course.titleBn} — ${currentLesson.titleBn} — ${activeServer.name}`}
                           />
                         </div>
-                      );
-                    }
-
-                    return (
-                      <CustomVideoPlayer
-                        videoUrlOrId={activeUrl}
-                        title={`${course.titleBn} — ${currentLesson.titleBn}`}
-                        thumbnailUrl={course.thumbnail}
-                        autoPlay={false}
-                        initialDuration={currentLesson.duration}
-                        enableDevToolsProtection={true}
-                        watermarkText={accessStatus.watermark?.text}
-                        onEnded={() => {
-                          setCompletedLessons((prev) => ({
-                            ...prev,
-                            [currentLesson.id]: true,
-                          }));
-                        }}
-                      />
-                    );
-                  } else if (activeType === "streamtape" || activeType === "embed") {
-                    const embedSrc = getEmbedUrl(activeUrl);
-                    return (
-                      <div className="w-full aspect-video bg-black relative flex items-center justify-center overflow-hidden shadow-2xl">
-                        <iframe
-                          src={embedSrc}
-                          className="w-full h-full border-0 absolute inset-0"
-                          sandbox="allow-scripts allow-same-origin allow-presentation allow-forms"
-                          referrerPolicy="no-referrer"
-                          allowFullScreen
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                          scrolling="no"
-                          title={`${course.titleBn} — ${currentLesson.titleBn} — ${activeServer.name}`}
-                        />
-                      </div>
-                    );
-                  } else {
-                    // Direct URL — HTML5 video
-                    return (
-                      <div className="w-full aspect-video bg-black">
-                        <video
-                          src={activeUrl}
-                          className="w-full h-full"
-                          controls
-                          controlsList="nodownload"
-                          onContextMenu={(e) => e.preventDefault()}
-                          onEnded={() => {
-                            setCompletedLessons((prev) => ({
-                              ...prev,
-                              [currentLesson.id]: true,
-                            }));
-                          }}
-                        />
-                      </div>
-                    );
-                  }
+                      ) : (
+                        <div className="w-full aspect-video bg-black">
+                          <video
+                            src={activeUrl}
+                            className="w-full h-full"
+                            controls
+                            controlsList="nodownload"
+                            onContextMenu={(e) => e.preventDefault()}
+                            onEnded={() => {
+                              setCompletedLessons((prev) => ({
+                                ...prev,
+                                [currentLesson.id]: true,
+                              }));
+                            }}
+                          />
+                        </div>
+                      )}
+                    </DevToolsDetector>
+                  );
                 })()}
 
                 {/* Server Switcher Bar — only when multiple servers */}
