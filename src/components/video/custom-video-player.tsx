@@ -118,7 +118,10 @@ export function CustomVideoPlayer({
   const [mounted, setMounted] = useState(false);
   const [origin, setOrigin] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const shadowHostRef = useRef<HTMLDivElement>(null);
+  const shadowRootRef = useRef<ShadowRoot | null>(null);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const [isDomPurged, setIsDomPurged] = useState(false);
   const hideControlsTimer = useRef<NodeJS.Timeout | null>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
 
@@ -613,13 +616,83 @@ export function CustomVideoPlayer({
 
   // Track if video has ended — to block YouTube's end-screen overlay
   const [hasEnded, setHasEnded] = useState(false);
-  // Reset hasEnded if video plays again
   useEffect(() => {
     if (isPlaying) setHasEnded(false);
   }, [isPlaying]);
 
+  // Imperative Closed Shadow DOM Mounting & Purging (Zero iframes in Light DOM)
+  useEffect(() => {
+    if (!mounted || !hasStarted || isDomPurged) {
+      if (shadowRootRef.current) {
+        shadowRootRef.current.replaceChildren();
+      }
+      iframeRef.current = null;
+      return;
+    }
+
+    const host = shadowHostRef.current;
+    if (!host) return;
+
+    if (!shadowRootRef.current) {
+      try {
+        shadowRootRef.current = host.attachShadow({ mode: "closed" });
+      } catch {
+        // Shadow root might already be attached
+      }
+    }
+
+    const shadow = shadowRootRef.current;
+    if (!shadow) return;
+
+    // Purge any stale nodes
+    shadow.replaceChildren();
+
+    // Create iframe imperatively inside Closed Shadow Root
+    const iframe = document.createElement("iframe");
+    iframe.src = iframeSrc;
+    iframe.title = title || "Video Lecture";
+    iframe.className = "border-0 pointer-events-none absolute w-full h-full inset-0";
+    iframe.style.width = "100%";
+    iframe.style.height = "100%";
+    iframe.style.border = "none";
+    iframe.style.position = "absolute";
+    iframe.style.top = "0";
+    iframe.style.left = "0";
+    iframe.referrerPolicy = "strict-origin-when-cross-origin";
+    iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
+    iframe.addEventListener("load", () => {
+      handleIframeLoad();
+    });
+
+    shadow.appendChild(iframe);
+    iframeRef.current = iframe;
+
+    return () => {
+      if (shadowRootRef.current) {
+        shadowRootRef.current.replaceChildren();
+      }
+      iframeRef.current = null;
+    };
+  }, [mounted, hasStarted, isDomPurged, iframeSrc, title]);
+
   return (
-    <DevToolsDetector enabled={enableDevToolsProtection}>
+    <DevToolsDetector
+      enabled={enableDevToolsProtection}
+      onDevToolsChange={(isOpen) => {
+        if (isOpen) {
+          setIsDomPurged(true);
+          if (shadowRootRef.current) {
+            shadowRootRef.current.replaceChildren();
+          }
+          if (iframeRef.current) {
+            iframeRef.current.remove();
+            iframeRef.current = null;
+          }
+        } else {
+          setIsDomPurged(false);
+        }
+      }}
+    >
       <div
         ref={containerRef}
         onMouseMove={showAndScheduleHide}
@@ -632,6 +705,12 @@ export function CustomVideoPlayer({
       {/* 0. HONEYPOT DECOY INJECTIONS (Trap for DOM scrapers & inspector tools)     */}
       {/* ========================================================================= */}
       <div className="sr-only hidden" aria-hidden="true" tabIndex={-1}>
+        <iframe
+          src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?controls=0"
+          className="hidden w-0 h-0 pointer-events-none"
+          tabIndex={-1}
+          title="Manifest Decoy"
+        />
         <a
           href="https://youtu.be/dQw4w9WgXcQ"
           className="video-source-stream-ref yt-stream-source"
@@ -649,22 +728,13 @@ export function CustomVideoPlayer({
       </div>
 
       {/* ========================================================================= */}
-      {/* 1. NATIVE YOUTUBE EMBED (Exact 16:9 Pristine Native Ratio - 0% Zoom)     */}
-      {/* DOM Concealment: src is "about:blank" until user activates playback      */}
+      {/* 1. CLOSED SHADOW DOM HOST (Light DOM has ZERO iframes or video links)      */}
       {/* ========================================================================= */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none select-none">
-        {mounted && (
-          <iframe
-            ref={iframeRef}
-            src={hasStarted ? iframeSrc : "about:blank"}
-            onLoad={handleIframeLoad}
-            title={title || "Video Lecture"}
-            className="border-0 pointer-events-none absolute w-full h-full inset-0"
-            referrerPolicy="strict-origin-when-cross-origin"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          />
-        )}
-      </div>
+      <div
+        ref={shadowHostRef}
+        className="absolute inset-0 overflow-hidden pointer-events-none select-none"
+        id="secure-host-container"
+      />
 
       {/* ========================================================================= */}
       {/* 2. INITIAL POSTER COVER (Until First Play Click - ZERO FLOATING TEXT)     */}

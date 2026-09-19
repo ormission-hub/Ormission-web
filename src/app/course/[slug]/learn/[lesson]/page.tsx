@@ -21,11 +21,12 @@ import {
 } from "lucide-react";
 import { getCourseBySlug, COURSES, type Course, type Lesson } from "@/lib/data/courses";
 import { CustomVideoPlayer, extractYouTubeId } from "@/components/video/custom-video-player";
+import { HlsVideoPlayer } from "@/components/video/hls-video-player";
 import { DevToolsDetector } from "@/components/video/devtools-detector";
 import { decryptVideoUrlClient, decryptServersArray } from "@/lib/crypto/decrypt-video-client";
 import { createClient } from "@/lib/supabase/client";
 import { mapDbCourseToAppCourse } from "@/lib/supabase/course-mapper";
-import { getEmbedUrl } from "@/lib/video-helpers";
+import { getEmbedUrl, isHlsUrl } from "@/lib/video-helpers";
 
 interface PlayerPageProps {
   params: Promise<{ slug: string; lesson: string }>;
@@ -615,7 +616,23 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
 
                   return (
                     <DevToolsDetector enabled={!isFreeClass}>
-                      {activeType === "youtube" ? (
+                      {activeType === "hls" || isHlsUrl(activeUrl) ? (
+                        <HlsVideoPlayer
+                          src={activeUrl}
+                          title={`${course.titleBn} — ${currentLesson.titleBn}`}
+                          thumbnailUrl={course.thumbnail}
+                          autoPlay={false}
+                          initialDuration={currentLesson.duration}
+                          token={accessStatus.videoSessionToken}
+                          enableDevToolsProtection={!isFreeClass}
+                          onEnded={() => {
+                            setCompletedLessons((prev) => ({
+                              ...prev,
+                              [currentLesson.id]: true,
+                            }));
+                          }}
+                        />
+                      ) : activeType === "youtube" ? (
                         isFreeClass ? (
                           <div className="w-full aspect-video bg-black">
                             <iframe

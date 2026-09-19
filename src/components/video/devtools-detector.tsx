@@ -154,11 +154,24 @@ export function DevToolsDetector({
       return false;
     };
 
+    // --- 3b. Docked DevTools Dimension Checker ---
+    const checkDockedDevTools = () => {
+      if (typeof window === "undefined") return;
+      const widthThreshold = window.outerWidth - window.innerWidth > 200;
+      const heightThreshold = window.outerHeight - window.innerHeight > 260;
+      if (widthThreshold || heightThreshold) {
+        broadcastDevTools(true);
+      }
+    };
+
     window.addEventListener("keydown", handleKeyDown, true);
     window.addEventListener("contextmenu", handleContextMenu, true);
+    window.addEventListener("resize", checkDockedDevTools, { passive: true });
+
+    // Immediate check on mount
+    checkDockedDevTools();
 
     // --- 4. Initialize disable-devtool engine globally once ---
-    // Uses stable detectors [1, 3, 4, 5, 6, 7], avoiding Size (detector 2) which triggers on DPI scaling and browser sidebars
     if (!disableDevtoolStarted) {
       disableDevtoolStarted = true;
       try {
@@ -172,11 +185,10 @@ export function DevToolsDetector({
             ondevtoolclose: () => {
               broadcastDevTools(false);
             },
-            interval: 500,
+            interval: 250,
             disableMenu: true,
             clearLog: true,
-            // Exclude DetectorType.Size to prevent false positives on Windows zoom (125%, 150%) & Brave/Edge sidebars
-            detectors: [1, 3, 4, 5, 6, 7] as any,
+            detectors: [0, 1, 2, 3, 4, 5, 6, 7] as any,
           });
         }
       } catch (err) {
@@ -184,60 +196,62 @@ export function DevToolsDetector({
       }
     }
 
-    // --- 5. Reliable Debugger Pause Verification ---
-    // A genuine DevTools breakpoint halts the thread for > 200ms.
-    // We require 2 consecutive slow ticks to filter out any single React hydration frame stutter.
-    let consecutivePauseCount = 0;
-    const heartbeatInterval = setInterval(() => {
-      // Check DisableDevtool state
-      if (typeof disableDevtoolGlobalRunner?.isDevToolOpened === "function") {
-        if (disableDevtoolGlobalRunner.isDevToolOpened()) {
+    // --- 5. Console & Elements Inspection Trap ---
+    try {
+      const inspectTrap = new Image();
+      Object.defineProperty(inspectTrap, "id", {
+        get: function () {
           broadcastDevTools(true);
-          return;
+          return "inspect-shield";
+        },
+      });
+      // Periodic evaluation trigger for Chromium devtools inspector
+      const trapInterval = setInterval(() => {
+        try {
+          console.debug(inspectTrap);
+        } catch {}
+      }, 500);
+
+      // --- 6. Fast Debugger Pause & Size Verification ---
+      const heartbeatInterval = setInterval(() => {
+        checkDockedDevTools();
+
+        if (typeof disableDevtoolGlobalRunner?.isDevToolOpened === "function") {
+          if (disableDevtoolGlobalRunner.isDevToolOpened()) {
+            broadcastDevTools(true);
+            return;
+          }
         }
-      }
 
-      // Timing check: Debugger breakpoint detection
-      const tStart = performance.now();
-      try {
-        (function () {
-          return false;
-        }["constructor"]("debugger")());
-      } catch {}
-      const elapsed = performance.now() - tStart;
+        // Timing check: Debugger breakpoint detection
+        const tStart = performance.now();
+        try {
+          (function () {
+            return false;
+          }["constructor"]("debugger")());
+        } catch {}
+        const elapsed = performance.now() - tStart;
 
-      if (elapsed > 200) {
-        consecutivePauseCount++;
-        if (consecutivePauseCount >= 2) {
+        if (elapsed > 80) {
           broadcastDevTools(true);
         }
-      } else {
-        if (consecutivePauseCount > 0) {
-          consecutivePauseCount = 0;
-        }
-        // If runner reports closed and thread execution is fast, auto-heal
-        if (
-          isGlobalDevToolsDetected &&
-          typeof disableDevtoolGlobalRunner?.isDevToolOpened === "function" &&
-          !disableDevtoolGlobalRunner.isDevToolOpened()
-        ) {
-          broadcastDevTools(false);
-        }
-      }
-    }, 1000);
+      }, 400);
 
-    return () => {
-      devToolsSubscribers.delete(setIsDevToolsOpen);
-      window.removeEventListener("keydown", handleKeyDown, true);
-      window.removeEventListener("contextmenu", handleContextMenu, true);
-      clearInterval(heartbeatInterval);
+      return () => {
+        devToolsSubscribers.delete(setIsDevToolsOpen);
+        window.removeEventListener("keydown", handleKeyDown, true);
+        window.removeEventListener("contextmenu", handleContextMenu, true);
+        window.removeEventListener("resize", checkDockedDevTools);
+        clearInterval(trapInterval);
+        clearInterval(heartbeatInterval);
 
-      // Restore original console methods
-      console.log = originalLog;
-      console.warn = originalWarn;
-      console.error = originalError;
-      console.info = originalInfo;
-    };
+        // Restore original console methods
+        console.log = originalLog;
+        console.warn = originalWarn;
+        console.error = originalError;
+        console.info = originalInfo;
+      };
+    } catch {}
   }, [enabled]);
 
   // When DevTools is detected, UNMOUNT children completely!
