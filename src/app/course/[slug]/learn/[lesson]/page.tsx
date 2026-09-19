@@ -643,12 +643,12 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
                             }}
                           />
                         )
-                      ) : activeType === "streamtape" || activeType === "embed" ? (
+                      ) : activeType === "streamtape" || activeType === "embed" || activeType === "abyss" ? (
                         <div className="w-full aspect-video bg-black relative flex items-center justify-center overflow-hidden shadow-2xl">
-                          {/* Honeypot decoy trap for Server 2 & 3 */}
+                          {/* Honeypot decoy trap for Server 2 & 3 & 4 */}
                           <div className="sr-only hidden" aria-hidden="true" tabIndex={-1}>
                             <a
-                              href={activeType === "streamtape" ? "https://streamtape.com/e/dQw4w9WgXcQ_decoy/" : "https://avcaption.com/watch/decoy_68f871a4d6c82a2f841fab1e30da"}
+                              href={activeType === "streamtape" ? "https://streamtape.com/e/dQw4w9WgXcQ_decoy/" : activeType === "abyss" ? "https://player.abyssplayer.com/dQw4w9WgXcQ_decoy" : "https://avcaption.com/watch/decoy_68f871a4d6c82a2f841fab1e30da"}
                               className="video-source-stream-ref server-manifest-url"
                               rel="nofollow noreferrer"
                               tabIndex={-1}
@@ -658,11 +658,11 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
                             <input
                               type="hidden"
                               name="source_manifest_url"
-                              value={activeType === "streamtape" ? "https://streamtape.com/e/dQw4w9WgXcQ_decoy/" : "https://avcaption.com/watch/decoy_68f871a4d6c82a2f841fab1e30da"}
+                              value={activeType === "streamtape" ? "https://streamtape.com/e/dQw4w9WgXcQ_decoy/" : activeType === "abyss" ? "https://player.abyssplayer.com/dQw4w9WgXcQ_decoy" : "https://avcaption.com/watch/decoy_68f871a4d6c82a2f841fab1e30da"}
                             />
                             <meta
                               itemProp="contentUrl"
-                              content={activeType === "streamtape" ? "https://streamtape.com/e/dQw4w9WgXcQ_decoy/" : "https://avcaption.com/watch/decoy_68f871a4d6c82a2f841fab1e30da"}
+                              content={activeType === "streamtape" ? "https://streamtape.com/e/dQw4w9WgXcQ_decoy/" : activeType === "abyss" ? "https://player.abyssplayer.com/dQw4w9WgXcQ_decoy" : "https://avcaption.com/watch/decoy_68f871a4d6c82a2f841fab1e30da"}
                             />
                           </div>
 
@@ -731,14 +731,16 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
                       })}
                     </div>
 
-                    {/* Adblock Shield Protection Indicator for sandboxed Embed servers */}
+                    {/* Adblock Shield Protection Indicator for Abyss & sandboxed Embed servers */}
                     {Boolean(
-                      accessStatus.servers[selectedServerIndex]?.type === "embed" &&
-                      !/streamtape\.(com|to|net|pe|xyz|site|cash|cc)|streamta\.pe/i.test(accessStatus.servers[selectedServerIndex]?.url || "")
+                      accessStatus.servers[selectedServerIndex]?.type === "abyss" ||
+                      /abyss/i.test(accessStatus.servers[selectedServerIndex]?.url || "") ||
+                      (accessStatus.servers[selectedServerIndex]?.type === "embed" &&
+                      !/streamtape\.(com|to|net|pe|xyz|site|cash|cc)|streamta\.pe/i.test(accessStatus.servers[selectedServerIndex]?.url || ""))
                     ) && (
                       <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-[11px] font-bengali font-semibold shadow-2xs">
                         <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                        <span>অ্যাড-ব্লকার সক্রিয় (পপআপ ও বিজ্ঞাপন ব্লকড)</span>
+                        <span>অ্যাড-ব্লকার সক্রিয় (পপআপ ও বিজ্ঞাপন ১০০% ব্লকড)</span>
                       </div>
                     )}
                   </div>

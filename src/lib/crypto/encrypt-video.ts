@@ -52,6 +52,9 @@ export function getDecoyForUrl(urlOrType: string): string {
   if (lower.includes("streamtape")) {
     return "https://streamtape.com/e/dQw4w9WgXcQ_decoy/";
   }
+  if (lower.includes("abyss")) {
+    return "https://player.abyssplayer.com/dQw4w9WgXcQ_decoy";
+  }
   if (lower.includes("avcaption")) {
     return "https://avcaption.com/watch/decoy_68f871a4d6c82a2f841fab1e30da";
   }
