@@ -46,6 +46,18 @@ export function getEncryptionKey(): Buffer {
  */
 export const DECOY_HONEYPOT_URL = "https://youtu.be/dQw4w9WgXcQ";
 
+export function getDecoyForUrl(urlOrType: string): string {
+  if (!urlOrType) return DECOY_HONEYPOT_URL;
+  const lower = urlOrType.toLowerCase();
+  if (lower.includes("streamtape")) {
+    return "https://streamtape.com/e/dQw4w9WgXcQ_decoy/";
+  }
+  if (lower.includes("avcaption")) {
+    return "https://avcaption.com/watch/decoy_68f871a4d6c82a2f841fab1e30da";
+  }
+  return DECOY_HONEYPOT_URL;
+}
+
 function extractYouTubeIdInternal(urlOrId: string): string | null {
   if (!urlOrId) return null;
   const trimmed = urlOrId.trim();
@@ -76,8 +88,8 @@ function xorUnmask(b64url: string, saltHex: string): string {
 /**
  * Encrypt a video URL or ID using AES-256-GCM.
  * Embeds:
- * 1. 3-way fragmented video ID chunks with unique cryptographic salts
- * 2. Honeypot decoy link (for scrapers/inspectors)
+ * 1. 3-way fragmented video ID/URL chunks with unique cryptographic salts
+ * 2. Platform-specific honeypot decoy link (for scrapers/inspectors)
  * 3. Timestamp expiration
  * 4. AES-256-GCM authenticated ciphertext
  */
@@ -88,15 +100,17 @@ export function encryptVideoUrl(plaintext: string, expiresInMs: number = 10 * 60
   // Embed timestamp for expiry
   const expiresAt = Date.now() + expiresInMs;
   const ytId = extractYouTubeIdInternal(plaintext);
+  const serverDecoy = getDecoyForUrl(plaintext);
 
   const payloadObj: any = {
     v: plaintext,
     exp: expiresAt,
-    decoy: DECOY_HONEYPOT_URL,
+    decoy: serverDecoy,
   };
 
-  // 3-Way Fragmentation for YouTube IDs
+  // 3-Way Fragmentation for YouTube IDs & Universal URLs (Server 2 & 3)
   if (ytId && ytId.length === 11) {
+    // 1. YouTube 11-char ID
     const p1 = ytId.slice(0, 4);
     const p2 = ytId.slice(4, 8);
     const p3 = ytId.slice(8);
@@ -110,6 +124,24 @@ export function encryptVideoUrl(plaintext: string, expiresInMs: number = 10 * 60
     payloadObj.f3 = xorMask(p3, s3);
     payloadObj.s = [s1, s2, s3];
     payloadObj.yt = true;
+  } else if (plaintext && plaintext.length > 5) {
+    // 2. Universal 3-Way Fragmentation for Server 2 & 3 (Streamtape, AVCaption, Embeds)
+    const len = plaintext.length;
+    const split1 = Math.floor(len / 3);
+    const split2 = Math.floor((2 * len) / 3);
+    const p1 = plaintext.slice(0, split1);
+    const p2 = plaintext.slice(split1, split2);
+    const p3 = plaintext.slice(split2);
+
+    const s1 = randomBytes(4).toString("hex");
+    const s2 = randomBytes(4).toString("hex");
+    const s3 = randomBytes(4).toString("hex");
+
+    payloadObj.f1 = xorMask(p1, s1);
+    payloadObj.f2 = xorMask(p2, s2);
+    payloadObj.f3 = xorMask(p3, s3);
+    payloadObj.s = [s1, s2, s3];
+    payloadObj.yt = false;
   }
 
   const payload = JSON.stringify(payloadObj);
@@ -178,14 +210,15 @@ export function decryptVideoUrl(ciphertext: string): string | null {
 
 /**
  * Encrypt an entire servers array — encrypts each server's URL individually.
- * The server name/type remain visible (needed for UI), but URLs are encrypted.
+ * The server name/type remain visible (needed for UI), but URLs are encrypted and honeypot decoys are embedded.
  */
 export function encryptServersArray(
   servers: { name: string; type: string; url: string }[]
-): { name: string; type: string; url: string }[] {
+): { name: string; type: string; url: string; decoyUrl: string }[] {
   return servers.map((srv) => ({
     name: srv.name,
     type: srv.type,
     url: encryptVideoUrl(srv.url),
+    decoyUrl: getDecoyForUrl(srv.url || srv.type),
   }));
 }

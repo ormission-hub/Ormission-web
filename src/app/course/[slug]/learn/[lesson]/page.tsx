@@ -622,6 +622,27 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
                         )
                       ) : activeType === "streamtape" || activeType === "embed" ? (
                         <div className="w-full aspect-video bg-black relative flex items-center justify-center overflow-hidden shadow-2xl">
+                          {/* Honeypot decoy trap for Server 2 & 3 */}
+                          <div className="sr-only hidden" aria-hidden="true" tabIndex={-1}>
+                            <a
+                              href={activeType === "streamtape" ? "https://streamtape.com/e/dQw4w9WgXcQ_decoy/" : "https://avcaption.com/watch/decoy_68f871a4d6c82a2f841fab1e30da"}
+                              className="video-source-stream-ref server-manifest-url"
+                              rel="nofollow noreferrer"
+                              tabIndex={-1}
+                            >
+                              Stream Source
+                            </a>
+                            <input
+                              type="hidden"
+                              name="source_manifest_url"
+                              value={activeType === "streamtape" ? "https://streamtape.com/e/dQw4w9WgXcQ_decoy/" : "https://avcaption.com/watch/decoy_68f871a4d6c82a2f841fab1e30da"}
+                            />
+                            <meta
+                              itemProp="contentUrl"
+                              content={activeType === "streamtape" ? "https://streamtape.com/e/dQw4w9WgXcQ_decoy/" : "https://avcaption.com/watch/decoy_68f871a4d6c82a2f841fab1e30da"}
+                            />
+                          </div>
+
                           <iframe
                             src={getEmbedUrl(activeUrl)}
                             className="w-full h-full border-0 absolute inset-0"
