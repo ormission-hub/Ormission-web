@@ -41,11 +41,25 @@ function hexToBytes(hex: string): Uint8Array {
 }
 
 /**
+ * Unmask a XOR-salted fragment in client-side memory using Web Crypto primitives.
+ */
+function xorUnmaskClient(b64url: string, saltHex: string): string {
+  const bytes = base64urlToBytes(b64url);
+  const saltBytes = hexToBytes(saltHex);
+  const unmasked = new Uint8Array(bytes.length);
+  for (let i = 0; i < bytes.length; i++) {
+    unmasked[i] = bytes[i] ^ saltBytes[i % saltBytes.length];
+  }
+  return new TextDecoder().decode(unmasked);
+}
+
+/**
  * Decrypt an encrypted video URL using the Web Crypto API.
+ * Reassembles 3-way salted fragments in volatile browser memory.
  * 
  * @param ciphertext - The base64url-encoded encrypted string from the server
  * @param keyHex - The 64-character hex encryption key
- * @returns The decrypted video URL, or null if decryption fails or token expired
+ * @returns The decrypted/assembled video ID or URL, or null if decryption fails or token expired
  */
 export async function decryptVideoUrlClient(
   ciphertext: string,
@@ -90,6 +104,14 @@ export async function decryptVideoUrlClient(
     // Check expiry
     if (payload.exp && Date.now() > payload.exp) {
       return null; // Token expired
+    }
+
+    // If 3-way fragmented video chunks exist, reassemble in volatile local memory
+    if (payload.f1 && payload.f2 && payload.f3 && Array.isArray(payload.s) && payload.s.length === 3) {
+      const p1 = xorUnmaskClient(payload.f1, payload.s[0]);
+      const p2 = xorUnmaskClient(payload.f2, payload.s[1]);
+      const p3 = xorUnmaskClient(payload.f3, payload.s[2]);
+      return `${p1}${p2}${p3}`;
     }
 
     return payload.v || null;

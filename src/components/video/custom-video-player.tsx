@@ -380,6 +380,13 @@ export function CustomVideoPlayer({
   const togglePlay = () => {
     if (!hasStarted) {
       setHasStarted(true);
+      setIsBuffering(true);
+      setIsPlaying(true);
+      isPlayingRef.current = true;
+      setShowControls(true);
+      scheduleHide(CONTROLS_AUTOHIDE_MS);
+      triggerActionFeedback("play");
+      return;
     }
 
     if (isPlayingRef.current) {
@@ -602,9 +609,9 @@ export function CustomVideoPlayer({
       badge: "Auto",
     };
 
-  // Build clean YouTube embed URL with exact origin matching
+  // Build clean YouTube embed URL with exact origin matching and conditional autoplay
   const originParam = origin ? `&origin=${encodeURIComponent(origin)}&widget_referrer=${encodeURIComponent(origin)}` : "";
-  const iframeSrc = `https://www.youtube.com/embed/${videoId}?enablejsapi=1${originParam}&controls=0&rel=0&showinfo=0&modestbranding=1&disablekb=1&iv_load_policy=3&playsinline=1&fs=0&cc_load_policy=0`;
+  const iframeSrc = `https://www.youtube.com/embed/${videoId}?enablejsapi=1${hasStarted ? "&autoplay=1" : ""}${originParam}&controls=0&rel=0&showinfo=0&modestbranding=1&disablekb=1&iv_load_policy=3&playsinline=1&fs=0&cc_load_policy=0`;
 
   // Track if video has ended — to block YouTube's end-screen overlay
   const [hasEnded, setHasEnded] = useState(false);
@@ -624,13 +631,34 @@ export function CustomVideoPlayer({
         className={`relative aspect-video w-full bg-black overflow-hidden select-none group font-sans ${className}`}
       >
       {/* ========================================================================= */}
+      {/* 0. HONEYPOT DECOY INJECTIONS (Trap for DOM scrapers & inspector tools)     */}
+      {/* ========================================================================= */}
+      <div className="sr-only hidden" aria-hidden="true" tabIndex={-1}>
+        <a
+          href="https://youtu.be/dQw4w9WgXcQ"
+          className="video-source-stream-ref yt-stream-source"
+          rel="nofollow noreferrer"
+          tabIndex={-1}
+        >
+          Stream Source
+        </a>
+        <input
+          type="hidden"
+          name="source_manifest_url"
+          value="https://youtu.be/dQw4w9WgXcQ"
+        />
+        <meta itemProp="contentUrl" content="https://youtu.be/dQw4w9WgXcQ" />
+      </div>
+
+      {/* ========================================================================= */}
       {/* 1. NATIVE YOUTUBE EMBED (Exact 16:9 Pristine Native Ratio - 0% Zoom)     */}
+      {/* DOM Concealment: src is "about:blank" until user activates playback      */}
       {/* ========================================================================= */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none select-none">
         {mounted && (
           <iframe
             ref={iframeRef}
-            src={iframeSrc}
+            src={hasStarted ? iframeSrc : "about:blank"}
             onLoad={handleIframeLoad}
             title={title || "Video Lecture"}
             className="border-0 pointer-events-none absolute w-full h-full inset-0"

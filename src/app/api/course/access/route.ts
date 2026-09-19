@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { encryptVideoUrl, encryptServersArray } from "@/lib/crypto/encrypt-video";
+import { encryptVideoUrl, encryptServersArray, DECOY_HONEYPOT_URL } from "@/lib/crypto/encrypt-video";
 import { cleanAndNormalizeVideoUrl } from "@/lib/video-helpers";
 
 
@@ -166,6 +166,7 @@ export async function POST(request: Request) {
           isFreePreview: false,
           isAdmin: true,
           isEncrypted: true,
+          decoyUrl: DECOY_HONEYPOT_URL,
           videoUrl: encryptVideoUrl(targetLesson.videoUrl),
           servers: encryptServersArray(targetLesson.servers),
           watermark: {
@@ -292,6 +293,7 @@ export async function POST(request: Request) {
         isFreePreview: false,
         isEnrolled: true,
         isEncrypted: true,
+        decoyUrl: DECOY_HONEYPOT_URL,
         videoUrl: encryptVideoUrl(targetLesson.videoUrl),
         servers: encryptServersArray(targetLesson.servers),
         watermark: {
