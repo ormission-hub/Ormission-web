@@ -247,59 +247,6 @@ export default async function CourseDetailPage({ params }: PageProps) {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
           {/* Main Content (Left 8 Cols) */}
           <div className="lg:col-span-8 space-y-8 sm:space-y-10">
-            {/* What you will learn (Highlights) */}
-            <div className="bg-surface rounded-2xl sm:rounded-3xl border border-border/80 p-6 sm:p-8 shadow-sm">
-              <h2 className="text-lg sm:text-xl font-black text-text font-bengali mb-5 flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-emerald-500/15 text-emerald-500 flex items-center justify-center">
-                  <CheckCircle2 className="w-5 h-5" />
-                </div>
-                <span>এই কোর্স থেকে যা যা শিখবেন</span>
-              </h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {course.highlights && course.highlights.length > 0 ? (
-                  course.highlights.map((highlight, index) => (
-                    <div
-                      key={index}
-                      className="flex items-start gap-3 text-xs sm:text-sm text-text font-bengali p-3 rounded-xl bg-surface-secondary/40 border border-border/50"
-                    >
-                      <div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-500 flex items-center justify-center shrink-0 mt-0.5">
-                        <Check className="w-3 h-3" />
-                      </div>
-                      <span className="leading-relaxed">{highlight}</span>
-                    </div>
-                  ))
-                ) : (
-                  <>
-                    <div className="flex items-start gap-3 text-xs sm:text-sm text-text font-bengali p-3 rounded-xl bg-surface-secondary/40 border border-border/50">
-                      <div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-500 flex items-center justify-center shrink-0 mt-0.5">
-                        <Check className="w-3 h-3" />
-                      </div>
-                      <span>লাইভ ও রেকর্ডেড ক্লাস সুবিধা ফুল এইচডি কোয়ালিটিতে</span>
-                    </div>
-                    <div className="flex items-start gap-3 text-xs sm:text-sm text-text font-bengali p-3 rounded-xl bg-surface-secondary/40 border border-border/50">
-                      <div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-500 flex items-center justify-center shrink-0 mt-0.5">
-                        <Check className="w-3 h-3" />
-                      </div>
-                      <span>অধ্যায়ভিত্তিক প্র্যাকটিস শিট ও বিগত বছরের প্রশ্ন সমাধান PDF</span>
-                    </div>
-                    <div className="flex items-start gap-3 text-xs sm:text-sm text-text font-bengali p-3 rounded-xl bg-surface-secondary/40 border border-border/50">
-                      <div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-500 flex items-center justify-center shrink-0 mt-0.5">
-                        <Check className="w-3 h-3" />
-                      </div>
-                      <span>২৪/৭ স্পেশাল মেন্টর ফোরাম ও ডাউট সলভিং সাপোর্ট</span>
-                    </div>
-                    <div className="flex items-start gap-3 text-xs sm:text-sm text-text font-bengali p-3 rounded-xl bg-surface-secondary/40 border border-border/50">
-                      <div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-500 flex items-center justify-center shrink-0 mt-0.5">
-                        <Check className="w-3 h-3" />
-                      </div>
-                      <span>পূর্ণাঙ্গ মডেল টেস্ট ও ইনস্ট্যান্ট রেজাল্ট এনালাইসিস</span>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-
             {/* Course Description */}
             <div className="bg-surface rounded-2xl sm:rounded-3xl border border-border/80 p-6 sm:p-8 shadow-sm">
               <h2 className="text-lg sm:text-xl font-black text-text font-bengali mb-4 flex items-center gap-2">

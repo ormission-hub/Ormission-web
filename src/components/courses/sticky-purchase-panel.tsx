@@ -472,60 +472,8 @@ export function StickyPurchasePanel({ course }: StickyPurchasePanelProps) {
             </>
           )}
 
-          {/* Course Features list in micro-cards */}
-          <div className="border-t border-border/70 pt-5 space-y-3 text-xs sm:text-sm text-text">
-            <h4 className="font-black text-text font-bengali text-xs uppercase tracking-wider mb-3 text-text-muted">
-              এই কোর্সের সাথে যা যা পাচ্ছেন:
-            </h4>
-
-            <div className="flex items-center gap-3 p-2.5 rounded-xl bg-surface-secondary/50 border border-border/50">
-              <div className="w-8 h-8 rounded-lg bg-primary/15 border border-primary/25 flex items-center justify-center text-primary shrink-0">
-                <Clock className="w-4 h-4" />
-              </div>
-              <span className="font-bengali font-medium">
-                {durationHours} ঘণ্টার ফুল এইচডি রেকর্ডেড ও লাইভ ক্লাস
-              </span>
-            </div>
-
-            <div className="flex items-center gap-3 p-2.5 rounded-xl bg-surface-secondary/50 border border-border/50">
-              <div className="w-8 h-8 rounded-lg bg-rose-500/15 border border-rose-500/25 flex items-center justify-center text-rose-500 shrink-0">
-                <FileDown className="w-4 h-4" />
-              </div>
-              <span className="font-bengali font-medium">
-                লেকচার স্লাইড ও প্র্যাকটিস শিট PDF
-              </span>
-            </div>
-
-            <div className="flex items-center gap-3 p-2.5 rounded-xl bg-surface-secondary/50 border border-border/50">
-              <div className="w-8 h-8 rounded-lg bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center text-emerald-500 shrink-0">
-                <Smartphone className="w-4 h-4" />
-              </div>
-              <span className="font-bengali font-medium">
-                মোবাইল ও পিসিতে আনলিমিটেড অ্যাক্সেস
-              </span>
-            </div>
-
-            <div className="flex items-center gap-3 p-2.5 rounded-xl bg-surface-secondary/50 border border-border/50">
-              <div className="w-8 h-8 rounded-lg bg-amber-500/15 border border-amber-500/25 flex items-center justify-center text-amber-500 shrink-0">
-                <Award className="w-4 h-4" />
-              </div>
-              <span className="font-bengali font-medium">
-                কোর্স সমাপনী অফিসিয়াল ভেরিফায়েড সার্টিফিকেট
-              </span>
-            </div>
-
-            <div className="flex items-center gap-3 p-2.5 rounded-xl bg-surface-secondary/50 border border-border/50">
-              <div className="w-8 h-8 rounded-lg bg-indigo-500/15 border border-indigo-500/25 flex items-center justify-center text-indigo-500 shrink-0">
-                <ShieldCheck className="w-4 h-4" />
-              </div>
-              <span className="font-bengali font-medium">
-                ১ বছরের ফুল ভ্যালিডিটি ও সাপোর্ট
-              </span>
-            </div>
-          </div>
-
           {/* Guarantee Badge */}
-          <div className="mt-6 p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-2.5 text-xs text-emerald-700 dark:text-emerald-400 font-bengali font-bold">
+          <div className="mt-4 p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-2.5 text-xs text-emerald-700 dark:text-emerald-400 font-bengali font-bold">
             <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
             <span>১০০% সুরক্ষিত পেমেন্ট ও তাত্ক্ষণিক অ্যাক্সেস</span>
           </div>
