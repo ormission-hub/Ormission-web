@@ -66,14 +66,16 @@ export function StickyPurchasePanel({ course }: StickyPurchasePanelProps) {
         const res = await fetch(`/api/course/access?courseSlug=${course.slug}`, {
           headers: session.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
         });
-        const data = await res.json();
-        if (isMounted && data.success) {
-          setEnrollmentStatus({
-            checking: false,
-            isEnrolled: !!data.isEnrolled,
-            isPending: !!data.isPending,
-            pendingOrder: data.pendingOrder,
-          });
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted && data?.success) {
+            setEnrollmentStatus({
+              checking: false,
+              isEnrolled: !!data.isEnrolled,
+              isPending: !!data.isPending,
+              pendingOrder: data.pendingOrder,
+            });
+          }
         }
       } catch {
         if (isMounted) setEnrollmentStatus({ checking: false, isEnrolled: false, isPending: false });
@@ -170,9 +172,9 @@ export function StickyPurchasePanel({ course }: StickyPurchasePanelProps) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ courseSlug: course.slug, lessonId: chapter.lessonId }),
     })
-      .then((res) => res.json())
+      .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        if (!cancelled) {
+        if (!cancelled && data) {
           if (data.videoUrl) {
             setPreviewVideoUrl(data.videoUrl);
           }

@@ -184,6 +184,10 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
           }),
         });
 
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData?.error || "Access check failed");
+        }
         const data = await res.json();
         if (isMounted) {
           if (data.authorized && data.videoUrl) {

@@ -159,14 +159,18 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
           const accessRes = await fetch(`/api/course/access?courseSlug=${courseSlug}`, {
             headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
           });
-          const accessData = await accessRes.json();
-          if (isMounted && accessData.success) {
-            setEnrollmentStatus({
-              checking: false,
-              isEnrolled: !!accessData.isEnrolled,
-              isPending: !!accessData.isPending,
-              pendingOrder: accessData.pendingOrder,
-            });
+          if (accessRes.ok) {
+            const accessData = await accessRes.json();
+            if (isMounted && accessData?.success) {
+              setEnrollmentStatus({
+                checking: false,
+                isEnrolled: !!accessData.isEnrolled,
+                isPending: !!accessData.isPending,
+                pendingOrder: accessData.pendingOrder,
+              });
+            } else if (isMounted) {
+              setEnrollmentStatus((prev) => ({ ...prev, checking: false }));
+            }
           } else if (isMounted) {
             setEnrollmentStatus((prev) => ({ ...prev, checking: false }));
           }
@@ -345,8 +349,14 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
         }),
       });
 
-      const result = await res.json();
-      if (!res.ok || !result.success) {
+      let result: any = null;
+      try {
+        result = await res.json();
+      } catch {
+        result = { success: false, error: "সার্ভার থেকে সঠিক তথ্য পাওয়া যায়নি।" };
+      }
+
+      if (!res.ok || !result?.success) {
         alert(result?.error || "অর্ডার প্রক্রিয়াকরণে সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।");
         setSubmitting(false);
         return;

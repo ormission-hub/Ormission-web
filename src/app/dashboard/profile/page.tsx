@@ -104,10 +104,15 @@ export default function ProfilePage() {
         body: formData,
       });
 
-      const data = await res.json();
+      let data: any = null;
+      try {
+        data = await res.json();
+      } catch {
+        data = { success: false, error: "ছবি আপলোডে সার্ভার থেকে ত্রুটি এসেছে" };
+      }
 
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || "ছবি আপলোড ব্যর্থ হয়েছে");
+      if (!res.ok || !data?.success) {
+        throw new Error(data?.error || "ছবি আপলোড ব্যর্থ হয়েছে");
       }
 
       const uploadedUrl = data.url;

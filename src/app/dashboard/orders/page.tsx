@@ -46,12 +46,63 @@ export default function OrdersPage() {
 
       setUserEmail(session.user.email || "");
 
-      const res = await fetch(`/api/orders?userId=${session.user.id}`);
-      const data = await res.json();
-
-      if (data.success && Array.isArray(data.data)) {
-        setOrders(data.data);
+      let loadedOrders: any[] = [];
+      try {
+        const res = await fetch(`/api/orders?userId=${session.user.id}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.success && Array.isArray(data.data)) {
+            loadedOrders = data.data;
+          }
+        }
+      } catch (fetchErr) {
+        console.warn("API student orders fetch warning:", fetchErr);
       }
+
+      if (loadedOrders.length === 0) {
+        try {
+          const { data: directOrders } = await supabase
+            .from("orders")
+            .select(`
+              *,
+              courses:course_id (
+                id,
+                title,
+                title_bn,
+                slug,
+                thumbnail_url
+              )
+            `)
+            .eq("user_id", session.user.id)
+            .order("created_at", { ascending: false });
+
+          if (directOrders && directOrders.length > 0) {
+            loadedOrders = directOrders.map((ord: any) => {
+              let parsedNotes: any = {};
+              try {
+                if (ord.notes && ord.notes.startsWith("{")) {
+                  parsedNotes = JSON.parse(ord.notes);
+                }
+              } catch {}
+              return {
+                ...ord,
+                orderNumber: parsedNotes.order_number || ord.id?.slice(0, 8)?.toUpperCase(),
+                senderNumber: parsedNotes.sender_number || "",
+                transactionId: parsedNotes.transaction_id || "",
+                courseTitle:
+                  ord.courses?.title_bn ||
+                  ord.courses?.title ||
+                  parsedNotes.course_title ||
+                  "কোর্স",
+              };
+            });
+          }
+        } catch (supaErr) {
+          console.warn("Direct Supabase query warning in orders page:", supaErr);
+        }
+      }
+
+      setOrders(loadedOrders);
     } catch (e) {
       console.error("Error loading student orders:", e);
     } finally {

@@ -69,8 +69,9 @@ const SCRAPER_SIGNATURES = [
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // 1. Allow static assets, images, and public media immediately
+  // 1. Allow API routes, static assets, images, and public media immediately
   if (
+    pathname.startsWith("/api/") ||
     pathname.startsWith("/_next/") ||
     pathname.startsWith("/images/") ||
     pathname === "/favicon.ico" ||
@@ -142,11 +143,12 @@ export const config = {
   matcher: [
     /*
      * Match all request paths except:
+     * - api (API routes)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico, sitemap.xml, robots.txt
      * - static image formats
      */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };
