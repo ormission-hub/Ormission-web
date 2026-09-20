@@ -141,18 +141,24 @@ export function CourseCard({ course }: CourseCardProps) {
 
       {/* Content Area */}
       <div className="p-5 sm:p-6 flex flex-col flex-1">
-        {/* Category Pill & 5-Star Rating Header */}
+        {/* Category Pill & Rating Header */}
         <div className="flex items-center justify-between gap-2 mb-3">
           <span className="inline-flex items-center gap-1 text-[11.5px] font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full font-bengali border border-primary/20">
             <BookOpen className="w-3 h-3 text-primary shrink-0" />
             <span className="truncate max-w-[150px]">{categoryName}</span>
           </span>
 
-          <div className="flex items-center gap-1 bg-amber-400/10 px-2.5 py-0.5 rounded-full border border-amber-400/25">
-            <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-            <span className="text-xs font-black text-amber-600 dark:text-amber-400">5.0</span>
-            <span className="text-[11px] font-bold text-text-muted">(১২৫)</span>
-          </div>
+          {course.showRating !== false && (
+            <div className="flex items-center gap-1 bg-amber-400/10 px-2.5 py-0.5 rounded-full border border-amber-400/25">
+              <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+              <span className="text-xs font-black text-amber-600 dark:text-amber-400">
+                {(course.rating || 5.0).toFixed(1)}
+              </span>
+              <span className="text-[11px] font-bold text-text-muted">
+                ({String(course.reviewsCount || 125).replace(/[0-9]/g, (d) => "০১২৩৪৫৬৭৮৯"[+d])})
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Course Title */}

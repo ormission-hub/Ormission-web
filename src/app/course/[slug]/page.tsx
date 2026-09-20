@@ -168,13 +168,15 @@ export default async function CourseDetailPage({ params }: PageProps) {
               {/* Meta Stats Cards Row */}
               <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs font-bengali border-t border-border/80 pt-5 mb-6">
                 {/* 5-Star Rating Pill */}
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-400/10 border border-amber-400/25">
-                  <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-                  <span className="font-black text-amber-600 dark:text-amber-400 text-sm">
-                    {rating.toFixed(1)}
-                  </span>
-                  <span className="text-text-muted">({reviewsCount} রেটিং)</span>
-                </div>
+                {course.showRating !== false && (
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-400/10 border border-amber-400/25">
+                    <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                    <span className="font-black text-amber-600 dark:text-amber-400 text-sm">
+                      {rating.toFixed(1)}
+                    </span>
+                    <span className="text-text-muted">({reviewsCount} রেটিং)</span>
+                  </div>
+                )}
 
                 {/* 3D Student Avatar Pill matching Home UI */}
                 <div className="inline-flex items-center gap-2 p-1 pr-3.5 rounded-2xl bg-white dark:bg-[#180d19]/90 border border-[#FCE7F3] dark:border-[#FB7185]/30 shadow-xs">

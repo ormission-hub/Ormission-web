@@ -87,28 +87,41 @@ export function mapDbCourseToAppCourse(dbCourse: any): Course {
     // If sections exist but have 0 lessons, mappedCurriculum stays [] (empty)
   }
 
-  return {
-    id: String(dbCourse.id),
-    slug: dbCourse.slug,
-    title: titleEn,
-    titleBn: titleBn,
-    subtitle: subtitleEn,
-    subtitleBn: subtitleBn,
-    categoryId: String(dbCourse.category_id || cat?.id || "general"),
-    categorySlug: cat?.slug || "general",
-    categoryNameBn: cat?.name_bn || cat?.name || "অনলাইন কোর্স",
-    subcategorySlug: cat?.slug || "general",
-    subcategoryNameBn: cat?.name_bn || cat?.name || "সাধারণ",
-    instructorId: String(dbCourse.instructor_id || inst?.id || "inst-1"),
-    price: Number(dbCourse.price) || 0,
-    originalPrice:
-      Number(dbCourse.original_price) && Number(dbCourse.original_price) > Number(dbCourse.price)
-        ? Number(dbCourse.original_price)
-        : Number(dbCourse.price) > 0
-        ? Math.round(Number(dbCourse.price) * 1.4)
-        : 0,
-    rating: 4.9,
-    reviewsCount: 128,
+    // Extract dynamic rating settings from features JSONB or fallback
+    const courseFeatures = (dbCourse.features && typeof dbCourse.features === "object") ? dbCourse.features : {};
+    const showRating = courseFeatures.show_rating !== undefined
+      ? Boolean(courseFeatures.show_rating)
+      : (dbCourse.show_rating !== undefined ? Boolean(dbCourse.show_rating) : true);
+    const ratingScore = courseFeatures.rating !== undefined
+      ? Number(courseFeatures.rating)
+      : (dbCourse.rating !== undefined ? Number(dbCourse.rating) : 5.0);
+    const reviewsCount = courseFeatures.reviews_count !== undefined
+      ? Number(courseFeatures.reviews_count)
+      : (dbCourse.reviews_count !== undefined ? Number(dbCourse.reviews_count) : 125);
+
+    return {
+      id: String(dbCourse.id),
+      slug: dbCourse.slug,
+      title: titleEn,
+      titleBn: titleBn,
+      subtitle: subtitleEn,
+      subtitleBn: subtitleBn,
+      categoryId: String(dbCourse.category_id || cat?.id || "general"),
+      categorySlug: cat?.slug || "general",
+      categoryNameBn: cat?.name_bn || cat?.name || "অনলাইন কোর্স",
+      subcategorySlug: cat?.slug || "general",
+      subcategoryNameBn: cat?.name_bn || cat?.name || "সাধারণ",
+      instructorId: String(dbCourse.instructor_id || inst?.id || "inst-1"),
+      price: Number(dbCourse.price) || 0,
+      originalPrice:
+        Number(dbCourse.original_price) && Number(dbCourse.original_price) > Number(dbCourse.price)
+          ? Number(dbCourse.original_price)
+          : Number(dbCourse.price) > 0
+          ? Math.round(Number(dbCourse.price) * 1.4)
+          : 0,
+      rating: ratingScore,
+      reviewsCount: reviewsCount,
+      showRating: showRating,
     enrolledCount: Number(dbCourse.enrollment_count) || 1250,
     durationHours: Math.max(1, Math.round((Number(dbCourse.total_duration) || 2400) / 60)),
     totalLessons: Number(dbCourse.total_lessons) || mappedCurriculum.reduce((acc, s) => acc + s.lessons.length, 0),

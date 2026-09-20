@@ -27,6 +27,7 @@ export interface DbFeaturedCourse {
   category_id?: number | string | null;
   short_description?: string | null;
   description?: string | null;
+  features?: any;
 }
 
 function CourseCard({ course }: { course: DbFeaturedCourse }) {
@@ -82,14 +83,20 @@ function CourseCard({ course }: { course: DbFeaturedCourse }) {
           {description}
         </p>
 
-        {/* 5-Star Rating & 2nd Image Inspired Student Enrollment Badge */}
+        {/* Rating & Student Enrollment Badge */}
         <div className="flex items-center justify-between gap-2 mb-4">
-          <div className="flex items-center gap-1">
-            {[...Array(5)].map((_, i) => (
-              <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-            ))}
-            <span className="text-xs font-bold text-text ml-1">5.0</span>
-          </div>
+          {(course.features?.show_rating !== false) ? (
+            <div className="flex items-center gap-1">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+              ))}
+              <span className="text-xs font-bold text-text ml-1">
+                {Number(course.features?.rating || 5.0).toFixed(1)}
+              </span>
+            </div>
+          ) : (
+            <div />
+          )}
 
           <div className="inline-flex items-center gap-2 p-1 pr-3 rounded-2xl bg-white dark:bg-[#180d19]/90 border border-[#FCE7F3] dark:border-[#FB7185]/30 shadow-[0_2px_8px_rgba(225,29,72,0.06)] dark:shadow-[0_4px_14px_rgba(225,29,72,0.2)] shrink-0">
             <div className="w-7 h-7 rounded-xl bg-[#FFF0F4] dark:bg-[#2E101F] border border-[#FCE7F3] dark:border-[#FB7185]/20 flex items-center justify-center shrink-0 p-0.5 overflow-hidden shadow-2xs">
@@ -155,6 +162,7 @@ export function FeaturedCourses({ initialCourses = [] }: { initialCourses?: DbFe
             thumbnail_url,
             short_description,
             description,
+            features,
             categories:category_id (id, name, name_bn, slug),
             instructors:instructor_id (id, name, name_bn, institution)
           `)

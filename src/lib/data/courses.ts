@@ -58,6 +58,7 @@ export interface Course {
   originalPrice: number;
   rating: number;
   reviewsCount: number;
+  showRating?: boolean;
   enrolledCount: number;
   durationHours: number;
   totalLessons: number;
