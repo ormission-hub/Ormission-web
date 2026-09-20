@@ -12,12 +12,15 @@ import {
   RefreshCw,
   ArrowRight,
   Sparkles,
+  XCircle,
+  RotateCcw,
+  Headphones,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { COURSES } from "@/lib/data/courses";
 
 export default function MyCoursesPage() {
-  const [filter, setFilter] = useState<"all" | "approved" | "pending">("all");
+  const [filter, setFilter] = useState<"all" | "approved" | "pending" | "rejected">("all");
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -103,12 +106,17 @@ export default function MyCoursesPage() {
     (o) => o.status === "paid" || o.status === "completed"
   );
   const pendingOrders = orders.filter((o) => o.status === "pending");
+  const rejectedOrders = orders.filter(
+    (o) => o.status === "failed" || o.status === "cancelled" || o.status === "rejected"
+  );
 
   const displayedList =
     filter === "approved"
       ? approvedOrders
       : filter === "pending"
       ? pendingOrders
+      : filter === "rejected"
+      ? rejectedOrders
       : orders;
 
   return (
@@ -120,12 +128,12 @@ export default function MyCoursesPage() {
             আমার নথিভুক্ত কোর্সসমূহ ({orders.length})
           </h1>
           <p className="text-xs text-text-muted mt-0.5">
-            আপনার সকল অনুমোদিত ও অপেক্ষমান কোর্সের ক্লাসরুম তালিকা
+            আপনার সকল অনুমোদিত, অপেক্ষমান ও সমন্বয়কৃত কোর্সের ক্লাসরুম তালিকা
           </p>
         </div>
 
         {/* Filter Tabs */}
-        <div className="flex items-center gap-1.5 p-1 bg-surface-secondary/80 rounded-xl text-xs font-semibold border border-border/60">
+        <div className="flex flex-wrap items-center gap-1.5 p-1 bg-surface-secondary/80 rounded-xl text-xs font-semibold border border-border/60">
           <button
             type="button"
             onClick={() => setFilter("all")}
@@ -161,6 +169,20 @@ export default function MyCoursesPage() {
             <Clock className="w-3.5 h-3.5" />
             <span>অপেক্ষমান ({pendingOrders.length})</span>
           </button>
+          {rejectedOrders.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setFilter("rejected")}
+              className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 ${
+                filter === "rejected"
+                  ? "bg-surface text-rose-600 dark:text-rose-400 shadow-xs font-bold"
+                  : "text-text-muted hover:text-text"
+              }`}
+            >
+              <XCircle className="w-3.5 h-3.5" />
+              <span>বাতিলকৃত ({rejectedOrders.length})</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -178,6 +200,8 @@ export default function MyCoursesPage() {
               ? "কোনো কোর্স বর্তমানে অপেক্ষমান নেই"
               : filter === "approved"
               ? "কোনো অনুমোদিত কোর্স এখনো নেই"
+              : filter === "rejected"
+              ? "কোনো বাতিলকৃত কোর্স নেই"
               : "আপনার কোনো নথিভুক্ত কোর্স নেই"}
           </h3>
           <p className="text-xs text-text-muted mb-4 max-w-sm mx-auto">
@@ -196,6 +220,12 @@ export default function MyCoursesPage() {
           {displayedList.map((order) => {
             const isApproved =
               order.status === "paid" || order.status === "completed";
+            const isRejected =
+              order.status === "failed" ||
+              order.status === "cancelled" ||
+              order.status === "rejected";
+            const isPending = order.status === "pending";
+
             const slug = order.courses?.slug || "test-course";
             const thumb =
               order.courses?.thumbnail_url || COURSES[0].thumbnail;
@@ -206,6 +236,8 @@ export default function MyCoursesPage() {
                 className={`bg-surface rounded-2xl border overflow-hidden flex flex-col justify-between shadow-xs transition-all ${
                   isApproved
                     ? "border-border hover:border-primary/40"
+                    : isRejected
+                    ? "border-rose-500/30 bg-rose-500/[0.02]"
                     : "border-amber-500/30 bg-amber-500/[0.02]"
                 }`}
               >
@@ -223,6 +255,11 @@ export default function MyCoursesPage() {
                         <span className="px-2.5 py-1 rounded-lg bg-emerald-500 text-white text-xs font-bold flex items-center gap-1 shadow-sm">
                           <CheckCircle2 className="w-3.5 h-3.5" />
                           <span>অনুমোদিত</span>
+                        </span>
+                      ) : isRejected ? (
+                        <span className="px-2.5 py-1 rounded-lg bg-rose-500 text-white text-xs font-bold flex items-center gap-1 shadow-sm">
+                          <XCircle className="w-3.5 h-3.5" />
+                          <span>বাতিলকৃত (Rejected)</span>
                         </span>
                       ) : (
                         <span className="px-2.5 py-1 rounded-lg bg-amber-500 text-white text-xs font-bold flex items-center gap-1 shadow-sm">
@@ -249,6 +286,16 @@ export default function MyCoursesPage() {
                       <p className="text-xs text-text-muted">
                         আপনার এই কোর্সের পূর্ণাঙ্গ ক্লাসরুম অ্যাক্সেস সক্রিয় রয়েছে।
                       </p>
+                    ) : isRejected ? (
+                      <div className="text-xs text-rose-700 dark:text-rose-300 bg-rose-500/10 p-3 rounded-xl border border-rose-500/20">
+                        <div className="flex items-center gap-1.5 font-bold text-rose-600 dark:text-rose-400 mb-1">
+                          <XCircle className="w-4 h-4 shrink-0" />
+                          <span>পেমেন্ট রিকোয়েস্ট প্রত্যাখ্যাত হয়েছে</span>
+                        </div>
+                        <p className="text-[11px] leading-relaxed opacity-95">
+                          TrxID: <span className="font-mono font-bold">{order.transactionId || "N/A"}</span> • জমাকৃত ট্রানজাকশন তথ্যের সাথে অ্যাকাউন্টের বিবরণ মেলেনি। সহায়তার জন্য সরাসরি সাপোর্ট টিকিট খুলুন।
+                        </p>
+                      </div>
                     ) : (
                       <div className="text-xs text-amber-700 dark:text-amber-300 bg-amber-500/10 p-2.5 rounded-xl border border-amber-500/20">
                         <p className="font-bold">TrxID: {order.transactionId || "Reviewing"}</p>
@@ -269,6 +316,23 @@ export default function MyCoursesPage() {
                       <Play className="w-3.5 h-3.5 fill-white" />
                       <span>ক্লাসরুমে প্রবেশ করুন</span>
                     </Link>
+                  ) : isRejected ? (
+                    <div className="grid grid-cols-2 gap-2 w-full">
+                      <Link
+                        href={`/dashboard/support?new=true&orderId=${order.orderNumber}&course=${encodeURIComponent(order.courseTitle)}`}
+                        className="py-2.5 px-3 rounded-xl font-bold text-xs text-white bg-rose-600 hover:bg-rose-700 flex items-center justify-center gap-1.5 shadow-xs transition-colors text-center"
+                      >
+                        <Headphones className="w-3.5 h-3.5" />
+                        <span>সাপোর্ট টিকিট</span>
+                      </Link>
+                      <Link
+                        href={`/checkout/${slug}`}
+                        className="py-2.5 px-3 rounded-xl font-bold text-xs text-text bg-surface-secondary hover:bg-surface-secondary/80 border border-border flex items-center justify-center gap-1.5 transition-colors text-center"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5 text-primary" />
+                        <span>পুনরায় ভর্তি</span>
+                      </Link>
+                    </div>
                   ) : (
                     <Link
                       href="/dashboard/orders"

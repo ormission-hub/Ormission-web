@@ -15,6 +15,8 @@ import {
   ExternalLink,
   Sparkles,
   RefreshCw,
+  XCircle,
+  Headphones,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -136,10 +138,14 @@ export default function DashboardOverviewPage() {
     (o) => o.status === "paid" || o.status === "completed"
   );
   const pendingOrders = orders.filter((o) => o.status === "pending");
+  const rejectedOrders = orders.filter(
+    (o) => o.status === "failed" || o.status === "cancelled" || o.status === "rejected"
+  );
 
   // Determine active course
   const activePaidOrder = paidOrders[0];
   const activePendingOrder = pendingOrders[0];
+  const activeRejectedOrder = rejectedOrders[0];
 
   // Filter out courses that student has already ordered or pending
   const orderedCourseIds = new Set(
@@ -176,6 +182,36 @@ export default function DashboardOverviewPage() {
           </div>
         </div>
       </div>
+
+      {/* Rejected Orders Live Alert Banner */}
+      {rejectedOrders.length > 0 && (
+        <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/25 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-rose-500 text-white flex items-center justify-center shrink-0">
+              <XCircle className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="font-bold text-sm text-rose-800 dark:text-rose-300">
+                পেমেন্ট রিকোয়েস্ট যাচাই ব্যর্থ হয়েছে ({rejectedOrders.length}টি কোর্স)
+              </h4>
+              <p className="text-xs text-rose-700/90 dark:text-rose-400/90 mt-0.5">
+                কোর্স: <strong>{activeRejectedOrder?.courseTitle}</strong> • TrxID:{" "}
+                <span className="font-mono font-bold">{activeRejectedOrder?.transactionId || "N/A"}</span> • জমাকৃত ট্রানজাকশন তথ্যে অসঙ্গতি থাকায় বাতিল করা হয়েছে।
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/dashboard/support?new=true&orderId=${activeRejectedOrder?.orderNumber}&course=${encodeURIComponent(activeRejectedOrder?.courseTitle)}`}
+              className="px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-colors shadow-xs flex items-center gap-1.5"
+            >
+              <Headphones className="w-3.5 h-3.5" />
+              <span>সাপোর্ট টিকিট খুলুন</span>
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* Pending Orders Live Alert Banner */}
       {pendingOrders.length > 0 && (

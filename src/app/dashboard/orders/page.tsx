@@ -11,6 +11,7 @@ import {
   RefreshCw,
   ExternalLink,
   BookOpen,
+  Headphones,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -264,6 +265,14 @@ export default function OrdersPage() {
                           >
                             <span>ক্লাসরুম</span>
                             <ExternalLink className="w-3 h-3" />
+                          </Link>
+                        ) : order.status === "failed" || order.status === "cancelled" ? (
+                          <Link
+                            href={`/dashboard/support?new=true&orderId=${order.orderNumber}&course=${encodeURIComponent(order.courseTitle)}`}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold font-bengali transition-colors"
+                          >
+                            <Headphones className="w-3 h-3" />
+                            <span>সাপোর্ট নিন</span>
                           </Link>
                         ) : (
                           <span className="text-[11px] text-amber-600 dark:text-amber-400 font-bengali">

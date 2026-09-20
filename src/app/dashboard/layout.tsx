@@ -12,6 +12,7 @@ import {
   LogOut,
   Sparkles,
   ShieldCheck,
+  Headphones,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -19,6 +20,7 @@ const sidebarNavItems = [
   { label: "ড্যাশবোর্ড ওভারভিউ", href: "/dashboard", icon: LayoutDashboard },
   { label: "আমার কোর্সসমূহ", href: "/dashboard/my-courses", icon: BookOpen },
   { label: "অর্ডার ও পেমেন্ট হিস্ট্রি", href: "/dashboard/orders", icon: Receipt },
+  { label: "সাপোর্ট ও সহায়তা", href: "/dashboard/support", icon: Headphones },
   { label: "প্রোফাইল সেটিংস", href: "/dashboard/profile", icon: User },
 ];
 
