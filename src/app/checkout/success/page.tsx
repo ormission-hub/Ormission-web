@@ -16,6 +16,8 @@ import {
   Check,
   ArrowRight,
   AlertCircle,
+  XCircle,
+  RotateCcw,
 } from "lucide-react";
 import { getCourseBySlug, COURSES, type Course } from "@/lib/data/courses";
 import { createClient } from "@/lib/supabase/client";
@@ -36,8 +38,10 @@ function SuccessContent() {
 
   useEffect(() => {
     const supabase = createClient();
+    let isMounted = true;
+    let activeChannel: any = null;
 
-    async function loadCourseAndStatus() {
+    async function loadCourse() {
       try {
         const { data: dbCourse } = await supabase
           .from("courses")
@@ -49,27 +53,94 @@ function SuccessContent() {
           .eq("slug", courseSlug)
           .maybeSingle();
 
-        if (dbCourse) {
+        if (dbCourse && isMounted) {
           setCourse(mapDbCourseToAppCourse(dbCourse));
         }
-
-        // Check if order exists in DB to get real-time status
-        const { data: orderData } = await supabase
-          .from("orders")
-          .select("status")
-          .ilike("notes", `%${orderId}%`)
-          .maybeSingle();
-
-        if (orderData?.status) {
-          setDbStatus(orderData.status);
-        }
       } catch (e) {
-        console.error("Error loading success course data:", e);
+        console.error("Error loading course:", e);
       }
     }
 
-    loadCourseAndStatus();
-  }, [courseSlug, orderId]);
+    async function checkOrderStatus(): Promise<string | null> {
+      try {
+        let orderRow: any = null;
+
+        // 1. Search by orderId in notes
+        if (orderId) {
+          const { data } = await supabase
+            .from("orders")
+            .select("id, status, notes, updated_at")
+            .ilike("notes", `%${orderId}%`)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (data) orderRow = data;
+        }
+
+        // 2. Fallback: Search by txId in notes
+        if (!orderRow && txId) {
+          const { data: byTx } = await supabase
+            .from("orders")
+            .select("id, status, notes, updated_at")
+            .ilike("notes", `%${txId}%`)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (byTx) orderRow = byTx;
+        }
+
+        if (orderRow && isMounted) {
+          setDbStatus(orderRow.status);
+          return orderRow.id;
+        }
+      } catch (e) {
+        console.error("Error checking order status:", e);
+      }
+      return null;
+    }
+
+    loadCourse();
+
+    // Initial check & subscribe to Realtime updates
+    checkOrderStatus().then((foundId) => {
+      if (!isMounted || !foundId) return;
+
+      try {
+        activeChannel = supabase
+          .channel(`order-live-${foundId}`)
+          .on(
+            "postgres_changes",
+            {
+              event: "UPDATE",
+              schema: "public",
+              table: "orders",
+              filter: `id=eq.${foundId}`,
+            },
+            (payload) => {
+              if (payload.new && payload.new.status && isMounted) {
+                setDbStatus(payload.new.status);
+              }
+            }
+          )
+          .subscribe();
+      } catch (subErr) {
+        console.warn("Realtime subscription notice:", subErr);
+      }
+    });
+
+    // Continuous 3-second polling ensures instant live update under any network or Supabase tier
+    const interval = setInterval(() => {
+      checkOrderStatus();
+    }, 3000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+      if (activeChannel) {
+        supabase.removeChannel(activeChannel);
+      }
+    };
+  }, [courseSlug, orderId, txId]);
 
   const copyTxId = () => {
     navigator.clipboard.writeText(txId);
@@ -91,42 +162,96 @@ function SuccessContent() {
   };
 
   const isApproved = dbStatus === "paid" || dbStatus === "completed";
+  const isRejected = dbStatus === "failed" || dbStatus === "cancelled" || dbStatus === "rejected";
+  const isPending = !isApproved && !isRejected;
 
   return (
     <div className="relative min-h-screen bg-background py-12 lg:py-20 flex items-center justify-center overflow-hidden px-4">
       {/* Ambient background glows */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-amber-500/10 dark:bg-amber-500/5 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div
+        className={`absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 rounded-full blur-3xl pointer-events-none -z-10 transition-colors duration-500 ${
+          isApproved
+            ? "bg-emerald-500/10 dark:bg-emerald-500/5"
+            : isRejected
+            ? "bg-rose-500/10 dark:bg-rose-500/5"
+            : "bg-amber-500/10 dark:bg-amber-500/5"
+        }`}
+      />
 
       <div className="container-main max-w-xl w-full">
         <div className="relative bg-surface/95 backdrop-blur-xl rounded-2xl border border-border p-6 sm:p-8 shadow-xl text-center">
           {/* Status Animated Icon */}
-          <div className="relative w-20 h-20 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto mb-4 shadow-xs">
+          <div
+            className={`relative w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 shadow-xs transition-colors duration-300 ${
+              isApproved
+                ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+                : isRejected
+                ? "bg-rose-500/15 text-rose-600 dark:text-rose-400"
+                : "bg-amber-500/15 text-amber-600 dark:text-amber-400"
+            }`}
+          >
             {isApproved ? (
               <CheckCircle2 className="w-11 h-11 text-emerald-500 stroke-[2.2]" />
+            ) : isRejected ? (
+              <XCircle className="w-11 h-11 text-rose-500 stroke-[2.2]" />
             ) : (
               <Clock className="w-11 h-11 text-amber-500 animate-pulse stroke-[2.2]" />
             )}
-            <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center shadow-xs text-xs font-bold">
-              ✓
+            <div
+              className={`absolute -top-1 -right-1 w-6 h-6 rounded-full text-white flex items-center justify-center shadow-xs text-xs font-bold ${
+                isApproved
+                  ? "bg-emerald-500"
+                  : isRejected
+                  ? "bg-rose-600"
+                  : "bg-amber-500"
+              }`}
+            >
+              {isApproved ? "✓" : isRejected ? "✕" : "⌛"}
             </div>
           </div>
 
           {/* Status Pill Badge */}
-          <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-600 dark:text-amber-400 text-xs font-bold font-bengali mb-3">
-            <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
+          <div
+            className={`inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-bold font-bengali mb-3 border transition-colors duration-300 ${
+              isApproved
+                ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-600 dark:text-emerald-400"
+                : isRejected
+                ? "bg-rose-500/10 border-rose-500/25 text-rose-600 dark:text-rose-400"
+                : "bg-amber-500/10 border-amber-500/25 text-amber-600 dark:text-amber-400"
+            }`}
+          >
+            <span
+              className={`w-2 h-2 rounded-full ${
+                isApproved
+                  ? "bg-emerald-500"
+                  : isRejected
+                  ? "bg-rose-500"
+                  : "bg-amber-500 animate-ping"
+              }`}
+            />
             <span>
-              {isApproved ? "পেমেন্ট অনুমোদিত ও সক্রিয়" : "পেমেন্ট ভেরিফিকেশন প্রক্রিয়াধীন (অপেক্ষমান)"}
+              {isApproved
+                ? "পেমেন্ট অনুমোদিত ও সক্রিয় (Approved)"
+                : isRejected
+                ? "পেমেন্ট রিকোয়েস্ট বাতিল করা হয়েছে (Rejected)"
+                : "পেমেন্ট ভেরিফিকেশন প্রক্রিয়াধীন (অপেক্ষমান)"}
             </span>
           </div>
 
           {/* Heading */}
           <h1 className="text-2xl sm:text-3xl font-extrabold text-text font-bengali tracking-tight mb-2.5">
-            {isApproved ? "অভিনন্দন! ভর্তি সম্পন্ন হয়েছে" : "পেমেন্ট রিকোয়েস্ট সফলভাবে জমা হয়েছে!"}
+            {isApproved
+              ? "অভিনন্দন! ভর্তি সম্পন্ন হয়েছে"
+              : isRejected
+              ? "পেমেন্ট রিকোয়েস্টটি প্রত্যাখ্যাত হয়েছে"
+              : "পেমেন্ট রিকোয়েস্ট সফলভাবে জমা হয়েছে!"}
           </h1>
 
-          <p className="text-xs sm:text-sm text-text-muted font-bengali mb-6 max-w-md mx-auto leading-relaxed">
+          <p className="text-xs sm:text-sm text-text-muted font-bengali mb-4 max-w-md mx-auto leading-relaxed">
             {isApproved ? (
-              "আপনার পেমেন্ট ভেরিফিকেশন সফলভাবে সম্পন্ন হয়েছে এবং কোর্সের পূর্ণাঙ্গ এক্সেস চালু করা হয়েছে।"
+              "আপনার পেমেন্ট ভেরিফিকেশন সফলভাবে সম্পন্ন হয়েছে এবং কোর্সের পূর্ণাঙ্গ অ্যাক্সেস চালু করা হয়েছে। এখনই আপনার ক্লাসরুমে প্রবেশ করতে পারবেন।"
+            ) : isRejected ? (
+              "আপনার প্রেরিত ট্রানজাকশন আইডি (TrxID) বা পেমেন্ট তথ্যের সাথে অফিসিয়াল স্টেটমেন্ট মেলেনি অথবা অ্যাডমিন কর্তৃক রিকোয়েস্টটি বাতিল করা হয়েছে। অনুগ্রহ করে সঠিক TrxID ও নম্বর দিয়ে পুনরায় ভর্তি সম্পন্ন করুন অথবা জরুরি প্রয়োজনে হেল্পলাইনে যোগাযোগ করুন।"
             ) : (
               <>
                 আমাদের টিম আপনার ট্রানজাকশন আইডি (TrxID) ও প্রেরক নম্বরটি স্টেটমেন্টের সাথে মিলিয়ে যাচাই করছে।
@@ -135,6 +260,17 @@ function SuccessContent() {
               </>
             )}
           </p>
+
+          {/* Live Monitor Indicator when pending */}
+          {isPending && (
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-secondary/80 border border-border/80 text-[11px] text-text-muted font-bengali mb-6">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+              </span>
+              <span>লাইভ স্ট্যাটাস মনিটরিং সক্রিয় • পেজ রিফ্রেশ করার প্রয়োজন নেই</span>
+            </div>
+          )}
 
           {/* 3-Step Verification Timeline */}
           <div className="bg-surface-secondary/70 rounded-xl border border-border p-4 mb-6 text-left font-bengali">
@@ -156,27 +292,91 @@ function SuccessContent() {
               </div>
 
               {/* Step 2 */}
-              <div className="flex items-start gap-2 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30">
-                <div className="w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5 animate-pulse">
-                  ২
+              <div
+                className={`flex items-start gap-2 p-2.5 rounded-lg border transition-colors ${
+                  isApproved
+                    ? "bg-surface border-emerald-500/30"
+                    : isRejected
+                    ? "bg-rose-500/10 border-rose-500/30"
+                    : "bg-amber-500/10 border-amber-500/30"
+                }`}
+              >
+                <div
+                  className={`w-5 h-5 rounded-full flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5 ${
+                    isApproved
+                      ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400"
+                      : isRejected
+                      ? "bg-rose-500 text-white"
+                      : "bg-amber-500 text-white animate-pulse"
+                  }`}
+                >
+                  {isApproved ? "✓" : isRejected ? "✕" : "২"}
                 </div>
                 <div>
-                  <p className="font-bold text-amber-700 dark:text-amber-300">লেনদেন যাচাইকরণ</p>
-                  <p className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold">
-                    {isApproved ? "যাচাই সম্পন্ন ✓" : "অ্যাডমিন রিভিউ চলছে..."}
+                  <p
+                    className={`font-bold ${
+                      isApproved
+                        ? "text-text"
+                        : isRejected
+                        ? "text-rose-700 dark:text-rose-300"
+                        : "text-amber-700 dark:text-amber-300"
+                    }`}
+                  >
+                    লেনদেন যাচাইকরণ
+                  </p>
+                  <p
+                    className={`text-[10px] font-semibold ${
+                      isApproved
+                        ? "text-emerald-600 dark:text-emerald-400"
+                        : isRejected
+                        ? "text-rose-600 dark:text-rose-400"
+                        : "text-amber-600 dark:text-amber-400"
+                    }`}
+                  >
+                    {isApproved
+                      ? "যাচাই সম্পন্ন ✓"
+                      : isRejected
+                      ? "বাতিল / তথ্য মেলেনি ✕"
+                      : "অ্যাডমিন রিভিউ চলছে..."}
                   </p>
                 </div>
               </div>
 
               {/* Step 3 */}
-              <div className="flex items-start gap-2 p-2.5 rounded-lg bg-surface border border-border/80 opacity-85">
-                <div className="w-5 h-5 rounded-full bg-surface-secondary text-text-muted flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">
-                  ৩
+              <div
+                className={`flex items-start gap-2 p-2.5 rounded-lg border transition-opacity ${
+                  isApproved
+                    ? "bg-surface border-emerald-500/30 opacity-100"
+                    : isRejected
+                    ? "bg-surface border-border/80 opacity-60"
+                    : "bg-surface border-border/80 opacity-85"
+                }`}
+              >
+                <div
+                  className={`w-5 h-5 rounded-full flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5 ${
+                    isApproved
+                      ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400"
+                      : "bg-surface-secondary text-text-muted"
+                  }`}
+                >
+                  {isApproved ? "✓" : isRejected ? "✕" : "৩"}
                 </div>
                 <div>
                   <p className="font-bold text-text">কোর্স ক্লাসরুম</p>
-                  <p className="text-[10px] text-text-muted">
-                    {isApproved ? "আনলকড ✓" : "অনুমোদনের পর সক্রিয়"}
+                  <p
+                    className={`text-[10px] ${
+                      isApproved
+                        ? "text-emerald-600 dark:text-emerald-400 font-semibold"
+                        : isRejected
+                        ? "text-rose-500 font-semibold"
+                        : "text-text-muted"
+                    }`}
+                  >
+                    {isApproved
+                      ? "আনলকড ✓"
+                      : isRejected
+                      ? "অ্যাক্সেস বন্ধ"
+                      : "অনুমোদনের পর সক্রিয়"}
                   </p>
                 </div>
               </div>
@@ -238,10 +438,16 @@ function SuccessContent() {
                 className={`px-2 py-0.5 rounded text-[11px] font-bold font-bengali ${
                   isApproved
                     ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+                    : isRejected
+                    ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20"
                     : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"
                 }`}
               >
-                {isApproved ? "অনুমোদিত (Approved)" : "অপেক্ষমান (Pending Review)"}
+                {isApproved
+                  ? "অনুমোদিত (Approved)"
+                  : isRejected
+                  ? "বাতিলকৃত (Rejected / Failed)"
+                  : "অপেক্ষমান (Pending Review)"}
               </span>
             </div>
 
@@ -262,6 +468,14 @@ function SuccessContent() {
               >
                 <span>কোর্সের ক্লাস শুরু করুন</span>
                 <ArrowRight className="w-4 h-4" />
+              </Link>
+            ) : isRejected ? (
+              <Link
+                href={`/checkout/${courseSlug}`}
+                className="w-full py-3 px-5 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-rose-600 via-red-600 to-rose-700 hover:opacity-95 flex items-center justify-center gap-2 shadow-md hover:shadow-lg shadow-rose-600/25 transition-all"
+              >
+                <RotateCcw className="w-4 h-4" />
+                <span>সঠিক TrxID দিয়ে পুনরায় পেমেন্ট করুন</span>
               </Link>
             ) : (
               <Link
@@ -299,13 +513,15 @@ function SuccessContent() {
               <span>জরুরি প্রয়োজনে হেল্পলাইন: <strong>০১৭২৮-৪৭৭০৯৫</strong></span>
             </div>
             <a
-              href={`https://wa.me/8801728477095?text=${encodeURIComponent(`আসসালামু আলাইকুম, আমি অর্মিশনে একটি কোর্সের পেমেন্ট সম্পন্ন করেছি। অর্ডার নম্বর: ${orderId}, TrxID: ${txId}`)}`}
+              href={`https://wa.me/8801728477095?text=${encodeURIComponent(
+                `আসসালামু আলাইকুম, আমি অর্মিশনে একটি কোর্সের পেমেন্ট করেছিলাম। অর্ডার নম্বর: ${orderId}, TrxID: ${txId}। স্ট্যাটাস: ${dbStatus}`
+              )}`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold hover:underline"
             >
               <MessageCircle className="w-3.5 h-3.5 text-emerald-500" />
-              <span>হোয়াটসঅ্যাপে দ্রুত ভেরিফাই চান?</span>
+              <span>হোয়াটসঅ্যাপে দ্রুত সহায়তা নিন</span>
             </a>
           </div>
         </div>
