@@ -690,11 +690,12 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
                           {(() => {
                             const isYt = /youtu\.be|youtube\.com|youtube-nocookie\.com/i.test(activeUrl);
                             const isStreamtape = activeType === "streamtape" || /streamtape\.(com|to|net|pe|xyz|site|cash|cc)|streamta\.pe/i.test(activeUrl);
+                            const isAbyss = activeType === "abyss" || /abyss/i.test(activeUrl) || activeUrl.includes("/api/player/abyss");
                             return (
                               <iframe
                                 src={getEmbedUrl(activeUrl)}
                                 className="w-full h-full border-0 absolute inset-0"
-                                sandbox={isYt || isStreamtape ? undefined : "allow-scripts allow-same-origin allow-presentation allow-forms"}
+                                sandbox={isYt || isStreamtape || isAbyss ? undefined : "allow-scripts allow-same-origin allow-presentation allow-forms"}
                                 referrerPolicy="strict-origin-when-cross-origin"
                                 allowFullScreen
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
