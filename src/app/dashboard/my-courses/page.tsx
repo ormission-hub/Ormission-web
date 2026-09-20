@@ -105,9 +105,20 @@ export default function MyCoursesPage() {
   const approvedOrders = orders.filter(
     (o) => o.status === "paid" || o.status === "completed"
   );
-  const pendingOrders = orders.filter((o) => o.status === "pending");
+  const approvedCourseIds = new Set(
+    approvedOrders.map((o) => String(o.course_id || o.courses?.id)).filter(Boolean)
+  );
+
+  const pendingOrders = orders.filter(
+    (o) =>
+      o.status === "pending" &&
+      !approvedCourseIds.has(String(o.course_id || o.courses?.id))
+  );
+
   const rejectedOrders = orders.filter(
-    (o) => o.status === "failed" || o.status === "cancelled" || o.status === "rejected"
+    (o) =>
+      (o.status === "failed" || o.status === "cancelled" || o.status === "rejected") &&
+      !approvedCourseIds.has(String(o.course_id || o.courses?.id))
   );
 
   const displayedList =
@@ -117,7 +128,7 @@ export default function MyCoursesPage() {
       ? pendingOrders
       : filter === "rejected"
       ? rejectedOrders
-      : orders;
+      : [...approvedOrders, ...pendingOrders, ...rejectedOrders];
 
   return (
     <div className="space-y-6 font-bengali">

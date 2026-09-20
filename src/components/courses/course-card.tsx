@@ -78,7 +78,7 @@ export function CourseCard({ course }: CourseCardProps) {
   const price = course.price ?? 0;
   const originalPrice = course.original_price ?? course.originalPrice;
   const enrollmentCount =
-    course.enrollment_count ?? course.enrolledCount ?? 1250;
+    course.enrollment_count ?? course.enrolledCount ?? 0;
   const totalDuration =
     course.total_duration ?? course.durationHours;
   const totalLessons =

@@ -222,3 +222,36 @@ export async function GET(request: Request) {
     return NextResponse.json({ success: false, error: msg }, { status: 500 });
   }
 }
+
+// DELETE: Delete an order by ID
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json({ success: false, error: "Order ID is required" }, { status: 400 });
+    }
+
+    // Delete associated payments first
+    await supabaseAdmin
+      .from("payments")
+      .delete()
+      .eq("order_id", id);
+
+    // Delete the order
+    const { error } = await supabaseAdmin
+      .from("orders")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true, deletedId: id });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "অর্ডার ডিলিট ব্যর্থ হয়েছে";
+    return NextResponse.json({ success: false, error: msg }, { status: 500 });
+  }
+}

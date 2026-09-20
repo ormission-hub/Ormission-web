@@ -100,7 +100,7 @@ export default async function CourseDetailPage({ params }: PageProps) {
 
   const rating = course.rating || 5.0;
   const reviewsCount = course.reviewsCount || 125;
-  const enrolledCount = course.enrolledCount || 1250;
+  const enrolledCount = course.enrolledCount || 0;
   const durationHours = course.durationHours || 45;
   const totalLessons = course.totalLessons || 48;
 

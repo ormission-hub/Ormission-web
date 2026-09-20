@@ -122,7 +122,7 @@ export function mapDbCourseToAppCourse(dbCourse: any): Course {
       rating: ratingScore,
       reviewsCount: reviewsCount,
       showRating: showRating,
-    enrolledCount: Number(dbCourse.enrollment_count) || 1250,
+    enrolledCount: Number(dbCourse.enrollment_count) || 0,
     durationHours: Math.max(1, Math.round((Number(dbCourse.total_duration) || 2400) / 60)),
     totalLessons: Number(dbCourse.total_lessons) || mappedCurriculum.reduce((acc, s) => acc + s.lessons.length, 0),
     level: "Intermediate",

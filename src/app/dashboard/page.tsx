@@ -17,6 +17,7 @@ import {
   RefreshCw,
   XCircle,
   Headphones,
+  X,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -25,6 +26,23 @@ export default function DashboardOverviewPage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [dbCourses, setDbCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dismissedAlerts, setDismissedAlerts] = useState<string[]>([]);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("dismissed_rejected_orders");
+      if (stored) setDismissedAlerts(JSON.parse(stored));
+    } catch {}
+  }, []);
+
+  const handleDismissAlert = (orderId?: string) => {
+    if (!orderId) return;
+    const next = [...dismissedAlerts, String(orderId)];
+    setDismissedAlerts(next);
+    try {
+      localStorage.setItem("dismissed_rejected_orders", JSON.stringify(next));
+    } catch {}
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -137,9 +155,22 @@ export default function DashboardOverviewPage() {
   const paidOrders = orders.filter(
     (o) => o.status === "paid" || o.status === "completed"
   );
-  const pendingOrders = orders.filter((o) => o.status === "pending");
+  const paidCourseIds = new Set(
+    paidOrders.map((o) => String(o.course_id || o.courses?.id)).filter(Boolean)
+  );
+
+  const pendingOrders = orders.filter(
+    (o) =>
+      o.status === "pending" &&
+      !paidCourseIds.has(String(o.course_id || o.courses?.id))
+  );
+
   const rejectedOrders = orders.filter(
-    (o) => o.status === "failed" || o.status === "cancelled" || o.status === "rejected"
+    (o) =>
+      (o.status === "failed" || o.status === "cancelled" || o.status === "rejected") &&
+      !paidCourseIds.has(String(o.course_id || o.courses?.id)) &&
+      !dismissedAlerts.includes(String(o.id)) &&
+      !dismissedAlerts.includes(String(o.orderNumber))
   );
 
   // Determine active course
@@ -209,6 +240,14 @@ export default function DashboardOverviewPage() {
               <Headphones className="w-3.5 h-3.5" />
               <span>সাপোর্ট টিকিট খুলুন</span>
             </Link>
+            <button
+              type="button"
+              onClick={() => handleDismissAlert(activeRejectedOrder?.id || activeRejectedOrder?.orderNumber)}
+              className="p-1.5 rounded-lg hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 transition-colors"
+              title="বিজ্ঞপ্তি বন্ধ করুন"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
         </div>
       )}

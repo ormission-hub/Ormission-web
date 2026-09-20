@@ -1073,7 +1073,7 @@ export function CategoryCoursesShowcase({
                           <span className="text-sm sm:text-base font-black text-[#E11D48] dark:text-[#FB7185] font-sans tracking-tight tabular-nums">
                             {(course.enrollment_count !== undefined && course.enrollment_count !== null
                               ? course.enrollment_count
-                              : 1250
+                              : 0
                             ).toLocaleString("en-US")}
                           </span>
                           <span className="text-[11px] sm:text-xs font-bold text-slate-800 dark:text-slate-100 font-bengali">

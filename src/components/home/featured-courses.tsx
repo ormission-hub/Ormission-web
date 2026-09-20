@@ -104,7 +104,7 @@ function CourseCard({ course }: { course: DbFeaturedCourse }) {
             </div>
             <div className="flex items-baseline gap-1">
               <span className="text-sm font-black text-[#E11D48] dark:text-[#FB7185] font-sans tracking-tight tabular-nums">
-                {(course.enrollment_count || 1250).toLocaleString("en-US")}
+                {(course.enrollment_count || 0).toLocaleString("en-US")}
               </span>
               <span className="text-[11px] font-bold text-slate-800 dark:text-slate-100 font-bengali">
                 জন ভর্তি

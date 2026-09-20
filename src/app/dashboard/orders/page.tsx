@@ -12,6 +12,7 @@ import {
   ExternalLink,
   BookOpen,
   Headphones,
+  Trash2,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -114,6 +115,21 @@ export default function OrdersPage() {
   useEffect(() => {
     loadStudentOrders();
   }, []);
+
+  const handleDeleteOrder = async (orderId: string) => {
+    if (!confirm("আপনি কি নিশ্চিত যে এই অর্ডার রেকর্ডটি মুছে ফেলতে চান?")) return;
+    try {
+      const res = await fetch(`/api/orders?id=${orderId}`, { method: "DELETE" });
+      const data = await res.json();
+      if (data?.success) {
+        setOrders((prev) => prev.filter((o) => o.id !== orderId));
+      } else {
+        alert(data?.error || "অর্ডার মুছতে সমস্যা হয়েছে");
+      }
+    } catch {
+      alert("নেটওয়ার্ক সমস্যা, পুনরায় চেষ্টা করুন");
+    }
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -267,13 +283,23 @@ export default function OrdersPage() {
                             <ExternalLink className="w-3 h-3" />
                           </Link>
                         ) : order.status === "failed" || order.status === "cancelled" ? (
-                          <Link
-                            href={`/dashboard/support?new=true&orderId=${order.orderNumber}&course=${encodeURIComponent(order.courseTitle)}`}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold font-bengali transition-colors"
-                          >
-                            <Headphones className="w-3 h-3" />
-                            <span>সাপোর্ট নিন</span>
-                          </Link>
+                          <div className="inline-flex items-center gap-1.5">
+                            <Link
+                              href={`/dashboard/support?new=true&orderId=${order.orderNumber}&course=${encodeURIComponent(order.courseTitle)}`}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold font-bengali transition-colors"
+                            >
+                              <Headphones className="w-3 h-3" />
+                              <span>সাপোর্ট নিন</span>
+                            </Link>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteOrder(order.id)}
+                              title="অর্ডার হিস্ট্রি থেকে মুছে ফেলুন"
+                              className="p-1.5 rounded-lg hover:bg-rose-500/20 text-rose-500 transition-colors"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         ) : (
                           <span className="text-[11px] text-amber-600 dark:text-amber-400 font-bengali">
                             যাচাইকরণাধীন
