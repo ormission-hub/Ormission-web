@@ -617,34 +617,59 @@ export function CategoryCoursesShowcase({
 
   const activeCategory = selectedCategory || defaultCategorySlug;
 
-  // Pinned courses to show on the Homepage (Filtered strictly by admin's pinned courses)
-  const pinnedCourses = useMemo(() => {
+  // Courses to show on the Homepage (Filtered strictly by active category, prioritizing pinned courses)
+  const displayedCourses = useMemo(() => {
+    // 1. If a category is selected (or active default category)
+    if (activeCategory && activeCategory !== "all") {
+      const curCat = displayCategories.find(
+        (cat) => cat.slug.toLowerCase() === activeCategory.toLowerCase()
+      );
+
+      const categoryFiltered = coursesList.filter((c) => {
+        const cCatId = c.category_id ?? (Array.isArray(c.categories) ? c.categories[0]?.id : c.categories?.id);
+        const cSlug = (Array.isArray(c.categories) ? c.categories[0]?.slug : c.categories?.slug || "").toLowerCase();
+        return (
+          (curCat?.id && String(cCatId) === String(curCat.id)) ||
+          (curCat?.slug && cSlug === curCat.slug.toLowerCase()) ||
+          (cSlug && cSlug === activeCategory.toLowerCase())
+        );
+      });
+
+      // Sort pinned courses to the top within this category
+      if (pinnedIds && pinnedIds.length > 0) {
+        return [...categoryFiltered].sort((a, b) => {
+          const aPinned = pinnedIds.some((pid) => String(pid) === String(a.id));
+          const bPinned = pinnedIds.some((pid) => String(pid) === String(b.id));
+          if (aPinned && !bPinned) return -1;
+          if (!aPinned && bPinned) return 1;
+          return 0;
+        });
+      }
+
+      return categoryFiltered;
+    }
+
+    // 2. Default when no category filter is applied:
     let list: DbFeaturedCourse[] = [];
     if (pinnedIds && pinnedIds.length > 0) {
       list = coursesList.filter((c) => pinnedIds.some((pid) => String(pid) === String(c.id)));
     }
-    // If no course is explicitly pinned yet, fallback gracefully to featured or published
     if (list.length === 0) {
       const featured = coursesList.filter((c) => c.is_featured);
       list = featured.length > 0 ? featured : coursesList.slice(0, 6);
     }
-
-    // If user explicitly clicked a category pill, highlight courses of that category
-    if (selectedCategory && selectedCategory !== "all") {
-      const catMatch = list.filter((c) => {
-        const cCatId = c.category_id ?? (Array.isArray(c.categories) ? c.categories[0]?.id : c.categories?.id);
-        const cSlug = (Array.isArray(c.categories) ? c.categories[0]?.slug : c.categories?.slug || "").toLowerCase();
-        const curCat = displayCategories.find((cat) => cat.slug === selectedCategory);
-        return (
-          (curCat?.id && String(cCatId) === String(curCat.id)) ||
-          (cSlug && cSlug === selectedCategory.toLowerCase())
-        );
-      });
-      if (catMatch.length > 0) return catMatch;
-    }
-
     return list;
-  }, [coursesList, pinnedIds, selectedCategory, displayCategories]);
+  }, [coursesList, activeCategory, displayCategories, pinnedIds]);
+
+  const pinnedCourses = displayedCourses;
+
+  // Reset carousel scroll to start whenever category changes
+  useEffect(() => {
+    if (coursesScrollRef.current) {
+      coursesScrollRef.current.scrollTo({ left: 0, behavior: "smooth" });
+    }
+    setCourseActiveIndex(0);
+  }, [activeCategory]);
 
   // Pinned books to show on the Homepage (Filtered strictly by admin's pinned books)
   const pinnedBooks = useMemo(() => {
@@ -884,81 +909,120 @@ export function CategoryCoursesShowcase({
         {/* ============================================================ */}
         {/* 1. PINNED COURSES SLIDESHOW (Side-sliding horizontal carousel) */}
         {/* ============================================================ */}
-        <div className="mb-6 sm:mb-8">
-          <div className="flex items-center justify-between gap-3 mb-3.5 sm:mb-4">
-            <div className="flex items-center gap-2.5 sm:gap-3">
-              {renderSectionLabel("জনপ্রিয় কোর্স", <PopularCoursesIllustration />, 0, "নির্বাচিত")}
-            </div>
+        {(() => {
+          const activeCategoryObj = displayCategories.find(
+            (cat) => cat.slug.toLowerCase() === activeCategory.toLowerCase()
+          );
+          const sectionTitle = activeCategoryObj
+            ? `${activeCategoryObj.name_bn || activeCategoryObj.name} কোর্সসমূহ`
+            : "জনপ্রিয় কোর্স";
 
-            {/* Slider Arrows & All Courses Link */}
-            <div className="flex items-center gap-2">
-              <Link
-                href="/courses?filter=popular"
-                className="hidden md:inline-flex items-center gap-1 text-xs font-bold text-primary hover:text-primary-hover font-bengali mr-2"
-              >
-                <span>সব কোর্স</span>
-                <ArrowUpRight className="w-3.5 h-3.5" />
-              </Link>
-              <button
-                type="button"
-                onClick={() => scrollCourse("left")}
-                aria-label="Previous Course"
-                className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-border bg-surface hover:bg-surface-secondary text-text flex items-center justify-center shadow-xs transition-colors cursor-pointer"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-              <button
-                type="button"
-                onClick={() => scrollCourse("right")}
-                aria-label="Next Course"
-                className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-border bg-surface hover:bg-surface-secondary text-text flex items-center justify-center shadow-xs transition-colors cursor-pointer"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
+          return (
+            <div className="mb-6 sm:mb-8">
+              <div className="flex items-center justify-between gap-3 mb-3.5 sm:mb-4">
+                <div className="flex items-center gap-2.5 sm:gap-3">
+                  {renderSectionLabel(sectionTitle, <PopularCoursesIllustration />, 0, activeCategoryObj?.name_bn || "নির্বাচিত")}
+                </div>
 
-          {/* Courses Slideshow Track */}
-          <div
-            ref={coursesScrollRef}
-            onScroll={handleCourseScroll}
-            className="flex gap-5 sm:gap-6 overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar py-3 px-1 -mx-1"
-          >
-            {pinnedCourses.map((course, idx) => {
-              const title = course.title_bn || course.title;
-              const categoryName = Array.isArray(course.categories)
-                ? course.categories[0]?.name_bn || course.categories[0]?.name
-                : course.categories?.name_bn || course.categories?.name || "কোর্স";
-
-              return (
-                <div
-                  key={course.id || course.slug}
-                  className="w-[86vw] xs:w-[320px] sm:w-[360px] lg:w-[380px] shrink-0 snap-start group flex flex-col bg-surface border border-border/80 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:shadow-primary/15 hover:border-primary/50 hover:-translate-y-1 transition-all duration-300 h-full"
-                >
-                  {/* Image Thumbnail with zoom hover */}
+                {/* Slider Arrows & All Courses Link */}
+                <div className="flex items-center gap-2">
                   <Link
-                    href={`/course/${course.slug}`}
-                    className="relative aspect-video w-full bg-slate-900 overflow-hidden block"
+                    href={activeCategory && activeCategory !== "all" ? `/courses?category=${activeCategory}` : "/courses?filter=popular"}
+                    className="hidden md:inline-flex items-center gap-1 text-xs font-bold text-primary hover:text-primary-hover font-bengali mr-2"
                   >
-                    {course.thumbnail_url ? (
-                      <Image
-                        src={course.thumbnail_url}
-                        alt={title}
-                        fill
-                        sizes="(max-width: 768px) 100vw, 400px"
-                        unoptimized={Boolean(course.thumbnail_url?.startsWith("http"))}
-                        className="object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-surface-secondary text-text-muted">
-                        <Sparkles className="w-10 h-10 opacity-30" />
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                    <span className="absolute top-3 right-3 px-2 py-0.5 rounded-full text-[10.5px] font-black text-white bg-primary shadow-sm font-bengali flex items-center gap-1">
-                      <Pin className="w-3 h-3 fill-white/30" /> পিন করা
-                    </span>
+                    <span>সব কোর্স</span>
+                    <ArrowUpRight className="w-3.5 h-3.5" />
                   </Link>
+                  {pinnedCourses.length > 1 && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => scrollCourse("left")}
+                        aria-label="Previous Course"
+                        className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-border bg-surface hover:bg-surface-secondary text-text flex items-center justify-center shadow-xs transition-colors cursor-pointer"
+                      >
+                        <ChevronLeft className="w-5 h-5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => scrollCourse("right")}
+                        aria-label="Next Course"
+                        className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-border bg-surface hover:bg-surface-secondary text-text flex items-center justify-center shadow-xs transition-colors cursor-pointer"
+                      >
+                        <ChevronRight className="w-5 h-5" />
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Courses Slideshow Track */}
+              {pinnedCourses.length === 0 ? (
+                <div className="w-full py-12 px-4 rounded-2xl border border-dashed border-border/80 bg-surface/40 flex flex-col items-center justify-center text-center my-3">
+                  <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mb-3">
+                    <Sparkles className="w-6 h-6" />
+                  </div>
+                  <h4 className="text-sm sm:text-base font-bold text-text font-bengali mb-1">
+                    {activeCategoryObj ? `${activeCategoryObj.name_bn || activeCategoryObj.name} ক্যাটাগরিতে শীঘ্রই কোর্স যুক্ত করা হবে` : "শীঘ্রই নতুন কোর্স যুক্ত করা হবে"}
+                  </h4>
+                  <p className="text-xs text-text-muted font-bengali max-w-sm mb-4">
+                    আমাদের শিক্ষকমণ্ডলী এই ক্যাটাগরির জন্য নতুন ও আকর্ষণীয় কোর্স প্রস্তুত করছেন।
+                  </p>
+                  <Link
+                    href="/courses"
+                    className="px-4 py-2 rounded-xl bg-primary text-white text-xs font-bold font-bengali hover:bg-primary-hover transition-colors shadow-sm"
+                  >
+                    সকল কোর্স দেখুন
+                  </Link>
+                </div>
+              ) : (
+                <div
+                  ref={coursesScrollRef}
+                  onScroll={handleCourseScroll}
+                  className="flex gap-5 sm:gap-6 overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar py-3 px-1 -mx-1"
+                >
+                  {pinnedCourses.map((course, idx) => {
+                    const title = course.title_bn || course.title;
+                    const categoryName = Array.isArray(course.categories)
+                      ? course.categories[0]?.name_bn || course.categories[0]?.name
+                      : course.categories?.name_bn || course.categories?.name || "কোর্স";
+                    const isPinned = pinnedIds.some((pid) => String(pid) === String(course.id));
+
+                    return (
+                      <div
+                        key={course.id || course.slug}
+                        className="w-[86vw] xs:w-[320px] sm:w-[360px] lg:w-[380px] shrink-0 snap-start group flex flex-col bg-surface border border-border/80 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:shadow-primary/15 hover:border-primary/50 hover:-translate-y-1 transition-all duration-300 h-full"
+                      >
+                        {/* Image Thumbnail with zoom hover */}
+                        <Link
+                          href={`/course/${course.slug}`}
+                          className="relative aspect-video w-full bg-slate-900 overflow-hidden block"
+                        >
+                          {course.thumbnail_url ? (
+                            <Image
+                              src={course.thumbnail_url}
+                              alt={title}
+                              fill
+                              sizes="(max-width: 768px) 100vw, 400px"
+                              unoptimized={Boolean(course.thumbnail_url?.startsWith("http"))}
+                              className="object-cover group-hover:scale-105 transition-transform duration-500"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-surface-secondary text-text-muted">
+                              <Sparkles className="w-10 h-10 opacity-30" />
+                            </div>
+                          )}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                          {isPinned ? (
+                            <span className="absolute top-3 right-3 px-2 py-0.5 rounded-full text-[10.5px] font-black text-white bg-primary shadow-sm font-bengali flex items-center gap-1">
+                              <Pin className="w-3 h-3 fill-white/30" /> পিন করা
+                            </span>
+                          ) : course.is_featured ? (
+                            <span className="absolute top-3 right-3 px-2 py-0.5 rounded-full text-[10.5px] font-black text-white bg-amber-500 shadow-sm font-bengali flex items-center gap-1">
+                              <Flame className="w-3 h-3 fill-white/30" /> জনপ্রিয়
+                            </span>
+                          ) : null}
+                        </Link>
 
                   {/* Content */}
                   <div className="p-5 sm:p-6 flex flex-col flex-1">
@@ -1037,29 +1101,32 @@ export function CategoryCoursesShowcase({
               );
             })}
           </div>
+        )}
 
-          {/* Dots Indicator */}
-          {pinnedCourses.length > 1 && (
-            <div className="flex items-center justify-center gap-1.5 mt-2.5">
-              {pinnedCourses.map((_, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  aria-label={`Go to course slide ${i + 1}`}
-                  onClick={() => {
-                    if (coursesScrollRef.current) {
-                      const cardWidth = coursesScrollRef.current.clientWidth > 640 ? 380 : 310;
-                      coursesScrollRef.current.scrollTo({ left: i * cardWidth, behavior: "smooth" });
-                    }
-                  }}
-                  className={`h-1.5 rounded-full transition-all duration-300 ${
-                    courseActiveIndex === i ? "w-6 bg-primary" : "w-1.5 bg-border hover:bg-text-muted"
-                  }`}
-                />
-              ))}
-            </div>
-          )}
-        </div>
+        {/* Dots Indicator */}
+        {pinnedCourses.length > 1 && (
+          <div className="flex items-center justify-center gap-1.5 mt-2.5">
+            {pinnedCourses.map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                aria-label={`Go to course slide ${i + 1}`}
+                onClick={() => {
+                  if (coursesScrollRef.current) {
+                    const cardWidth = coursesScrollRef.current.clientWidth > 640 ? 380 : 310;
+                    coursesScrollRef.current.scrollTo({ left: i * cardWidth, behavior: "smooth" });
+                  }
+                }}
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  courseActiveIndex === i ? "w-6 bg-primary" : "w-1.5 bg-border hover:bg-text-muted"
+                }`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  })()}
 
         {/* ============================================================ */}
         {/* 2. PINNED BOOKS SLIDESHOW (Side-sliding horizontal carousel) */}
