@@ -18,6 +18,7 @@ import {
   ShieldCheck,
   HelpCircle,
   Filter,
+  Trash2,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -58,6 +59,7 @@ export default function SupportPage() {
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
   const [replyMessage, setReplyMessage] = useState("");
   const [sendingReply, setSendingReply] = useState(false);
+  const [deletingTicketId, setDeletingTicketId] = useState<string | null>(null);
 
   // New Ticket Modal State
   const [isNewTicketOpen, setIsNewTicketOpen] = useState(false);
@@ -231,6 +233,37 @@ export default function SupportPage() {
       alert("বার্তা পাঠাতে ত্রুটি হয়েছে।");
     } finally {
       setSendingReply(false);
+    }
+  };
+
+  // Delete ticket
+  const handleDeleteTicket = async (ticketId: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+
+    const confirmed = window.confirm(
+      `আপনি কি নিশ্চিতভাবে এই সাপোর্ট টিকিটটি (#${ticketId}) স্থায়ীভাবে মুছে ফেলতে চান?`
+    );
+    if (!confirmed) return;
+
+    setDeletingTicketId(ticketId);
+    try {
+      const res = await fetch(`/api/support/tickets?ticketId=${ticketId}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (data?.success) {
+        setTickets((prev) => prev.filter((t) => t.id !== ticketId));
+        if (selectedTicket?.id === ticketId) {
+          setSelectedTicket(null);
+        }
+      } else {
+        alert(data?.error || "টিকিট ডিলিট করতে সমস্যা হয়েছে।");
+      }
+    } catch (err) {
+      console.error("Delete ticket error:", err);
+      alert("নেটওয়ার্ক ত্রুটি, অনুগ্রহ করে আবার চেষ্টা করুন।");
+    } finally {
+      setDeletingTicketId(null);
     }
   };
 
@@ -502,7 +535,22 @@ export default function SupportPage() {
                       <span>{repliesCount}টি বার্তা</span>
                     </span>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-text-muted group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      disabled={deletingTicketId === ticket.id}
+                      onClick={(e) => handleDeleteTicket(ticket.id, e)}
+                      className="p-1.5 rounded-lg text-text-muted hover:text-rose-500 hover:bg-rose-500/10 transition-colors opacity-80 hover:opacity-100 cursor-pointer"
+                      title="টিকিট মুছে ফেলুন"
+                    >
+                      {deletingTicketId === ticket.id ? (
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin text-rose-500" />
+                      ) : (
+                        <Trash2 className="w-3.5 h-3.5" />
+                      )}
+                    </button>
+                    <ChevronRight className="w-4 h-4 text-text-muted group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+                  </div>
                 </div>
               </div>
             );
@@ -540,13 +588,29 @@ export default function SupportPage() {
                 )}
               </div>
 
-              <button
-                type="button"
-                onClick={() => setSelectedTicket(null)}
-                className="p-1.5 rounded-lg hover:bg-surface text-text-muted hover:text-text transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  disabled={deletingTicketId === selectedTicket.id}
+                  onClick={() => handleDeleteTicket(selectedTicket.id)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white border border-rose-500/20 text-xs font-bold transition-all disabled:opacity-50 cursor-pointer"
+                  title="টিকিট স্থায়ীভাবে মুছে ফেলুন"
+                >
+                  {deletingTicketId === selectedTicket.id ? (
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Trash2 className="w-3.5 h-3.5" />
+                  )}
+                  <span>ডিলিট</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedTicket(null)}
+                  className="p-1.5 rounded-lg hover:bg-surface text-text-muted hover:text-text transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             {/* Conversation Messages */}
