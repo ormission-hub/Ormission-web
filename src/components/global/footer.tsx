@@ -19,7 +19,6 @@ const footerLinks = {
     links: [
       { label: "আমাদের সম্পর্কে", href: "/about" },
       { label: "যোগাযোগ", href: "/contact" },
-      { label: "ব্লগ", href: "/blog" },
     ],
   },
   policies: {
