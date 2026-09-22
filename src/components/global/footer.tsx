@@ -1,9 +1,25 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BrandLogo } from "@/components/global/brand-logo";
 import { cn } from "@/lib/utils";
+import {
+  getSocialLinks,
+  DEFAULT_SOCIAL_LINKS,
+  type SocialLinksSettings,
+} from "@/lib/data/social-links";
+import {
+  FacebookIcon,
+  YouTubeIcon,
+  TelegramIcon,
+  WhatsAppIcon,
+  InstagramIcon,
+  LinkedInIcon,
+  TwitterXIcon,
+  TikTokIcon,
+} from "@/components/global/social-icons";
 
 const footerLinks = {
   study: {
@@ -33,9 +49,68 @@ const footerLinks = {
 
 export function Footer() {
   const pathname = usePathname();
+  const [social, setSocial] = useState<SocialLinksSettings>(DEFAULT_SOCIAL_LINKS);
+
+  useEffect(() => {
+    getSocialLinks().then((res) => {
+      if (res) setSocial(res);
+    });
+  }, []);
+
   if (pathname?.includes("/learn/")) {
     return null;
   }
+
+  const socialItems = [
+    {
+      key: "facebook",
+      data: social.facebook,
+      icon: FacebookIcon,
+      hoverColor: "hover:bg-[#1877F2] hover:text-white hover:border-[#1877F2]",
+    },
+    {
+      key: "youtube",
+      data: social.youtube,
+      icon: YouTubeIcon,
+      hoverColor: "hover:bg-[#FF0000] hover:text-white hover:border-[#FF0000]",
+    },
+    {
+      key: "telegram",
+      data: social.telegram,
+      icon: TelegramIcon,
+      hoverColor: "hover:bg-[#229ED9] hover:text-white hover:border-[#229ED9]",
+    },
+    {
+      key: "whatsapp",
+      data: social.whatsapp,
+      icon: WhatsAppIcon,
+      hoverColor: "hover:bg-[#25D366] hover:text-white hover:border-[#25D366]",
+    },
+    {
+      key: "instagram",
+      data: social.instagram,
+      icon: InstagramIcon,
+      hoverColor: "hover:bg-gradient-to-tr hover:from-[#F58529] hover:via-[#DD2A7B] hover:to-[#8134AF] hover:text-white hover:border-[#DD2A7B]",
+    },
+    {
+      key: "linkedin",
+      data: social.linkedin,
+      icon: LinkedInIcon,
+      hoverColor: "hover:bg-[#0A66C2] hover:text-white hover:border-[#0A66C2]",
+    },
+    {
+      key: "twitter",
+      data: social.twitter,
+      icon: TwitterXIcon,
+      hoverColor: "hover:bg-slate-900 hover:text-white hover:border-slate-800 dark:hover:bg-white dark:hover:text-black",
+    },
+    {
+      key: "tiktok",
+      data: social.tiktok,
+      icon: TikTokIcon,
+      hoverColor: "hover:bg-black hover:text-white hover:border-black dark:hover:bg-white dark:hover:text-black",
+    },
+  ].filter((item) => item.data?.enabled && item.data?.url?.trim());
 
   return (
     <footer className="bg-surface border-t border-border">
@@ -47,9 +122,36 @@ export function Footer() {
             <div className="mb-4">
               <BrandLogo size="md" showTagline={true} />
             </div>
-            <p className="text-text-muted text-xs leading-relaxed font-bengali">
+            <p className="text-text-muted text-xs leading-relaxed font-bengali mb-4">
               মানসম্মত ও কর্মমুখী শিক্ষার মাধ্যমে আপনার ভবিষ্যৎ সফলভাবে গড়ে তুলুন।
             </p>
+
+            {/* Brand Social Media Icons */}
+            {socialItems.length > 0 && (
+              <div className="space-y-2">
+                <span className="text-[11px] font-bold text-text font-bengali block">
+                  যুক্ত থাকুন সোশ্যাল মিডিয়ায়:
+                </span>
+                <div className="flex flex-wrap items-center gap-2">
+                  {socialItems.map(({ key, data, icon: Icon, hoverColor }) => (
+                    <a
+                      key={key}
+                      href={data.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={data.label || key}
+                      aria-label={data.label || key}
+                      className={cn(
+                        "w-8 h-8 rounded-xl bg-surface-secondary border border-border text-text-muted flex items-center justify-center transition-all duration-200 shadow-2xs active:scale-90",
+                        hoverColor
+                      )}
+                    >
+                      <Icon size={16} />
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Link columns */}

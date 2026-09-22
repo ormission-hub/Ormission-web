@@ -21,6 +21,16 @@ import {
   Trash2,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import {
+  getSocialLinks,
+  DEFAULT_SOCIAL_LINKS,
+  type SocialLinksSettings,
+} from "@/lib/data/social-links";
+import {
+  FacebookIcon,
+  WhatsAppIcon,
+  TelegramIcon,
+} from "@/components/global/social-icons";
 
 interface TicketReply {
   id: string;
@@ -54,6 +64,13 @@ function SupportContent() {
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "open" | "resolved">("all");
+  const [social, setSocial] = useState<SocialLinksSettings>(DEFAULT_SOCIAL_LINKS);
+
+  useEffect(() => {
+    getSocialLinks().then((res) => {
+      if (res) setSocial(res);
+    });
+  }, []);
 
   // Selected Ticket for Conversation View Modal
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
@@ -399,6 +416,61 @@ function SupportContent() {
           </div>
         </div>
       </div>
+
+      {/* Quick Direct Social Channels Bar */}
+      {(social.whatsapp?.enabled || social.telegram?.enabled || social.facebook?.enabled) && (
+        <div className="bg-gradient-to-r from-surface via-primary/5 to-secondary/5 rounded-2xl border border-border p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <Headphones className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-xs sm:text-sm font-bold text-text">
+                সরাসরি তাৎক্ষণিক সহায়তা চান?
+              </h3>
+              <p className="text-[11px] text-text-muted">
+                টিকিট খোলার পাশাপাশি জরুরি প্রয়োজনে আমাদের অফিসিয়াল হোয়াটসঅ্যাপ বা টেলিগ্রামেও সরাসরি যোগাযোগ করতে পারেন।
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 shrink-0 w-full sm:w-auto">
+            {social.whatsapp?.enabled && social.whatsapp?.url && (
+              <a
+                href={social.whatsapp.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366] hover:text-white border border-[#25D366]/25 transition-all text-xs font-bold font-bengali active:scale-95 shadow-2xs"
+              >
+                <WhatsAppIcon size={14} />
+                <span>হোয়াটসঅ্যাপ</span>
+              </a>
+            )}
+            {social.telegram?.enabled && social.telegram?.url && (
+              <a
+                href={social.telegram.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#229ED9]/10 text-[#229ED9] hover:bg-[#229ED9] hover:text-white border border-[#229ED9]/25 transition-all text-xs font-bold font-bengali active:scale-95 shadow-2xs"
+              >
+                <TelegramIcon size={14} />
+                <span>টেলিগ্রাম</span>
+              </a>
+            )}
+            {social.facebook?.enabled && social.facebook?.url && (
+              <a
+                href={social.facebook.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#1877F2]/10 text-[#1877F2] hover:bg-[#1877F2] hover:text-white border border-[#1877F2]/25 transition-all text-xs font-bold font-bengali active:scale-95 shadow-2xs"
+              >
+                <FacebookIcon size={14} />
+                <span>ফেসবুক গ্রুপ</span>
+              </a>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Ticket List Header & Filters */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-2">

@@ -20,6 +20,21 @@ import {
   X,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import {
+  getSocialLinks,
+  DEFAULT_SOCIAL_LINKS,
+  type SocialLinksSettings,
+} from "@/lib/data/social-links";
+import {
+  FacebookIcon,
+  YouTubeIcon,
+  TelegramIcon,
+  WhatsAppIcon,
+  InstagramIcon,
+  LinkedInIcon,
+  TwitterXIcon,
+  TikTokIcon,
+} from "@/components/global/social-icons";
 
 export default function DashboardOverviewPage() {
   const [user, setUser] = useState<any>(null);
@@ -27,6 +42,13 @@ export default function DashboardOverviewPage() {
   const [dbCourses, setDbCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [dismissedAlerts, setDismissedAlerts] = useState<string[]>([]);
+  const [social, setSocial] = useState<SocialLinksSettings>(DEFAULT_SOCIAL_LINKS);
+
+  useEffect(() => {
+    getSocialLinks().then((res) => {
+      if (res) setSocial(res);
+    });
+  }, []);
 
   useEffect(() => {
     try {
@@ -555,6 +577,170 @@ export default function DashboardOverviewPage() {
           </p>
         </div>
       )}
+
+      {/* ──────────────── Official Social & Community Section ──────────────── */}
+      {(() => {
+        const socialCards = [
+          {
+            key: "telegram",
+            data: social.telegram,
+            icon: TelegramIcon,
+            accent: "text-[#229ED9]",
+            borderHover: "hover:border-[#229ED9]/50",
+            bgIcon: "bg-[#229ED9]/15 text-[#229ED9]",
+            btnBg: "bg-[#229ED9] hover:bg-[#1d8bc0] text-white",
+            badge: "ডাউট সলভিং ও কুইজ",
+            desc: "সরাসরি টিচার ও মেন্টরদের সাথে স্টাডি গ্রুপ",
+          },
+          {
+            key: "facebook",
+            data: social.facebook,
+            icon: FacebookIcon,
+            accent: "text-[#1877F2]",
+            borderHover: "hover:border-[#1877F2]/50",
+            bgIcon: "bg-[#1877F2]/15 text-[#1877F2]",
+            btnBg: "bg-[#1877F2] hover:bg-[#1465cc] text-white",
+            badge: "স্টুডেন্ট কমিউনিটি",
+            desc: "ব্যাচমেটদের সাথে পড়ালেখা ও লাইভ আপডেট",
+          },
+          {
+            key: "youtube",
+            data: social.youtube,
+            icon: YouTubeIcon,
+            accent: "text-[#FF0000]",
+            borderHover: "hover:border-[#FF0000]/50",
+            bgIcon: "bg-[#FF0000]/15 text-[#FF0000]",
+            btnBg: "bg-[#FF0000] hover:bg-[#d90000] text-white",
+            badge: "ফ্রি ক্লাস ও টিপস",
+            desc: "অধ্যায়ভিত্তিক সল্যুশন ও রোডম্যাপ ভিডিও",
+          },
+          {
+            key: "whatsapp",
+            data: social.whatsapp,
+            icon: WhatsAppIcon,
+            accent: "text-[#25D366]",
+            borderHover: "hover:border-[#25D366]/50",
+            bgIcon: "bg-[#25D366]/15 text-[#25D366]",
+            btnBg: "bg-[#25D366] hover:bg-[#20ba5a] text-white",
+            badge: "ইনস্ট্যান্ট হেল্পলাইন",
+            desc: "জরুরি অ্যাডমিশন ও টেকনিক্যাল সহায়তা",
+          },
+          {
+            key: "instagram",
+            data: social.instagram,
+            icon: InstagramIcon,
+            accent: "text-[#E4405F]",
+            borderHover: "hover:border-[#E4405F]/50",
+            bgIcon: "bg-[#E4405F]/15 text-[#E4405F]",
+            btnBg: "bg-gradient-to-tr from-[#F58529] via-[#DD2A7B] to-[#8134AF] text-white",
+            badge: "স্টাডি মোটিভেশন",
+            desc: "ডেইলি কুইজ, ইনফোগ্রাফিক ও সফলতার গল্প",
+          },
+          {
+            key: "linkedin",
+            data: social.linkedin,
+            icon: LinkedInIcon,
+            accent: "text-[#0A66C2]",
+            borderHover: "hover:border-[#0A66C2]/50",
+            bgIcon: "bg-[#0A66C2]/15 text-[#0A66C2]",
+            btnBg: "bg-[#0A66C2] hover:bg-[#084e96] text-white",
+            badge: "ক্যারিয়ার ও অপরচুনিটি",
+            desc: "প্রফেশনাল স্কিলস ও নেটওয়ার্কিং",
+          },
+          {
+            key: "twitter",
+            data: social.twitter,
+            icon: TwitterXIcon,
+            accent: "text-slate-900 dark:text-white",
+            borderHover: "hover:border-text/40",
+            bgIcon: "bg-slate-500/15 text-slate-800 dark:text-slate-200",
+            btnBg: "bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-black dark:hover:bg-slate-200",
+            badge: "অফিসিয়াল নিউজ",
+            desc: "তাত্ক্ষণিক নোটিশ ও প্ল্যাটফর্ম আপডেট",
+          },
+          {
+            key: "tiktok",
+            data: social.tiktok,
+            icon: TikTokIcon,
+            accent: "text-slate-900 dark:text-white",
+            borderHover: "hover:border-text/40",
+            bgIcon: "bg-slate-500/15 text-slate-800 dark:text-slate-200",
+            btnBg: "bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-black dark:hover:bg-slate-200",
+            badge: "শর্টস ও ট্রিকস",
+            desc: "দ্রুততম রিভিশন ও শর্টকাট কৌশল",
+          },
+        ].filter((item) => item.data?.enabled && item.data?.url?.trim());
+
+        if (socialCards.length === 0) return null;
+
+        return (
+          <div className="bg-gradient-to-br from-surface via-surface to-primary/5 rounded-2xl border border-border p-5 sm:p-7 shadow-xs mt-8">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-5 pb-4 border-b border-border">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <h3 className="text-base sm:text-lg font-bold text-text font-bengali">
+                    {social.communityTitle || "আমাদের অফিশিয়াল কমিউনিটিতে যুক্ত হোন"}
+                  </h3>
+                </div>
+                <p className="text-xs text-text-muted font-bengali">
+                  {social.communitySubtitle || "লাইভ ক্লাস নোটিফিকেশন, সরাসরি মেন্টরশিপ ও ব্যাচমেটদের সাথে আলোচনার জন্য অফিসিয়াল সোশ্যাল চ্যানেলে যুক্ত থাকুন।"}
+                </p>
+              </div>
+
+              <span className="text-[11px] font-bold text-primary bg-primary/10 px-3 py-1 rounded-full font-bengali shrink-0">
+                অফিসিয়াল চ্যানেলসমূহ
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {socialCards.map(({ key, data, icon: Icon, accent, borderHover, bgIcon, btnBg, badge, desc }) => (
+                <div
+                  key={key}
+                  className={`bg-surface-secondary/40 rounded-xl border border-border p-4 flex flex-col justify-between transition-all duration-200 ${borderHover} hover:shadow-xs group`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between gap-2 mb-3">
+                      <div className={`w-9 h-9 rounded-xl ${bgIcon} flex items-center justify-center shrink-0 shadow-2xs`}>
+                        <Icon size={18} />
+                      </div>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-surface border border-border text-text-muted font-bengali">
+                        {badge}
+                      </span>
+                    </div>
+
+                    <h4 className="font-bold text-xs sm:text-sm text-text font-bengali flex items-center gap-1.5">
+                      <span>{data.label || key}</span>
+                    </h4>
+
+                    {data.handle && (
+                      <span className="text-[11px] font-mono text-text-muted block mt-0.5">
+                        {data.handle}
+                      </span>
+                    )}
+
+                    <p className="text-[11px] text-text-muted font-bengali mt-1.5 line-clamp-2 leading-relaxed">
+                      {desc}
+                    </p>
+                  </div>
+
+                  <div className="pt-3 mt-3 border-t border-border/70">
+                    <a
+                      href={data.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`w-full py-2 px-3 rounded-lg text-xs font-bold font-bengali flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer shadow-2xs ${btnBg}`}
+                    >
+                      <span>যুক্ত হন</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
