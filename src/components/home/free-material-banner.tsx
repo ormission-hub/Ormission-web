@@ -34,10 +34,6 @@ export function FreeMaterialBanner() {
               <h3 className="text-base sm:text-lg lg:text-xl font-bold text-text font-bengali tracking-tight flex items-center justify-center sm:justify-start gap-1.5">
                 <span>সার্বক্ষণিক ব্যক্তিগত মেন্টরশিপ ও ডাউট সলভিং সাপোর্ট</span>
               </h3>
-
-              <p className="text-xs sm:text-sm text-text-muted font-bengali mt-1 leading-relaxed">
-                পড়াশোনায় যেকোনো দ্বিধা, কনফিউশন বা মানসিক চাপে Ormission-এর মেন্টর প্যানেল টেলিগ্রাম ও গ্রুপে সার্বক্ষণিক আপনাকে ব্যক্তিগত গাইডলাইন দেবে। সেই সাথে থাকছে ফ্রি অধ্যায়ভিত্তিক নোট ও সাজেশন শিট।
-              </p>
             </div>
           </div>
 
