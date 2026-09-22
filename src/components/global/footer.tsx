@@ -75,7 +75,7 @@ export function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="border-t border-border py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="border-t border-border pt-6 pb-24 lg:pb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-sm text-text-muted">
             © {new Date().getFullYear()} Ormission. সর্বস্বত্ব সংরক্ষিত।
           </p>

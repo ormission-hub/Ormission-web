@@ -490,11 +490,11 @@ export function Navbar() {
 
       {/* ═══════════════════ Mobile Floating Liquid Glass Navigation Dock ═══════════════════ */}
       <nav
-        className="fixed bottom-3 left-1/2 -translate-x-1/2 w-[calc(100%-1.5rem)] max-w-[390px] z-[60] lg:hidden select-none pb-[env(safe-area-inset-bottom)]"
+        className="fixed bottom-3 inset-x-3 max-w-[390px] mx-auto z-[60] lg:hidden select-none pb-[env(safe-area-inset-bottom)]"
         aria-label="Mobile navigation"
       >
         {/* Floating Liquid Glass Capsule */}
-        <div className="relative rounded-full p-1 bg-surface/75 dark:bg-slate-950/75 backdrop-blur-2xl backdrop-saturate-200 border border-white/30 dark:border-white/15 shadow-[0_12px_36px_rgba(0,0,0,0.18),inset_0_1.5px_1px_rgba(255,255,255,0.45),inset_0_-1px_1px_rgba(0,0,0,0.12)] dark:shadow-[0_16px_45px_rgba(0,0,0,0.55),inset_0_1.5px_1px_rgba(255,255,255,0.2),inset_0_-1px_1px_rgba(0,0,0,0.3)] ring-1 ring-black/5 dark:ring-white/5">
+        <div className="relative rounded-full p-1 bg-surface/80 dark:bg-slate-950/80 backdrop-blur-2xl backdrop-saturate-200 border border-white/30 dark:border-white/15 shadow-[0_12px_36px_rgba(0,0,0,0.2),inset_0_1.5px_1px_rgba(255,255,255,0.45),inset_0_-1px_1px_rgba(0,0,0,0.12)] dark:shadow-[0_16px_45px_rgba(0,0,0,0.6),inset_0_1.5px_1px_rgba(255,255,255,0.2),inset_0_-1px_1px_rgba(0,0,0,0.3)] ring-1 ring-black/5 dark:ring-white/5">
           
           {/* Liquid Glass Top Gloss Specular Highlight */}
           <div className="absolute inset-x-6 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/70 dark:via-white/35 to-transparent rounded-full pointer-events-none" />
@@ -502,7 +502,7 @@ export function Navbar() {
           {/* Liquid Inner Ambient Subtle Light */}
           <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/15 dark:from-white/5 to-transparent pointer-events-none" />
 
-          <div className="relative flex items-center justify-between gap-1">
+          <div className="relative flex items-center justify-between">
             {bottomNavItems.map((item) => {
               const Icon = item.icon;
               const isActive =
@@ -518,17 +518,22 @@ export function Navbar() {
                 <Link
                   key={item.href}
                   href={item.href}
+                  onClick={() => {
+                    if (typeof window !== "undefined") {
+                      window.scrollTo({ top: 0, behavior: "instant" });
+                    }
+                  }}
                   className={cn(
-                    "relative flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 px-1 rounded-full transition-all duration-200 group text-center select-none border",
+                    "relative flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1.5 px-0.5 rounded-full transition-all duration-200 group text-center select-none border",
                     isActive
-                      ? "text-primary font-bold bg-gradient-to-b from-primary/20 via-primary/12 to-primary/5 dark:from-primary/25 dark:via-primary/15 dark:to-primary/10 border-primary/40 shadow-[0_2px_12px_rgba(255,95,0,0.25),inset_0_1px_1px_rgba(255,255,255,0.4)] dark:shadow-[0_2px_14px_rgba(255,115,21,0.3),inset_0_1px_1px_rgba(255,255,255,0.2)]"
+                      ? "text-primary font-bold bg-gradient-to-b from-primary/20 via-primary/12 to-primary/5 dark:from-primary/25 dark:via-primary/15 dark:to-primary/10 border-primary/40 shadow-[0_2px_10px_rgba(255,95,0,0.25),inset_0_1px_1px_rgba(255,255,255,0.4)] dark:shadow-[0_2px_12px_rgba(255,115,21,0.3),inset_0_1px_1px_rgba(255,255,255,0.2)]"
                       : "text-text-muted/70 hover:text-text border-transparent active:scale-90 active:text-text"
                   )}
                 >
                   <Icon
                     active={isActive}
                     className={cn(
-                      "w-[19px] h-[19px] transition-all duration-200",
+                      "w-[18px] h-[18px] shrink-0 transition-all duration-200",
                       isActive
                         ? "scale-105 drop-shadow-[0_2px_8px_rgba(255,95,0,0.4)] text-primary"
                         : "group-hover:scale-105 opacity-70 group-active:scale-90"
@@ -536,7 +541,7 @@ export function Navbar() {
                   />
                   <span
                     className={cn(
-                      "text-[9px] font-bengali leading-none tracking-tight transition-all duration-200",
+                      "text-[9px] font-bengali leading-none tracking-tight transition-all duration-200 truncate max-w-full",
                       isActive ? "font-bold text-primary" : "font-medium opacity-80"
                     )}
                   >
