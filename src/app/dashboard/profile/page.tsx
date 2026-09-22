@@ -34,6 +34,7 @@ export default function ProfilePage() {
     name: "",
     phone: "",
     email: "",
+    address: "",
     institution: "",
     targetBatch: "",
     district: "",
@@ -65,6 +66,7 @@ export default function ProfilePage() {
             name: dbProfile?.full_name || meta.full_name || meta.name || "",
             phone: dbProfile?.phone || meta.phone || "",
             email: session.user.email || "",
+            address: meta.address || meta.district || "",
             institution: meta.institution || "",
             targetBatch: meta.hsc_batch ? `এইচএসসি '${meta.hsc_batch}` : meta.target || "",
             district: meta.district || "ঢাকা",
@@ -189,6 +191,7 @@ export default function ProfilePage() {
           data: {
             full_name: profile.name,
             phone: profile.phone,
+            address: profile.address,
             institution: profile.institution,
             district: profile.district,
             target: profile.targetBatch,
@@ -450,6 +453,22 @@ export default function ProfilePage() {
               <p className="text-[11px] text-text-muted mt-1.5">
                 অ্যাকাউন্টের নিরাপত্তার স্বার্থে প্রাথমিক ইমেইলটি অপরিবর্তনযোগ্য রাখা হয়েছে।
               </p>
+            </div>
+
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-semibold text-text mb-1.5">
+                আপনার পূর্ণাঙ্গ ঠিকানা (Address)
+              </label>
+              <div className="relative">
+                <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted/70 pointer-events-none" />
+                <input
+                  type="text"
+                  value={profile.address}
+                  onChange={(e) => setProfile({ ...profile, address: e.target.value })}
+                  className="w-full pl-11 pr-4 py-2.5 rounded-xl bg-surface-secondary/70 hover:bg-surface-secondary focus:bg-surface border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 text-xs sm:text-sm text-text placeholder:text-text-muted/50 placeholder:font-bengali font-bengali transition-all duration-150 outline-none shadow-2xs"
+                  placeholder="উদাঃ বাড়ি নং ১২, রোড নং ৫, ধানমন্ডি, ঢাকা"
+                />
+              </div>
             </div>
           </div>
         </div>

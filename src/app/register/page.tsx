@@ -18,6 +18,7 @@ import {
   BookOpen,
   AlertCircle,
   Check,
+  MapPin,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
@@ -30,6 +31,7 @@ function RegisterContent() {
     name: "",
     email: "",
     phone: "",
+    address: "",
     password: "",
     academicLevel: "hsc-science",
     agreed: true,
@@ -73,6 +75,16 @@ function RegisterContent() {
       return;
     }
 
+    if (!formData.phone.trim()) {
+      setErrorMessage("অনুগ্রহ করে আপনার মোবাইল নম্বর দিন।");
+      return;
+    }
+
+    if (!formData.address.trim()) {
+      setErrorMessage("অনুগ্রহ করে আপনার পূর্ণাঙ্গ ঠিকানা দিন।");
+      return;
+    }
+
     if (formData.password.length < 6) {
       setErrorMessage("পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।");
       return;
@@ -96,6 +108,7 @@ function RegisterContent() {
           data: {
             full_name: formData.name.trim(),
             phone: formData.phone.trim(),
+            address: formData.address.trim(),
             academic_level: formData.academicLevel,
           },
           emailRedirectTo: emailCallbackUrl,
@@ -518,6 +531,24 @@ function RegisterContent() {
                               className="w-full pl-12 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 font-sans focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all"
                             />
                           </div>
+                        </div>
+                      </div>
+
+                      {/* Address */}
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                          আপনার পূর্ণাঙ্গ ঠিকানা (Address) <span className="text-rose-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <MapPin className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                          <input
+                            type="text"
+                            required
+                            placeholder="উদা: বাড়ি/রোড নং, এলাকা, থানা, জেলা"
+                            value={formData.address}
+                            onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all"
+                          />
                         </div>
                       </div>
 

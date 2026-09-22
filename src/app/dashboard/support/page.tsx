@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useTransition, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   Headphones,
@@ -48,7 +48,7 @@ interface SupportTicket {
   replies: TicketReply[];
 }
 
-export default function SupportPage() {
+function SupportContent() {
   const searchParams = useSearchParams();
   const [user, setUser] = useState<any>(null);
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
@@ -852,5 +852,22 @@ export default function SupportPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function SupportPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="space-y-6 max-w-6xl mx-auto pb-12 font-bengali p-6">
+          <div className="p-8 text-center text-xs text-text-muted">
+            <RefreshCw className="w-6 h-6 animate-spin text-primary mx-auto mb-2" />
+            <span>সাপোর্ট প্যানেল লোড হচ্ছে...</span>
+          </div>
+        </div>
+      }
+    >
+      <SupportContent />
+    </Suspense>
   );
 }
