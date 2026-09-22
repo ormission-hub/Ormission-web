@@ -118,11 +118,25 @@ export async function getCategoryWithCourses(
 ): Promise<{ category: any; courses: Course[] }> {
   try {
     const supabase = await createServerClient();
-    const { data: dbCat } = await supabase
+    const normalizedSlug = decodeURIComponent(slug).toLowerCase().trim();
+    const slugCandidates = [normalizedSlug];
+    if (normalizedSlug === "school") slugCandidates.push("ssc");
+    if (normalizedSlug === "ssc") slugCandidates.push("school");
+
+    let { data: dbCat } = await supabase
       .from("categories")
       .select("*")
-      .eq("slug", slug)
+      .in("slug", slugCandidates)
       .maybeSingle();
+
+    if (!dbCat) {
+      const { data: catByName } = await supabase
+        .from("categories")
+        .select("*")
+        .ilike("name", normalizedSlug)
+        .maybeSingle();
+      if (catByName) dbCat = catByName;
+    }
 
     const { data: dbCourses } = await supabase
       .from("courses")
@@ -135,7 +149,12 @@ export async function getCategoryWithCourses(
       .order("created_at", { ascending: false });
 
     const allMapped = (dbCourses || []).map(mapDbCourseToAppCourse);
-    const catCourses = allMapped.filter((c) => c.categorySlug === slug);
+    const catCourses = allMapped.filter((c) => {
+      const cCatSlug = (c.categorySlug || "").toLowerCase();
+      const matchSlug = slugCandidates.includes(cCatSlug);
+      const matchId = dbCat ? String(c.categoryId) === String(dbCat.id) : false;
+      return matchSlug || matchId;
+    });
 
     if (dbCat) {
       const category = {
@@ -156,7 +175,15 @@ export async function getCategoryWithCourses(
   }
 
   // Fallback to static data
-  const fallbackCat = CATEGORIES.find((c) => c.slug === slug);
-  const fallbackCourses = COURSES.filter((c) => c.categorySlug === slug);
+  const fallbackCat = CATEGORIES.find(
+    (c) =>
+      c.slug.toLowerCase() === slug.toLowerCase() ||
+      (slug.toLowerCase() === "ssc" && c.slug === "school")
+  );
+  const fallbackCourses = COURSES.filter(
+    (c) =>
+      c.categorySlug.toLowerCase() === slug.toLowerCase() ||
+      (slug.toLowerCase() === "ssc" && c.categorySlug === "school")
+  );
   return { category: fallbackCat || null, courses: fallbackCourses };
 }

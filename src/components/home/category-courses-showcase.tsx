@@ -596,81 +596,26 @@ export function CategoryCoursesShowcase({
     return [];
   }, [categoriesList]);
 
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
-
-  const defaultCategorySlug = useMemo(() => {
-    if (displayCategories.length === 0) return "";
-    if (coursesList.length === 0) return displayCategories[0].slug;
-
-    const catWithCourses = displayCategories.find((cat) =>
-      coursesList.some((c) => {
-        const cCatId = c.category_id ?? (Array.isArray(c.categories) ? c.categories[0]?.id : c.categories?.id);
-        const cCatSlug = (Array.isArray(c.categories) ? c.categories[0]?.slug : c.categories?.slug || "").toLowerCase();
-        return (
-          (cat.id && String(cCatId) === String(cat.id)) ||
-          (cat.slug && cCatSlug === cat.slug.toLowerCase())
-        );
-      })
-    );
-
-    return catWithCourses ? catWithCourses.slug : displayCategories[0].slug;
-  }, [displayCategories, coursesList]);
-
-  const activeCategory = selectedCategory || defaultCategorySlug;
-
-  // Courses to show on the Homepage (Filtered strictly by active category, prioritizing pinned courses)
+  // Courses to show on the Homepage (Filtered strictly to popular / featured and pinned courses)
   const displayedCourses = useMemo(() => {
-    // 1. If a category is selected (or active default category)
-    if (activeCategory && activeCategory !== "all") {
-      const curCat = displayCategories.find(
-        (cat) => cat.slug.toLowerCase() === activeCategory.toLowerCase()
-      );
-
-      const categoryFiltered = coursesList.filter((c) => {
-        const cCatId = c.category_id ?? (Array.isArray(c.categories) ? c.categories[0]?.id : c.categories?.id);
-        const cSlug = (Array.isArray(c.categories) ? c.categories[0]?.slug : c.categories?.slug || "").toLowerCase();
-        return (
-          (curCat?.id && String(cCatId) === String(curCat.id)) ||
-          (curCat?.slug && cSlug === curCat.slug.toLowerCase()) ||
-          (cSlug && cSlug === activeCategory.toLowerCase())
-        );
-      });
-
-      // Sort pinned courses to the top within this category
-      if (pinnedIds && pinnedIds.length > 0) {
-        return [...categoryFiltered].sort((a, b) => {
-          const aPinned = pinnedIds.some((pid) => String(pid) === String(a.id));
-          const bPinned = pinnedIds.some((pid) => String(pid) === String(b.id));
-          if (aPinned && !bPinned) return -1;
-          if (!aPinned && bPinned) return 1;
-          return 0;
-        });
-      }
-
-      return categoryFiltered;
-    }
-
-    // 2. Default when no category filter is applied:
     let list: DbFeaturedCourse[] = [];
     if (pinnedIds && pinnedIds.length > 0) {
       list = coursesList.filter((c) => pinnedIds.some((pid) => String(pid) === String(c.id)));
     }
+    const featured = coursesList.filter(
+      (c) => c.is_featured && !list.some((existing) => String(existing.id) === String(c.id))
+    );
+    list = [...list, ...featured];
+
+    // Fallback if no courses are marked featured yet
     if (list.length === 0) {
-      const featured = coursesList.filter((c) => c.is_featured);
-      list = featured.length > 0 ? featured : coursesList.slice(0, 6);
+      const published = coursesList.filter((c) => c.status === "published");
+      list = published.length > 0 ? published.slice(0, 8) : coursesList.slice(0, 8);
     }
     return list;
-  }, [coursesList, activeCategory, displayCategories, pinnedIds]);
+  }, [coursesList, pinnedIds]);
 
   const pinnedCourses = displayedCourses;
-
-  // Reset carousel scroll to start whenever category changes
-  useEffect(() => {
-    if (coursesScrollRef.current) {
-      coursesScrollRef.current.scrollTo({ left: 0, behavior: "smooth" });
-    }
-    setCourseActiveIndex(0);
-  }, [activeCategory]);
 
   // Pinned books to show on the Homepage (Filtered strictly by admin's pinned books)
   const pinnedBooks = useMemo(() => {
@@ -748,75 +693,57 @@ export function CategoryCoursesShowcase({
 
   // Category Pill Component: Lightweight, GPU-accelerated & 60fps smooth
   const renderCategoryPill = (cat: DbCategoryShowcaseItem, idx: number) => {
-    const isSelected = activeCategory === cat.slug;
     const illustration = getCategoryIllustration(cat);
+    const catSlug = cat.slug === "school" ? "ssc" : cat.slug;
 
     return (
-      <motion.button
+      <motion.div
         key={cat.id || cat.slug}
-        type="button"
         variants={zoomIn}
-        onClick={() => {
-          setSelectedCategory(cat.slug);
-        }}
-        whileHover={{ y: -2, scale: 1.02, transition: { duration: 0.15 } }}
-        whileTap={{ scale: 0.97 }}
-        className={`group relative p-[1.5px] sm:p-[2.5px] rounded-xl sm:rounded-2xl cursor-pointer select-none transition-all duration-200 overflow-hidden w-full sm:w-auto min-w-0 sm:min-w-[170px] min-h-[46px] sm:min-h-[56px] ${
-          isSelected
-            ? "shadow-[0_0_18px_rgba(255,95,0,0.38)] ring-1.5 sm:ring-2 ring-primary/60 bg-primary/20"
-            : "border border-border/80 bg-slate-200/60 dark:bg-slate-800/60 hover:border-primary/50 hover:shadow-xs"
-        }`}
+        whileHover={{ y: -3, scale: 1.02, transition: { duration: 0.15 } }}
+        whileTap={{ scale: 0.98 }}
+        className="w-full sm:w-auto min-w-0 flex-1 sm:flex-initial"
       >
-        {/* Continuous rotating glowing border laser beam on ALL pills */}
-        <div
-          className="border-beam-sharp"
-          style={{
-            background: isSelected
-              ? "conic-gradient(from 0deg, transparent 0deg, transparent 240deg, #FF5F00 285deg, #FFFFFF 330deg, transparent 360deg)"
-              : "conic-gradient(from 0deg, transparent 0deg, transparent 255deg, rgba(255,95,0,0.7) 295deg, rgba(255,255,255,0.95) 335deg, transparent 360deg)",
-            animationName: "borderRotate",
-            animationDuration: isSelected ? "2.6s" : "3.5s",
-            animationTimingFunction: "linear",
-            animationIterationCount: "infinite",
-            animationDelay: `${idx * -0.7}s`,
-            opacity: isSelected ? 1 : 0.75,
-          }}
-        />
-
-        <div
-          className={`relative z-10 w-full h-full rounded-[10px] sm:rounded-[13.5px] flex items-center justify-center gap-1.5 sm:gap-3.5 px-2 py-2.5 sm:px-8 sm:py-3.5 transition-colors duration-200 overflow-hidden ${
-            isSelected
-              ? "bg-surface dark:bg-slate-900 text-primary"
-              : "bg-surface dark:bg-slate-900/95 text-text group-hover:text-primary"
-          }`}
+        <Link
+          href={`/category/${catSlug}`}
+          className="group relative block p-[1.5px] sm:p-[2.5px] rounded-xl sm:rounded-2xl cursor-pointer select-none transition-all duration-200 overflow-hidden w-full sm:w-auto min-w-0 sm:min-w-[170px] min-h-[46px] sm:min-h-[56px] border border-border/80 bg-slate-200/60 dark:bg-slate-800/60 hover:border-primary/60 hover:shadow-[0_0_20px_rgba(255,95,0,0.3)] hover:bg-primary/10"
         >
-          {isSelected && (
-            <span
-              className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/35 dark:via-white/[0.08] to-transparent pointer-events-none animate-glass-shimmer"
-            />
-          )}
+          {/* Continuous rotating glowing border laser beam on ALL pills */}
+          <div
+            className="border-beam-sharp"
+            style={{
+              background:
+                "conic-gradient(from 0deg, transparent 0deg, transparent 255deg, rgba(255,95,0,0.7) 295deg, rgba(255,255,255,0.95) 335deg, transparent 360deg)",
+              animationName: "borderRotate",
+              animationDuration: "3.5s",
+              animationTimingFunction: "linear",
+              animationIterationCount: "infinite",
+              animationDelay: `${idx * -0.7}s`,
+              opacity: 0.75,
+            }}
+          />
 
-          <span className="absolute inset-x-0 top-0 h-1/2 rounded-t-[10px] sm:rounded-t-[13.5px] bg-gradient-to-b from-white/60 dark:from-white/[0.06] to-transparent pointer-events-none" />
-
-          <div className="relative z-10 w-6 h-6 sm:w-10 sm:h-10 shrink-0 [&>div]:!w-6 [&>div]:!h-6 sm:[&>div]:!w-10 sm:[&>div]:!w-10 transition-transform duration-200 group-hover:scale-110 drop-shadow-xs">
-            {illustration}
-          </div>
-
-          <span
-            className={`relative z-10 text-xs xs:text-[13px] sm:text-base lg:text-lg tracking-tight transition-colors duration-200 truncate sm:whitespace-nowrap ${
-              isSelected
-                ? "text-primary font-black"
-                : "text-text group-hover:text-primary font-bold"
-            }`}
+          <div
+            className="relative z-10 w-full h-full rounded-[10px] sm:rounded-[13.5px] flex items-center justify-center gap-1.5 sm:gap-3.5 px-2 py-2.5 sm:px-8 sm:py-3.5 transition-colors duration-200 overflow-hidden bg-surface dark:bg-slate-900/95 text-text group-hover:text-primary"
           >
-            {cat.name || cat.name_bn}
-          </span>
+            <span
+              className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 dark:via-white/[0.08] to-transparent pointer-events-none group-hover:animate-glass-shimmer"
+            />
 
-          {isSelected && (
-            <span className="relative z-10 w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-primary animate-pulse shrink-0 ml-1 shadow-[0_0_8px_#FF5F00]" />
-          )}
-        </div>
-      </motion.button>
+            <span className="absolute inset-x-0 top-0 h-1/2 rounded-t-[10px] sm:rounded-t-[13.5px] bg-gradient-to-b from-white/60 dark:from-white/[0.06] to-transparent pointer-events-none" />
+
+            <div className="relative z-10 w-6 h-6 sm:w-10 sm:h-10 shrink-0 [&>div]:!w-6 [&>div]:!h-6 sm:[&>div]:!w-10 sm:[&>div]:!w-10 transition-transform duration-200 group-hover:scale-110 drop-shadow-xs">
+              {illustration}
+            </div>
+
+            <span
+              className="relative z-10 text-xs xs:text-[13px] sm:text-base lg:text-lg tracking-tight transition-colors duration-200 truncate sm:whitespace-nowrap font-bold text-text group-hover:text-primary"
+            >
+              {cat.name || cat.name_bn}
+            </span>
+          </div>
+        </Link>
+      </motion.div>
     );
   };
 
@@ -911,24 +838,17 @@ export function CategoryCoursesShowcase({
         {/* 1. PINNED COURSES SLIDESHOW (Side-sliding horizontal carousel) */}
         {/* ============================================================ */}
         {(() => {
-          const activeCategoryObj = displayCategories.find(
-            (cat) => cat.slug.toLowerCase() === activeCategory.toLowerCase()
-          );
-          const sectionTitle = activeCategoryObj
-            ? `${activeCategoryObj.name_bn || activeCategoryObj.name} কোর্সসমূহ`
-            : "জনপ্রিয় কোর্স";
-
           return (
             <div className="mb-6 sm:mb-8">
               <div className="flex items-center justify-between gap-3 mb-3.5 sm:mb-4">
                 <div className="flex items-center gap-2.5 sm:gap-3">
-                  {renderSectionLabel(sectionTitle, <PopularCoursesIllustration />, 0, activeCategoryObj?.name_bn || "নির্বাচিত")}
+                  {renderSectionLabel("জনপ্রিয় কোর্সসমূহ", <PopularCoursesIllustration />, 0, "হট ও ট্রেন্ডিং")}
                 </div>
 
                 {/* Slider Arrows & All Courses Link */}
                 <div className="flex items-center gap-2">
                   <Link
-                    href={activeCategory && activeCategory !== "all" ? `/courses?category=${activeCategory}` : "/courses?filter=popular"}
+                    href="/courses"
                     className="hidden md:inline-flex items-center gap-1 text-xs font-bold text-primary hover:text-primary-hover font-bengali mr-2"
                   >
                     <span>সব কোর্স</span>
@@ -964,10 +884,10 @@ export function CategoryCoursesShowcase({
                     <Sparkles className="w-6 h-6" />
                   </div>
                   <h4 className="text-sm sm:text-base font-bold text-text font-bengali mb-1">
-                    {activeCategoryObj ? `${activeCategoryObj.name_bn || activeCategoryObj.name} ক্যাটাগরিতে শীঘ্রই কোর্স যুক্ত করা হবে` : "শীঘ্রই নতুন কোর্স যুক্ত করা হবে"}
+                    শীঘ্রই নতুন জনপ্রিয় কোর্স যুক্ত করা হবে
                   </h4>
                   <p className="text-xs text-text-muted font-bengali max-w-sm mb-4">
-                    আমাদের শিক্ষকমণ্ডলী এই ক্যাটাগরির জন্য নতুন ও আকর্ষণীয় কোর্স প্রস্তুত করছেন।
+                    আমাদের শিক্ষকমণ্ডলী নতুন ও আকর্ষণীয় কোর্স প্রস্তুত করছেন।
                   </p>
                   <Link
                     href="/courses"
