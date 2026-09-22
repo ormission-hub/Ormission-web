@@ -65,6 +65,34 @@ export function mapDbCourseToAppCourse(dbCourse: any): Course {
 
             const primaryUrl = fallbackServers.length > 0 ? fallbackServers[0].url : (les.video_url || les.videoUrl || "");
 
+            const rawResources = Array.isArray(les.lesson_resources)
+              ? les.lesson_resources
+              : (Array.isArray(les.materials) ? les.materials : []);
+
+            const mappedMaterials = rawResources
+              .sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0))
+              .map((res: any) => {
+                let formattedSize: string | null = null;
+                const rawSize = res.file_size ?? res.fileSize;
+                if (typeof rawSize === "number" && rawSize > 0) {
+                  const k = 1024;
+                  const sizes = ["B", "KB", "MB", "GB"];
+                  const i = Math.floor(Math.log(rawSize) / Math.log(k));
+                  formattedSize = `${parseFloat((rawSize / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
+                } else if (typeof rawSize === "string" && rawSize.trim() !== "") {
+                  formattedSize = rawSize;
+                }
+
+                return {
+                  id: String(res.id),
+                  title: res.title || "Study Material",
+                  fileUrl: res.file_url || res.fileUrl || "",
+                  fileType: res.file_type || res.fileType || "pdf",
+                  fileSize: formattedSize,
+                  sortOrder: res.sort_order || 0,
+                };
+              });
+
             return {
               id: String(les.id || `les-${sIdx + 1}-${lIdx + 1}`),
               title: les.title || les.title_bn || `Class ${lIdx + 1}`,
@@ -73,6 +101,8 @@ export function mapDbCourseToAppCourse(dbCourse: any): Course {
                 ? `${les.video_duration}:00`
                 : les.duration || "30:00",
               isFreePreview: isFree,
+              resourcesCount: mappedMaterials.length,
+              materials: mappedMaterials,
               // SECURITY: Only expose videoUrl and full server URLs for free preview lessons
               // Paid lesson URLs are ONLY served via /api/course/access after auth check
               videoUrl: isFree ? primaryUrl : undefined,

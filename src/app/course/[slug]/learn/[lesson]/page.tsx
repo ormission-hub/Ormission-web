@@ -18,6 +18,12 @@ import {
   ShieldCheck,
   Loader2,
   Receipt,
+  FileText,
+  File,
+  FolderDown,
+  Download,
+  ExternalLink,
+  Paperclip,
 } from "lucide-react";
 import { getCourseBySlug, COURSES, type Course, type Lesson } from "@/lib/data/courses";
 import { CustomVideoPlayer, extractYouTubeId } from "@/components/video/custom-video-player";
@@ -70,6 +76,14 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
                   server_type,
                   video_url,
                   is_enabled,
+                  sort_order
+                ),
+                lesson_resources (
+                  id,
+                  title,
+                  file_url,
+                  file_type,
+                  file_size,
                   sort_order
                 )
               )
@@ -532,6 +546,15 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
                           <span>পেইড</span>
                         </span>
                       )}
+                      {lesson.materials && lesson.materials.length > 0 && (
+                        <span
+                          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-sky-500/10 border border-sky-500/25 text-sky-400 text-[10px] font-bengali font-semibold"
+                          title={`${lesson.materials.length}টি স্টাডি ম্যাটেরিয়াল`}
+                        >
+                          <Paperclip className="w-2.5 h-2.5" />
+                          <span>{lesson.materials.length}</span>
+                        </span>
+                      )}
                       <span className="text-[11px] font-mono text-slate-400 font-semibold bg-slate-800/80 px-2 py-0.5 rounded-md border border-slate-700/60">
                         {lesson.duration}
                       </span>
@@ -975,6 +998,130 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
                 {currentLesson.title}
               </p>
             </div>
+
+            {/* Class Study Materials & Lecture Sheets */}
+            {currentLesson.materials && currentLesson.materials.length > 0 && (
+              <div className="bg-slate-900/80 rounded-2xl border border-slate-800/90 p-4 sm:p-6 backdrop-blur-sm shadow-md space-y-4 font-bengali">
+                <div className="flex items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/25 text-primary flex items-center justify-center shadow-inner">
+                      <FolderDown className="w-4.5 h-4.5" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm sm:text-base font-bold text-white leading-tight flex items-center gap-2">
+                        <span>ক্লাস স্টাডি ম্যাটেরিয়াল ও লেকচার শিট</span>
+                      </h3>
+                      <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">
+                        এই ক্লাসের সাথে সংযুক্ত প্রয়োজনীয় রিসোর্স ও ফাইল ডাউনলোড করুন
+                      </p>
+                    </div>
+                  </div>
+                  <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary border border-primary/25">
+                    {currentLesson.materials.length}টি ফাইল
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {currentLesson.materials.map((mat, mIdx) => {
+                    const isPdf =
+                      mat.fileType?.toLowerCase().includes("pdf") ||
+                      mat.fileUrl?.toLowerCase().endsWith(".pdf");
+                    const isZip =
+                      mat.fileType?.toLowerCase().includes("zip") ||
+                      mat.fileUrl?.toLowerCase().endsWith(".zip");
+                    const isDoc =
+                      mat.fileType?.toLowerCase().includes("doc") ||
+                      mat.fileUrl?.toLowerCase().includes("word");
+                    const isPpt =
+                      mat.fileType?.toLowerCase().includes("ppt") ||
+                      mat.fileUrl?.toLowerCase().includes("presentation");
+
+                    return (
+                      <div
+                        key={mat.id || mIdx}
+                        className="group flex items-center justify-between gap-3 p-3.5 rounded-xl bg-slate-800/70 hover:bg-slate-800 border border-slate-700/60 hover:border-primary/40 transition-all shadow-sm"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div
+                            className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${
+                              isPdf
+                                ? "bg-red-500/10 border-red-500/25 text-red-400"
+                                : isDoc
+                                ? "bg-blue-500/10 border-blue-500/25 text-blue-400"
+                                : isPpt
+                                ? "bg-orange-500/10 border-orange-500/25 text-orange-400"
+                                : isZip
+                                ? "bg-amber-500/10 border-amber-500/25 text-amber-400"
+                                : "bg-emerald-500/10 border-emerald-500/25 text-emerald-400"
+                            }`}
+                          >
+                            {isPdf ? (
+                              <FileText className="w-5 h-5" />
+                            ) : (
+                              <File className="w-5 h-5" />
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <h4
+                              className="text-xs sm:text-sm font-bold text-slate-100 truncate group-hover:text-primary transition-colors"
+                              title={mat.title}
+                            >
+                              {mat.title}
+                            </h4>
+                            <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-400 font-sans">
+                              <span className="uppercase font-bold tracking-wider text-[10px] text-slate-300">
+                                {mat.fileType || "FILE"}
+                              </span>
+                              {mat.fileSize && (
+                                <>
+                                  <span className="text-slate-600">•</span>
+                                  <span>{mat.fileSize}</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {Boolean(accessStatus.authorized || currentLesson.isFreePreview) ? (
+                            <>
+                              <a
+                                href={mat.fileUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-2 rounded-lg bg-slate-700/60 hover:bg-slate-700 text-slate-300 hover:text-white transition-all cursor-pointer"
+                                title="ব্রাউজারে দেখুন"
+                              >
+                                <ExternalLink className="w-4 h-4" />
+                              </a>
+                              <a
+                                href={mat.fileUrl}
+                                download={mat.title}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="px-3 py-1.5 rounded-lg bg-primary/15 hover:bg-primary border border-primary/30 hover:border-primary text-primary hover:text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+                                title="ডাউনলোড করুন"
+                              >
+                                <Download className="w-3.5 h-3.5" />
+                                <span className="hidden xs:inline">ডাউনলোড</span>
+                              </a>
+                            </>
+                          ) : (
+                            <span
+                              className="px-2 py-1 rounded-md bg-amber-500/10 border border-amber-500/25 text-amber-400 text-[10px] font-bold flex items-center gap-1"
+                              title="ম্যাটেরিয়াল ডাউনলোড করতে ক্লাসে ভর্তি হন"
+                            >
+                              <Lock className="w-3 h-3" />
+                              <span>লকড</span>
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* ========================================================================= */}
             {/* CLASS SELECTOR (কোর্স কারিকুলাম ও সকল ক্লাস)                              */}

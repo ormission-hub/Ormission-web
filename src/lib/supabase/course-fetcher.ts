@@ -72,6 +72,14 @@ export async function getLiveCourseBySlug(
               video_url,
               is_enabled,
               sort_order
+            ),
+            lesson_resources (
+              id,
+              title,
+              file_url,
+              file_type,
+              file_size,
+              sort_order
             )
           )
         )
@@ -123,6 +131,14 @@ export async function getLiveCourses(): Promise<Course[]> {
               server_type,
               video_url,
               is_enabled,
+              sort_order
+            ),
+            lesson_resources (
+              id,
+              title,
+              file_url,
+              file_type,
+              file_size,
               sort_order
             )
           )

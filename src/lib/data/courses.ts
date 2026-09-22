@@ -8,6 +8,15 @@ export interface LessonServer {
   url: string;
 }
 
+export interface LessonMaterial {
+  id: string | number;
+  title: string;
+  fileUrl: string;
+  fileType?: string;
+  fileSize?: number | string | null;
+  sortOrder?: number;
+}
+
 export interface Lesson {
   id: string;
   title: string;
@@ -17,6 +26,7 @@ export interface Lesson {
   videoUrl?: string;
   servers?: LessonServer[];
   resourcesCount?: number;
+  materials?: LessonMaterial[];
 }
 
 export interface CurriculumSection {
