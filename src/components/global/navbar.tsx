@@ -33,40 +33,78 @@ const navItems = [
   { label: "আমাদের সম্পর্কে", href: "/about", icon: Users },
 ];
 
-/* ──────────────── Premium SVG Icons for Bottom Nav ──────────────── */
-const HomeIcon = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M3 10.182V22h7v-7h4v7h7V10.182L12 2 3 10.182Z" />
+/* ──────────────── Premium Dual-Tone SVG Icons for Bottom Nav ──────────────── */
+const HomeIcon = ({ className, active }: { className?: string; active?: boolean }) => (
+  <svg className={className} viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth={active ? "0" : "1.8"} strokeLinecap="round" strokeLinejoin="round">
+    {active ? (
+      <path d="M12 2.1 2.5 9.7a1 1 0 0 0-.35.76V20a2 2 0 0 0 2 2h4.5a1 1 0 0 0 1-1v-4.5a1 1 0 0 1 1-1h2.7a1 1 0 0 1 1 1V21a1 1 0 0 0 1 1H19.8a2 2 0 0 0 2-2V10.46a1 1 0 0 0-.35-.76L12 2.1Z" />
+    ) : (
+      <path d="M3 10.5 12 3l9 7.5V20a1.5 1.5 0 0 1-1.5 1.5h-4.5a1 1 0 0 1-1-1v-4.5a1.5 1.5 0 0 0-1.5-1.5h-1A1.5 1.5 0 0 0 10 14.5V19a1 1 0 0 1-1 1H4.5A1.5 1.5 0 0 1 3 20v-9.5Z" />
+    )}
   </svg>
 );
 
-const CoursesIcon = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+const CoursesIcon = ({ className, active }: { className?: string; active?: boolean }) => (
+  <svg className={className} viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth={active ? "0" : "1.8"} strokeLinecap="round" strokeLinejoin="round">
+    {active ? (
+      <>
+        <path d="M12 4.5c-2.4-1.2-5.4-1.5-8-1A2 2 0 0 0 2 5.5v12a1.5 1.5 0 0 0 1.9 1.45c2.2-.5 4.8-.2 6.1.8.5.3 1.1.3 1.6 0 1.3-1 3.9-1.3 6.1-.8A1.5 1.5 0 0 0 19.6 17.5v-12a2 2 0 0 0-2-2c-2.6-.5-5.6-.2-8 1Z" />
+        <path d="M12 5v13.5" stroke="white" strokeWidth="1.6" strokeLinecap="round" />
+      </>
+    ) : (
+      <>
+        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+      </>
+    )}
   </svg>
 );
 
-const CategoryIcon = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="3" y="3" width="7" height="7" rx="1.5" />
-    <rect x="14" y="3" width="7" height="7" rx="1.5" />
-    <rect x="3" y="14" width="7" height="7" rx="1.5" />
-    <rect x="14" y="14" width="7" height="7" rx="1.5" />
+const CategoryIcon = ({ className, active }: { className?: string; active?: boolean }) => (
+  <svg className={className} viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth={active ? "0" : "1.8"} strokeLinecap="round" strokeLinejoin="round">
+    {active ? (
+      <>
+        <rect x="3" y="3" width="8" height="8" rx="2.5" />
+        <rect x="13" y="3" width="8" height="8" rx="2.5" opacity="0.6" />
+        <rect x="3" y="13" width="8" height="8" rx="2.5" opacity="0.6" />
+        <rect x="13" y="13" width="8" height="8" rx="2.5" />
+      </>
+    ) : (
+      <>
+        <rect x="3" y="3" width="7.5" height="7.5" rx="2" />
+        <rect x="13.5" y="3" width="7.5" height="7.5" rx="2" />
+        <rect x="3" y="13.5" width="7.5" height="7.5" rx="2" />
+        <rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2" />
+      </>
+    )}
   </svg>
 );
 
-const ResourceIcon = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+const ResourceIcon = ({ className, active }: { className?: string; active?: boolean }) => (
+  <svg className={className} viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth={active ? "0" : "1.8"} strokeLinecap="round" strokeLinejoin="round">
+    {active ? (
+      <path d="m12 2.5 2.2 5.5 5.8 1.8-4.5 3.9 1.4 5.8-4.9-3.2-4.9 3.2 1.4-5.8-4.5-3.9 5.8-1.8L12 2.5Z" />
+    ) : (
+      <path d="m12 2.5 2.2 5.5 5.8 1.8-4.5 3.9 1.4 5.8-4.9-3.2-4.9 3.2 1.4-5.8-4.5-3.9 5.8-1.8L12 2.5Z" />
+    )}
   </svg>
 );
 
-const InfoIcon = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="10" />
-    <path d="M12 16v-4" />
-    <path d="M12 8h.01" />
+const InfoIcon = ({ className, active }: { className?: string; active?: boolean }) => (
+  <svg className={className} viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth={active ? "0" : "1.8"} strokeLinecap="round" strokeLinejoin="round">
+    {active ? (
+      <>
+        <circle cx="12" cy="12" r="10" />
+        <circle cx="12" cy="8" r="1.3" fill="white" stroke="none" />
+        <path d="M12 11.5v5" stroke="white" strokeWidth="2.2" strokeLinecap="round" />
+      </>
+    ) : (
+      <>
+        <circle cx="12" cy="12" r="9.5" />
+        <circle cx="12" cy="8" r="1" fill="currentColor" stroke="none" />
+        <path d="M12 11.5v5" strokeWidth="1.8" strokeLinecap="round" />
+      </>
+    )}
   </svg>
 );
 
@@ -452,59 +490,71 @@ export function Navbar() {
 
       {/* ═══════════════════ Mobile Bottom Navigation ═══════════════════ */}
       <nav
-        className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-surface/95 backdrop-blur-md border-t border-border shadow-[0_-4px_20px_rgba(0,0,0,0.08)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.3)]"
+        className="fixed bottom-0 left-0 right-0 z-50 lg:hidden"
         aria-label="Mobile navigation"
       >
-        {/* Safe area padding for devices with home indicators */}
-        <div className="flex items-center justify-around px-1 pt-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))]">
-          {bottomNavItems.map((item) => {
-            const Icon = item.icon;
-            const isActive =
-              item.href === "/"
-                ? pathname === "/"
-                : pathname?.startsWith(item.href);
+        {/* Glassmorphism gradient ambient glow line */}
+        <div className="h-[1px] bg-gradient-to-r from-transparent via-primary/35 to-transparent" />
+        
+        {/* Glassmorphic backdrop bar */}
+        <div className="bg-surface/75 dark:bg-surface/70 backdrop-blur-2xl backdrop-saturate-180 border-t border-white/[0.12] dark:border-white/[0.05] shadow-[0_-8px_24px_rgba(0,0,0,0.06)] dark:shadow-[0_-8px_28px_rgba(0,0,0,0.45)]">
+          <div className="flex items-center justify-around px-1.5 pt-1.5 pb-[max(0.3rem,env(safe-area-inset-bottom))]">
+            {bottomNavItems.map((item) => {
+              const Icon = item.icon;
+              const isActive =
+                item.href === "/"
+                  ? pathname === "/"
+                  : item.href === "/courses"
+                  ? pathname === "/courses" || pathname?.startsWith("/course")
+                  : item.href === "/categories"
+                  ? pathname === "/categories" || pathname?.startsWith("/category")
+                  : pathname?.startsWith(item.href);
 
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-xl min-w-[56px] transition-all duration-200 relative",
-                  isActive
-                    ? "text-primary"
-                    : "text-text-muted active:text-text"
-                )}
-              >
-                {/* Active indicator dot */}
-                {isActive && (
-                  <motion.div
-                    layoutId="bottomNavIndicator"
-                    className="absolute -top-1.5 w-5 h-0.5 rounded-full bg-primary"
-                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                  />
-                )}
-                <Icon
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
                   className={cn(
-                    "w-[22px] h-[22px] transition-all duration-200",
-                    isActive && "scale-110"
-                  )}
-                />
-                <span
-                  className={cn(
-                    "text-[9px] font-bengali leading-tight transition-all duration-200",
-                    isActive ? "font-bold" : "font-medium"
+                    "flex flex-col items-center justify-center gap-0.5 py-1 px-2 rounded-xl min-w-[46px] transition-all duration-200 relative group",
+                    isActive
+                      ? "text-primary font-bold"
+                      : "text-text-muted/70 hover:text-text active:text-text active:scale-95"
                   )}
                 >
-                  {item.label}
-                </span>
-              </Link>
-            );
-          })}
+                  {/* Active indicator bar */}
+                  {isActive && (
+                    <motion.div
+                      layoutId="bottomNavIndicator"
+                      className="absolute -top-1.5 w-5 h-[2px] rounded-full bg-primary shadow-[0_0_8px_var(--primary)]"
+                      transition={{ type: "spring", stiffness: 500, damping: 32 }}
+                    />
+                  )}
+                  <Icon
+                    active={isActive}
+                    className={cn(
+                      "w-[20px] h-[20px] transition-all duration-200",
+                      isActive
+                        ? "scale-105 drop-shadow-[0_2px_8px_rgba(var(--primary-rgb),0.35)]"
+                        : "group-hover:scale-105 opacity-70"
+                    )}
+                  />
+                  <span
+                    className={cn(
+                      "text-[9px] font-bengali leading-none tracking-tight transition-all duration-200",
+                      isActive ? "font-bold text-primary" : "font-medium opacity-80"
+                    )}
+                  >
+                    {item.label}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
         </div>
       </nav>
 
       {/* Bottom nav spacer — prevents content from being hidden behind bottom nav on mobile */}
-      <div className="lg:hidden h-16" />
+      <div className="lg:hidden h-14" />
     </>
   );
 }

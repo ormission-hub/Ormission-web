@@ -84,12 +84,23 @@ export function Footer() {
               href="https://t.me/cryptography55"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium text-text-muted/70 hover:text-[#229ED9] hover:bg-[#229ED9]/8 border border-transparent hover:border-[#229ED9]/20 transition-all duration-200 font-sans"
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium bg-[#229ED9]/10 dark:bg-[#229ED9]/15 text-[#229ED9] dark:text-[#38b7f5] hover:bg-[#229ED9] hover:text-white border border-[#229ED9]/30 hover:border-[#229ED9] shadow-xs hover:shadow-[0_4px_16px_rgba(34,158,217,0.35)] transition-all duration-200 group font-sans active:scale-95"
+              title="Contact Developer on Telegram: @cryptography55"
             >
-              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+              <span className="w-5 h-5 rounded-full bg-[#229ED9] text-white flex items-center justify-center shrink-0 group-hover:bg-white group-hover:text-[#229ED9] transition-colors shadow-xs">
+                <svg className="w-3 h-3 translate-x-[-0.5px] translate-y-[0.5px]" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.37.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .37z"/>
+                </svg>
+              </span>
+              <span className="text-text-muted text-[11px] group-hover:text-white/90 transition-colors">
+                Developer:
+              </span>
+              <span className="font-semibold text-xs tracking-tight">
+                @cryptography55
+              </span>
+              <svg className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
               </svg>
-              <span>Developed by @cryptography55</span>
             </a>
           </div>
         </div>
