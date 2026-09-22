@@ -503,7 +503,7 @@ export function CategoryDirectoryClient({
                   ফ্রি রিসোর্স দেখুন
                 </Link>
                 <Link
-                  href="/contact"
+                  href="/dashboard/support"
                   className="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bengali text-sm font-bold bg-primary hover:bg-primary-hover text-white shadow-md hover:shadow-lg transition-all text-center flex items-center justify-center gap-2"
                 >
                   <span>যোগাযোগ করুন</span>

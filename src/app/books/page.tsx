@@ -508,7 +508,7 @@ function BooksContent() {
                         )}
 
                         <Link
-                          href={book.order_url || "/contact"}
+                          href={book.order_url || "/dashboard/support"}
                           className="inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-primary hover:bg-primary-hover shadow-md shadow-primary/25 hover:shadow-lg hover:shadow-primary/35 transition-all duration-200 group-hover:scale-105 font-bengali cursor-pointer"
                         >
                           <ShoppingBag className="w-3.5 h-3.5" />

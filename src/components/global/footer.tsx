@@ -18,7 +18,7 @@ const footerLinks = {
     title: "কোম্পানি",
     links: [
       { label: "আমাদের সম্পর্কে", href: "/about" },
-      { label: "যোগাযোগ", href: "/contact" },
+      { label: "সাপোর্ট", href: "/dashboard/support" },
     ],
   },
   policies: {

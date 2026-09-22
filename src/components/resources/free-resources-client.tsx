@@ -541,7 +541,7 @@ export function FreeResourcesClient({ initialResources }: FreeResourcesClientPro
                 অনলাইন কোর্সসমূহ
               </Link>
               <Link
-                href="/contact"
+                href="/dashboard/support"
                 className="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bengali text-sm font-bold bg-secondary hover:bg-secondary-hover text-white shadow-md hover:shadow-lg transition-all text-center flex items-center justify-center gap-2"
               >
                 <span>শিটের রিকোয়েস্ট পাঠান</span>

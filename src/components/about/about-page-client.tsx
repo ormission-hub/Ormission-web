@@ -656,7 +656,7 @@ export function AboutPageClient({
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                   <Link
-                    href="/contact"
+                    href="/dashboard/support"
                     className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-surface border border-border text-text font-semibold text-sm font-bengali hover:border-primary/40 hover:text-primary transition-all duration-200"
                   >
                     যোগাযোগ করুন
