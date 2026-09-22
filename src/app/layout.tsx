@@ -90,7 +90,7 @@ export default function RootLayout({
         <ThemeProvider>
           <SplashScreen />
           <Navbar />
-          <main>{children}</main>
+          <main className="pb-20 lg:pb-0">{children}</main>
           <Footer />
         </ThemeProvider>
       </body>
