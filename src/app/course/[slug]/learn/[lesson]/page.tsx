@@ -1036,6 +1036,18 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
                       mat.fileType?.toLowerCase().includes("ppt") ||
                       mat.fileUrl?.toLowerCase().includes("presentation");
 
+                    const isGDrive = mat.fileUrl?.includes("drive.google.com");
+                    const gDriveMatch =
+                      mat.fileUrl?.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) ||
+                      mat.fileUrl?.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+                    const gDriveId = gDriveMatch?.[1];
+                    const previewUrl = gDriveId
+                      ? `https://drive.google.com/file/d/${gDriveId}/preview`
+                      : mat.fileUrl;
+                    const downloadUrl = gDriveId
+                      ? `https://drive.google.com/uc?export=download&id=${gDriveId}`
+                      : mat.fileUrl;
+
                     return (
                       <div
                         key={mat.id || mIdx}
@@ -1070,7 +1082,7 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
                             </h4>
                             <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-400 font-sans">
                               <span className="uppercase font-bold tracking-wider text-[10px] text-slate-300">
-                                {mat.fileType || "FILE"}
+                                {isGDrive ? "GOOGLE DRIVE" : (mat.fileType || "FILE")}
                               </span>
                               {mat.fileSize && (
                                 <>
@@ -1086,7 +1098,7 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
                           {Boolean(accessStatus.authorized || currentLesson.isFreePreview) ? (
                             <>
                               <a
-                                href={mat.fileUrl}
+                                href={previewUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="p-2 rounded-lg bg-slate-700/60 hover:bg-slate-700 text-slate-300 hover:text-white transition-all cursor-pointer"
@@ -1095,7 +1107,7 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
                                 <ExternalLink className="w-4 h-4" />
                               </a>
                               <a
-                                href={mat.fileUrl}
+                                href={downloadUrl}
                                 download={mat.title}
                                 target="_blank"
                                 rel="noopener noreferrer"
