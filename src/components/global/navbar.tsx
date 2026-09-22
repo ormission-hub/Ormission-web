@@ -488,17 +488,21 @@ export function Navbar() {
         </nav>
       </header>
 
-      {/* ═══════════════════ Mobile Bottom Navigation ═══════════════════ */}
+      {/* ═══════════════════ Mobile Floating Liquid Glass Navigation Dock ═══════════════════ */}
       <nav
-        className="fixed bottom-0 left-0 right-0 z-50 lg:hidden"
+        className="fixed bottom-3 inset-x-3 z-50 lg:hidden max-w-[390px] mx-auto pointer-events-none select-none pb-[env(safe-area-inset-bottom)]"
         aria-label="Mobile navigation"
       >
-        {/* Glassmorphism gradient ambient glow line */}
-        <div className="h-[1px] bg-gradient-to-r from-transparent via-primary/35 to-transparent" />
-        
-        {/* Glassmorphic backdrop bar */}
-        <div className="bg-surface/75 dark:bg-surface/70 backdrop-blur-2xl backdrop-saturate-180 border-t border-white/[0.12] dark:border-white/[0.05] shadow-[0_-8px_24px_rgba(0,0,0,0.06)] dark:shadow-[0_-8px_28px_rgba(0,0,0,0.45)]">
-          <div className="flex items-center justify-around px-1.5 pt-1.5 pb-[max(0.3rem,env(safe-area-inset-bottom))]">
+        {/* Floating Liquid Glass Capsule */}
+        <div className="pointer-events-auto relative rounded-full p-1 bg-surface/70 dark:bg-slate-950/70 backdrop-blur-2xl backdrop-saturate-200 border border-white/25 dark:border-white/12 shadow-[0_12px_36px_rgba(0,0,0,0.18),inset_0_1.5px_1px_rgba(255,255,255,0.45),inset_0_-1px_1px_rgba(0,0,0,0.12)] dark:shadow-[0_16px_45px_rgba(0,0,0,0.55),inset_0_1.5px_1px_rgba(255,255,255,0.2),inset_0_-1px_1px_rgba(0,0,0,0.3)] ring-1 ring-black/5 dark:ring-white/5">
+          
+          {/* Liquid Glass Top Gloss Specular Highlight */}
+          <div className="absolute inset-x-6 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/70 dark:via-white/35 to-transparent rounded-full pointer-events-none" />
+
+          {/* Liquid Inner Ambient Subtle Light */}
+          <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/15 dark:from-white/5 to-transparent pointer-events-none" />
+
+          <div className="relative flex items-center justify-between gap-1">
             {bottomNavItems.map((item) => {
               const Icon = item.icon;
               const isActive =
@@ -515,32 +519,33 @@ export function Navbar() {
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "flex flex-col items-center justify-center gap-0.5 py-1 px-2 rounded-xl min-w-[46px] transition-all duration-200 relative group",
+                    "relative flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 px-1 rounded-full transition-all duration-200 group text-center select-none",
                     isActive
                       ? "text-primary font-bold"
-                      : "text-text-muted/70 hover:text-text active:text-text active:scale-95"
+                      : "text-text-muted/70 hover:text-text active:scale-90 active:text-text"
                   )}
                 >
-                  {/* Active indicator bar */}
+                  {/* Liquid Glass Pill Button for Active Item */}
                   {isActive && (
                     <motion.div
-                      layoutId="bottomNavIndicator"
-                      className="absolute -top-1.5 w-5 h-[2px] rounded-full bg-primary shadow-[0_0_8px_var(--primary)]"
-                      transition={{ type: "spring", stiffness: 500, damping: 32 }}
+                      layoutId="liquidGlassActivePill"
+                      className="absolute inset-0 rounded-full bg-gradient-to-b from-primary/20 via-primary/12 to-primary/5 dark:from-primary/25 dark:via-primary/15 dark:to-primary/10 border border-primary/40 shadow-[0_2px_12px_rgba(255,95,0,0.25),inset_0_1px_1px_rgba(255,255,255,0.4)] dark:shadow-[0_2px_14px_rgba(255,115,21,0.3),inset_0_1px_1px_rgba(255,255,255,0.2)]"
+                      transition={{ type: "spring", stiffness: 450, damping: 32 }}
                     />
                   )}
+
                   <Icon
                     active={isActive}
                     className={cn(
-                      "w-[20px] h-[20px] transition-all duration-200",
+                      "w-[19px] h-[19px] transition-all duration-200 z-10",
                       isActive
-                        ? "scale-105 drop-shadow-[0_2px_8px_rgba(var(--primary-rgb),0.35)]"
-                        : "group-hover:scale-105 opacity-70"
+                        ? "scale-105 drop-shadow-[0_2px_8px_rgba(255,95,0,0.4)] text-primary"
+                        : "group-hover:scale-105 opacity-70 group-active:scale-90"
                     )}
                   />
                   <span
                     className={cn(
-                      "text-[9px] font-bengali leading-none tracking-tight transition-all duration-200",
+                      "text-[9px] font-bengali leading-none tracking-tight transition-all duration-200 z-10",
                       isActive ? "font-bold text-primary" : "font-medium opacity-80"
                     )}
                   >
@@ -553,8 +558,8 @@ export function Navbar() {
         </div>
       </nav>
 
-      {/* Bottom nav spacer — prevents content from being hidden behind bottom nav on mobile */}
-      <div className="lg:hidden h-14" />
+      {/* Bottom nav spacer — prevents content from being hidden behind floating dock */}
+      <div className="lg:hidden h-20" />
     </>
   );
 }
