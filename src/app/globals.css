@@ -153,11 +153,24 @@ html, body {
   text-rendering: optimizeLegibility;
   scroll-behavior: smooth;
   transition: background-color 200ms ease, color 200ms ease;
+  overflow-x: hidden;
+  max-width: 100vw;
+  position: relative;
+}
+
+/* Hide Next.js dev tools floating portal from obstructing mobile bottom navigation */
+nextjs-portal,
+[data-nextjs-toast-wrapper],
+[data-nextjs-dialog-overlay] {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
 
 body {
   min-height: 100vh;
   line-height: 1.65;
+  overflow-x: hidden;
 }
 
 h1, h2, h3, h4, h5, h6, p, span, a, button, input, select, textarea {

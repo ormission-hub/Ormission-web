@@ -202,6 +202,7 @@ export function CategoryGrid({ initialCategories }: { initialCategories?: DbCate
             >
               <Link
                 href={`/category/${cat.slug}`}
+                prefetch={true}
                 className={cn(
                   "group relative flex flex-col items-center text-center h-full",
                   "rounded-2xl p-7 pb-6 bg-surface",

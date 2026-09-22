@@ -123,6 +123,7 @@ export function Navbar() {
   const [user, setUser] = useState<any>(null);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const { resolvedTheme, toggleTheme } = useTheme();
   const pathname = usePathname();
@@ -307,13 +308,14 @@ export function Navbar() {
                     )}
                     aria-expanded={isUserMenuOpen}
                   >
-                    {userAvatarUrl ? (
+                    {userAvatarUrl && !avatarError ? (
                       <div className="relative w-7 h-7 rounded-full overflow-hidden shrink-0 border border-primary/20">
-                        <Image
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
                           src={userAvatarUrl}
                           alt={displayName}
-                          fill
-                          className="object-cover"
+                          className="w-full h-full object-cover"
+                          onError={() => setAvatarError(true)}
                         />
                       </div>
                     ) : (
@@ -345,13 +347,14 @@ export function Navbar() {
                         {/* Profile Header */}
                         <div className="px-4 py-3 bg-surface-secondary/50 border-b border-border/70">
                           <div className="flex items-center gap-3">
-                            {userAvatarUrl ? (
+                            {userAvatarUrl && !avatarError ? (
                               <div className="relative w-10 h-10 rounded-full overflow-hidden shrink-0 border border-primary/20">
-                                <Image
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
                                   src={userAvatarUrl}
                                   alt={displayName}
-                                  fill
-                                  className="object-cover"
+                                  className="w-full h-full object-cover"
+                                  onError={() => setAvatarError(true)}
                                 />
                               </div>
                             ) : (
@@ -489,30 +492,33 @@ export function Navbar() {
       </header>
 
       {/* ═══════════════════ Mobile Floating Liquid Glass Navigation Dock ═══════════════════ */}
-      <nav
-        className="fixed bottom-3 inset-x-3 max-w-[390px] mx-auto z-[60] lg:hidden select-none pb-[env(safe-area-inset-bottom)]"
-        aria-label="Mobile navigation"
-      >
+      {!pathname?.startsWith("/course/") && !pathname?.startsWith("/checkout") && (
+        <nav
+          className="fixed bottom-3 left-1/2 -translate-x-1/2 w-[calc(100%-1.25rem)] max-w-[380px] z-[60] lg:hidden select-none pb-[env(safe-area-inset-bottom,0px)]"
+          aria-label="Mobile navigation"
+        >
         {/* Floating Liquid Glass Capsule */}
-        <div className="relative rounded-full p-1 bg-surface/80 dark:bg-slate-950/80 backdrop-blur-2xl backdrop-saturate-200 border border-white/30 dark:border-white/15 shadow-[0_12px_36px_rgba(0,0,0,0.2),inset_0_1.5px_1px_rgba(255,255,255,0.45),inset_0_-1px_1px_rgba(0,0,0,0.12)] dark:shadow-[0_16px_45px_rgba(0,0,0,0.6),inset_0_1.5px_1px_rgba(255,255,255,0.2),inset_0_-1px_1px_rgba(0,0,0,0.3)] ring-1 ring-black/5 dark:ring-white/5">
+        <div className="relative rounded-full p-1 bg-surface/90 dark:bg-slate-950/90 backdrop-blur-2xl backdrop-saturate-200 border border-white/40 dark:border-white/15 shadow-[0_12px_36px_rgba(0,0,0,0.2),inset_0_1.5px_1px_rgba(255,255,255,0.5),inset_0_-1px_1px_rgba(0,0,0,0.12)] dark:shadow-[0_16px_45px_rgba(0,0,0,0.65),inset_0_1.5px_1px_rgba(255,255,255,0.2),inset_0_-1px_1px_rgba(0,0,0,0.3)] ring-1 ring-black/5 dark:ring-white/5 overflow-hidden">
           
           {/* Liquid Glass Top Gloss Specular Highlight */}
-          <div className="absolute inset-x-6 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/70 dark:via-white/35 to-transparent rounded-full pointer-events-none" />
+          <div className="absolute inset-x-6 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/80 dark:via-white/40 to-transparent rounded-full pointer-events-none" />
 
           {/* Liquid Inner Ambient Subtle Light */}
           <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/15 dark:from-white/5 to-transparent pointer-events-none" />
 
-          <div className="relative flex items-center justify-between">
+          <div className="relative grid grid-cols-5 items-center w-full">
             {bottomNavItems.map((item) => {
               const Icon = item.icon;
               const isActive =
                 item.href === "/"
                   ? pathname === "/"
                   : item.href === "/courses"
-                  ? pathname === "/courses" || pathname?.startsWith("/course")
+                  ? pathname === "/courses" || pathname?.startsWith("/course/")
                   : item.href === "/categories"
-                  ? pathname === "/categories" || pathname?.startsWith("/category")
-                  : pathname?.startsWith(item.href);
+                  ? pathname === "/categories" || pathname?.startsWith("/category/")
+                  : item.href === "/free-resources"
+                  ? pathname === "/free-resources" || pathname?.startsWith("/resources/")
+                  : pathname === item.href || pathname?.startsWith(item.href);
 
               return (
                 <Link
@@ -524,24 +530,24 @@ export function Navbar() {
                     }
                   }}
                   className={cn(
-                    "relative flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1.5 px-0.5 rounded-full transition-all duration-200 group text-center select-none border",
+                    "relative flex flex-col items-center justify-center gap-0.5 py-1.5 px-0.5 rounded-full transition-all duration-200 group text-center select-none w-full",
                     isActive
-                      ? "text-primary font-bold bg-gradient-to-b from-primary/20 via-primary/12 to-primary/5 dark:from-primary/25 dark:via-primary/15 dark:to-primary/10 border-primary/40 shadow-[0_2px_10px_rgba(255,95,0,0.25),inset_0_1px_1px_rgba(255,255,255,0.4)] dark:shadow-[0_2px_12px_rgba(255,115,21,0.3),inset_0_1px_1px_rgba(255,255,255,0.2)]"
-                      : "text-text-muted/70 hover:text-text border-transparent active:scale-90 active:text-text"
+                      ? "text-primary font-bold bg-primary/15 dark:bg-primary/20 border border-primary/35 shadow-[0_2px_8px_rgba(255,95,0,0.25)]"
+                      : "text-text-muted hover:text-text border border-transparent active:scale-90"
                   )}
                 >
                   <Icon
                     active={isActive}
                     className={cn(
-                      "w-[18px] h-[18px] shrink-0 transition-all duration-200",
+                      "w-[18px] h-[18px] shrink-0 transition-transform duration-200",
                       isActive
-                        ? "scale-105 drop-shadow-[0_2px_8px_rgba(255,95,0,0.4)] text-primary"
-                        : "group-hover:scale-105 opacity-70 group-active:scale-90"
+                        ? "scale-105 drop-shadow-[0_2px_6px_rgba(255,95,0,0.35)] text-primary"
+                        : "opacity-70 group-hover:opacity-100 group-hover:scale-105"
                     )}
                   />
                   <span
                     className={cn(
-                      "text-[9px] font-bengali leading-none tracking-tight transition-all duration-200 truncate max-w-full",
+                      "text-[10px] font-bengali leading-none tracking-tight transition-colors duration-200 truncate max-w-full block",
                       isActive ? "font-bold text-primary" : "font-medium opacity-80"
                     )}
                   >
@@ -553,6 +559,7 @@ export function Navbar() {
           </div>
         </div>
       </nav>
+      )}
     </>
   );
 }

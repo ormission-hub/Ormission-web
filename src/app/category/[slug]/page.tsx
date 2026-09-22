@@ -1,10 +1,11 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, BookOpen, ChevronRight, Sparkles } from "lucide-react";
-import { CourseCard } from "@/components/courses/course-card";
+import { ChevronRight, Sparkles } from "lucide-react";
 import { getCategoryWithCourses } from "@/lib/supabase/course-fetcher";
+import { CategoryDetailContent } from "@/components/categories/category-detail-content";
 
-export const dynamic = "force-dynamic";
+// ISR: Cache page HTML/RSC for 60 seconds for ultra-fast response (<10ms)
+export const revalidate = 60;
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -12,21 +13,23 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps) {
   const { slug } = await params;
-  const { category } = await getCategoryWithCourses(slug);
+  const { category, courses, books } = await getCategoryWithCourses(slug);
 
   if (!category) {
     return { title: "ক্যাটাগরি পাওয়া যায়নি | Ormission" };
   }
 
   return {
-    title: `${category.nameBn || category.name} — অনলাইন কোর্সসমূহ | Ormission`,
-    description: category.description || `${category.nameBn || category.name} এর সকল কোর্স এবং প্রস্তুতি প্রোগ্রাম`,
+    title: `${category.nameBn || category.name} — অনলাইন কোর্স ও বইসমূহ | Ormission`,
+    description:
+      category.description ||
+      `${category.nameBn || category.name} এর সকল কোর্স, প্রস্তুতি প্রোগ্রাম এবং স্টাডি বুকলেট`,
   };
 }
 
 export default async function CategoryDetailPage({ params }: PageProps) {
   const { slug } = await params;
-  const { category, courses } = await getCategoryWithCourses(slug);
+  const { category, courses, books } = await getCategoryWithCourses(slug);
 
   if (!category) {
     notFound();
@@ -36,12 +39,21 @@ export default async function CategoryDetailPage({ params }: PageProps) {
     <div className="bg-background min-h-screen py-8 lg:py-12">
       <div className="container-main">
         {/* Breadcrumb Navigation */}
-        <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-text-muted mb-6 font-bengali">
-          <Link href="/" className="hover:text-primary transition-colors">হোম</Link>
+        <nav
+          aria-label="Breadcrumb"
+          className="flex items-center gap-2 text-xs text-text-muted mb-6 font-bengali"
+        >
+          <Link href="/" className="hover:text-primary transition-colors">
+            হোম
+          </Link>
           <ChevronRight className="w-3.5 h-3.5 text-text-muted/60" />
-          <Link href="/categories" className="hover:text-primary transition-colors">ক্যাটাগরি</Link>
+          <Link href="/categories" className="hover:text-primary transition-colors">
+            ক্যাটাগরি
+          </Link>
           <ChevronRight className="w-3.5 h-3.5 text-text-muted/60" />
-          <span className="text-primary font-bold">{category.nameBn || category.name}</span>
+          <span className="text-primary font-bold">
+            {category.nameBn || category.name}
+          </span>
         </nav>
 
         {/* Header Banner */}
@@ -50,7 +62,8 @@ export default async function CategoryDetailPage({ params }: PageProps) {
           <div
             className="absolute top-0 right-0 w-80 h-80 rounded-full opacity-20 pointer-events-none"
             style={{
-              background: "radial-gradient(circle, rgba(255,95,0,0.3) 0%, transparent 70%)",
+              background:
+                "radial-gradient(circle, rgba(255,95,0,0.3) 0%, transparent 70%)",
             }}
           />
 
@@ -76,50 +89,23 @@ export default async function CategoryDetailPage({ params }: PageProps) {
               </p>
             )}
 
-            <div className="flex items-center gap-4 text-xs font-bold font-bengali text-text-muted">
-              <span className="px-3 py-1 rounded-md bg-surface-secondary border border-border text-primary font-bold">
-                মোট {courses.length} টি কোর্স উপলব্ধ
+            <div className="flex flex-wrap items-center gap-3 text-xs font-bold font-bengali text-text-muted">
+              <span className="px-3.5 py-1.5 rounded-xl bg-surface-secondary border border-border text-primary font-bold shadow-2xs">
+                মোট {courses.length} টি কোর্স
+              </span>
+              <span className="px-3.5 py-1.5 rounded-xl bg-surface-secondary border border-border text-emerald-600 dark:text-emerald-400 font-bold shadow-2xs">
+                মোট {books.length} টি বই ও বুকলেট
               </span>
             </div>
           </div>
         </div>
 
-        {/* Section Heading */}
-        <div className="flex items-center justify-between mb-6 pb-2 border-b border-border/60">
-          <h2 className="text-lg sm:text-xl font-bold text-text font-bengali flex items-center gap-2">
-            <span>সকল কোর্সসমূহ</span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-primary/15 text-primary font-bold">
-              {courses.length}
-            </span>
-          </h2>
-          <Link
-            href="/courses"
-            className="text-xs text-primary font-bold hover:underline font-bengali flex items-center gap-1"
-          >
-            <span>সব কোর্স দেখুন</span>
-            <ChevronRight className="w-3.5 h-3.5" />
-          </Link>
-        </div>
-
-        {/* Courses Grid */}
-        {courses.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {courses.map((course) => (
-              <CourseCard key={course.id} course={course} />
-            ))}
-          </div>
-        ) : (
-          <div className="rounded-2xl border border-border bg-surface p-12 text-center max-w-md mx-auto my-8">
-            <BookOpen className="w-12 h-12 text-text-muted/40 mx-auto mb-4" />
-            <h3 className="text-lg font-bold text-text font-bengali mb-2">শীঘ্রই নতুন কোর্স আসছে</h3>
-            <p className="text-sm text-text-muted font-bengali mb-6">
-              এই বিভাগের জন্য নতুন ব্যাচের কোর্স তৈরির কাজ চলছে। শীঘ্রই কোর্সগুলো উন্মুক্ত করা হবে।
-            </p>
-            <Link href="/courses" className="btn btn-primary btn-sm font-bengali">
-              অন্যান্য কোর্স দেখুন
-            </Link>
-          </div>
-        )}
+        {/* Dynamic Courses & Books Content */}
+        <CategoryDetailContent
+          category={category}
+          courses={courses}
+          books={books}
+        />
       </div>
     </div>
   );

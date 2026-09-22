@@ -188,11 +188,11 @@ export function FreeResourcesClient({ initialResources }: FreeResourcesClientPro
   };
 
   return (
-    <div className="bg-background min-h-screen py-8 sm:py-12 lg:py-16 text-text selection:bg-secondary/20 selection:text-secondary">
+    <div className="bg-background min-h-screen py-8 sm:py-12 lg:py-16 text-text selection:bg-secondary/20 selection:text-secondary overflow-hidden">
       <div className="container-main relative">
         {/* Ambient radial glow */}
         <div
-          className="absolute -top-10 left-1/2 -translate-x-1/2 w-[650px] h-[320px] rounded-full opacity-20 pointer-events-none blur-3xl"
+          className="absolute -top-10 left-1/2 -translate-x-1/2 w-full max-w-[650px] h-[320px] rounded-full opacity-20 pointer-events-none blur-3xl"
           style={{
             background:
               "radial-gradient(circle, rgba(167, 139, 250, 0.4) 0%, rgba(45, 212, 191, 0.2) 50%, transparent 70%)",
