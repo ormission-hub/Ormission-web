@@ -79,10 +79,19 @@ export function Footer() {
           <p className="text-sm text-text-muted">
             © {new Date().getFullYear()} Ormission. সর্বস্বত্ব সংরক্ষিত।
           </p>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-5">
             <span className="text-xs text-text-muted">
               পেমেন্ট মেথড: bKash · Nagad · Rocket · Card
             </span>
+            <span className="hidden sm:inline text-border">|</span>
+            <a
+              href="https://t.me/cryptography55"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[11px] text-text-muted/60 hover:text-primary transition-colors font-sans"
+            >
+              Developed by @cryptography55
+            </a>
           </div>
         </div>
       </div>
