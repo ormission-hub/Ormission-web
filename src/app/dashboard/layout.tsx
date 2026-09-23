@@ -34,6 +34,7 @@ export default function DashboardLayout({
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
@@ -130,13 +131,14 @@ export default function DashboardLayout({
               {/* Student Profile Card */}
               <div className="text-center pb-6 border-b border-border">
                 <div className="relative w-20 h-20 rounded-full mx-auto mb-3.5 border-2 border-primary/30 p-1 shadow-xs flex items-center justify-center bg-surface-secondary">
-                  {(profile?.avatar_url || userMeta?.avatar_url) ? (
+                  {(profile?.avatar_url || userMeta?.avatar_url) && !avatarError ? (
                     <div className="relative w-full h-full rounded-full overflow-hidden">
-                      <Image
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
                         src={profile?.avatar_url || userMeta?.avatar_url}
                         alt={displayName}
-                        fill
-                        className="object-cover"
+                        className="w-full h-full object-cover"
+                        onError={() => setAvatarError(true)}
                       />
                     </div>
                   ) : (

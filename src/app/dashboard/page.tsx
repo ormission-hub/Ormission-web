@@ -363,6 +363,7 @@ export default function DashboardOverviewPage() {
                   src={activePaidOrder.courses?.thumbnail_url || "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600&auto=format&fit=crop"}
                   alt={activePaidOrder.courseTitle}
                   fill
+                  unoptimized
                   className="object-cover"
                 />
               </div>
@@ -472,6 +473,7 @@ export default function DashboardOverviewPage() {
                         src={thumb}
                         alt={title}
                         fill
+                        unoptimized
                         className="object-cover"
                       />
                     </div>
@@ -535,6 +537,7 @@ export default function DashboardOverviewPage() {
                         src={thumb}
                         alt={title}
                         fill
+                        unoptimized
                         className="object-cover"
                       />
                     </div>

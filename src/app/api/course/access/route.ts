@@ -331,7 +331,7 @@ export async function POST(request: Request) {
         authorized: false,
         isPending: true,
         reason: "pending_verification",
-        orderNumber: parsedNotes.order_number || pendingOrder.id.slice(0, 8),
+        orderNumber: parsedNotes.order_number || String(pendingOrder.id || "").slice(0, 8),
         transactionId: parsedNotes.transaction_id || "",
         message: "আপনার পেমেন্ট রিকোয়েস্ট যাচাইকরণ প্রক্রিয়াধীন রয়েছে। অ্যাডমিন যাচাই সম্পন্ন করলেই ক্লাসটি চালু হয়ে যাবে।",
       });

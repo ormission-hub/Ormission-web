@@ -27,6 +27,7 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [avatarError, setAvatarError] = useState(false);
   const [user, setUser] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -278,13 +279,14 @@ export default function ProfilePage() {
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 -mt-14 sm:-mt-16 mb-5">
             {/* Avatar with Camera Overlay */}
             <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 border-surface bg-surface-secondary shadow-lg shrink-0 group">
-              {profile.avatarUrl ? (
+              {profile.avatarUrl && !avatarError ? (
                 <div className="relative w-full h-full rounded-full overflow-hidden">
-                  <Image
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
                     src={profile.avatarUrl}
                     alt={profile.name || "Student"}
-                    fill
-                    className="object-cover"
+                    className="w-full h-full object-cover"
+                    onError={() => setAvatarError(true)}
                   />
                 </div>
               ) : (

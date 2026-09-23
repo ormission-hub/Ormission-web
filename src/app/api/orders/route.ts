@@ -205,7 +205,7 @@ export async function GET(request: Request) {
 
       return {
         ...ord,
-        orderNumber: parsedNotes.order_number || ord.id.slice(0, 8).toUpperCase(),
+        orderNumber: parsedNotes.order_number || String(ord.id || "").slice(0, 8).toUpperCase(),
         senderNumber: parsedNotes.sender_number || "",
         transactionId: parsedNotes.transaction_id || "",
         courseTitle:

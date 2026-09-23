@@ -102,24 +102,32 @@ export default function MyCoursesPage() {
     loadCourses();
   }, []);
 
-  const approvedOrders = orders.filter(
-    (o) => o.status === "paid" || o.status === "completed"
+  const approvedOrders = (orders || []).filter(
+    (o) => o && (o.status === "paid" || o.status === "completed")
   );
   const approvedCourseIds = new Set(
-    approvedOrders.map((o) => String(o.course_id || o.courses?.id)).filter(Boolean)
+    approvedOrders
+      .map((o) => {
+        const c = Array.isArray(o.courses) ? o.courses[0] : o.courses;
+        return String(o.course_id || c?.id || "");
+      })
+      .filter(Boolean)
   );
 
-  const pendingOrders = orders.filter(
-    (o) =>
-      o.status === "pending" &&
-      !approvedCourseIds.has(String(o.course_id || o.courses?.id))
-  );
+  const pendingOrders = (orders || []).filter((o) => {
+    if (!o || o.status !== "pending") return false;
+    const c = Array.isArray(o.courses) ? o.courses[0] : o.courses;
+    return !approvedCourseIds.has(String(o.course_id || c?.id || ""));
+  });
 
-  const rejectedOrders = orders.filter(
-    (o) =>
-      (o.status === "failed" || o.status === "cancelled" || o.status === "rejected") &&
-      !approvedCourseIds.has(String(o.course_id || o.courses?.id))
-  );
+  const rejectedOrders = (orders || []).filter((o) => {
+    if (!o) return false;
+    const isRej =
+      o.status === "failed" || o.status === "cancelled" || o.status === "rejected";
+    if (!isRej) return false;
+    const c = Array.isArray(o.courses) ? o.courses[0] : o.courses;
+    return !approvedCourseIds.has(String(o.course_id || c?.id || ""));
+  });
 
   const displayedList =
     filter === "approved"
@@ -237,9 +245,10 @@ export default function MyCoursesPage() {
               order.status === "rejected";
             const isPending = order.status === "pending";
 
-            const slug = order.courses?.slug || "test-course";
+            const courseObj = Array.isArray(order.courses) ? order.courses[0] : order.courses;
+            const slug = courseObj?.slug || "test-course";
             const thumb =
-              order.courses?.thumbnail_url || COURSES[0].thumbnail;
+              courseObj?.thumbnail_url || COURSES[0]?.thumbnail || "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=800&auto=format&fit=crop";
 
             return (
               <div
@@ -256,8 +265,9 @@ export default function MyCoursesPage() {
                   <div className="relative aspect-video w-full overflow-hidden bg-slate-900">
                     <Image
                       src={thumb}
-                      alt={order.courseTitle}
+                      alt={order.courseTitle || "Course"}
                       fill
+                      unoptimized
                       className="object-cover"
                     />
 
