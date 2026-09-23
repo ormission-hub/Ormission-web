@@ -593,26 +593,18 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           {/* Progress Indicator */}
-          <div className="hidden sm:flex items-center gap-2 text-xs text-slate-300 font-bengali">
-            <span>অগ্রগতি: {progressPercent}%</span>
-            <div className="w-24 h-2 bg-slate-800 rounded-full overflow-hidden">
+          <div className="flex items-center gap-2 text-[11px] sm:text-xs text-slate-300 font-bengali">
+            <span className="hidden sm:inline">অগ্রগতি:</span>
+            <span className="font-mono font-bold text-primary">{progressPercent}%</span>
+            <div className="w-16 sm:w-24 h-1.5 sm:h-2 bg-slate-800 rounded-full overflow-hidden">
               <div
                 className="h-full bg-primary rounded-full transition-all duration-300"
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
           </div>
-
-          <button
-            type="button"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="btn btn-sm btn-outline text-xs text-slate-200 border-slate-700 hover:bg-slate-800 font-bengali flex items-center gap-1.5"
-          >
-            <BookOpen className="w-3.5 h-3.5" />
-            <span>{sidebarOpen ? "কারিকুলাম লুকান" : "কারিকুলাম দেখুন"}</span>
-          </button>
         </div>
       </header>
 
