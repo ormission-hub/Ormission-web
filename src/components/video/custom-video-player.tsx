@@ -226,10 +226,7 @@ export function CustomVideoPlayer({
           setIsPlaying(false);
           setIsBuffering(false);
           setShowControls(true);
-          if (hideControlsTimer.current) {
-            clearTimeout(hideControlsTimer.current);
-            hideControlsTimer.current = null;
-          }
+          scheduleHide(CONTROLS_AUTOHIDE_MS);
         } else if (payload.info === 3) {
           setIsBuffering(true);
         } else if (payload.info === 0) {
@@ -352,22 +349,13 @@ export function CustomVideoPlayer({
   // Keep isPlayingRef and auto-hide timer in sync with isPlaying
   useEffect(() => {
     isPlayingRef.current = isPlaying;
-    if (isPlaying) {
-      setShowControls(true);
-      scheduleHide(CONTROLS_AUTOHIDE_MS);
-    } else {
-      if (hideControlsTimer.current) {
-        clearTimeout(hideControlsTimer.current);
-        hideControlsTimer.current = null;
-      }
-      setShowControls(true);
-    }
+    setShowControls(true);
+    scheduleHide(CONTROLS_AUTOHIDE_MS);
   }, [isPlaying, scheduleHide]);
 
   const handleMouseLeave = () => {
-    // When the mouse leaves the player, do NOT cut the timer down to 1.5s!
-    // Maintain the full 6 seconds so user has time to view the lecture without abrupt hiding.
-    if (isPlayingRef.current && !hideControlsTimer.current) {
+    // When the mouse leaves the player, maintain the auto-hide timer so user has time to view the lecture without abrupt hiding
+    if (!hideControlsTimer.current) {
       scheduleHide(CONTROLS_AUTOHIDE_MS);
     }
   };
@@ -395,10 +383,7 @@ export function CustomVideoPlayer({
       isPlayingRef.current = false;
       setIsPlaying(false);
       setShowControls(true);
-      if (hideControlsTimer.current) {
-        clearTimeout(hideControlsTimer.current);
-        hideControlsTimer.current = null;
-      }
+      scheduleHide(CONTROLS_AUTOHIDE_MS);
       triggerActionFeedback("pause");
     } else {
       sendCommand("playVideo");
@@ -816,30 +801,7 @@ export function CustomVideoPlayer({
         </div>
       )}
 
-      {/* Center Play & Frosted Shield When Paused (100% Covers YouTube's Pause Screen) */}
-      {hasStarted && !isPlaying && !hasEnded && (
-        <div
-          onClick={(e) => {
-            e.stopPropagation();
-            togglePlay();
-          }}
-          className="absolute inset-0 z-20 flex flex-col items-center justify-center cursor-pointer transition-all bg-slate-950/90 backdrop-blur-md"
-        >
-          <div className="relative z-10 flex flex-col items-center gap-2.5 text-center px-4">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-tr from-primary to-orange-500 text-white flex items-center justify-center shadow-2xl transition-transform hover:scale-110 border-2 border-white/30">
-              <Play className="w-8 h-8 sm:w-10 sm:h-10 fill-white text-white ml-1" />
-            </div>
-            {title && (
-              <p className="text-white text-xs sm:text-sm font-bold font-bengali max-w-md line-clamp-1">
-                {title}
-              </p>
-            )}
-            <span className="text-slate-400 text-[11px] sm:text-xs font-bengali">
-              চালিয়ে যেতে ক্লিক করুন
-            </span>
-          </div>
-        </div>
-      )}
+      {/* Center Play overlay on pause removed — Keeps teacher's whiteboard notes, math formulas and diagrams 100% crystal clear when paused */}
 
       {/* ========================================================================= */}
       {/* TOP HEADER BAR (Synchronized with Bottom Controls: 3.5s auto-hide)        */}
@@ -847,7 +809,7 @@ export function CustomVideoPlayer({
       {/* ========================================================================= */}
       <div
         className={`absolute top-0 inset-x-0 z-30 h-16 px-4 bg-gradient-to-b from-slate-950 via-slate-950/90 to-transparent transition-all duration-300 pointer-events-none flex items-center justify-between ${
-          showControls || !isPlaying
+          showControls
             ? "opacity-100 translate-y-0"
             : "opacity-0 -translate-y-2"
         }`}
@@ -866,7 +828,7 @@ export function CustomVideoPlayer({
       </div>
 
       {/* ========================================================================= */}
-      {/* 4. BOTTOM CONTROLS BAR (Synchronized: 3.5s auto-hide)                     */}
+      {/* 4. BOTTOM CONTROLS BAR (Synchronized: auto-hide)                          */}
       {/* Completely covers YouTube's logo and controls at the bottom               */}
       {/* ========================================================================= */}
       <div
@@ -879,7 +841,7 @@ export function CustomVideoPlayer({
           showAndScheduleHide();
         }}
         className={`absolute bottom-0 inset-x-0 z-30 px-3 py-3 sm:px-4 sm:py-3.5 bg-gradient-to-t from-slate-950 via-slate-950/95 to-transparent transition-all duration-300 ${
-          showControls || !isPlaying
+          showControls
             ? "opacity-100 translate-y-0"
             : "opacity-0 translate-y-2 pointer-events-none"
         }`}
