@@ -4,6 +4,7 @@ import { Navbar } from "@/components/global/navbar";
 import { Footer } from "@/components/global/footer";
 import { ThemeProvider } from "@/components/global/theme-provider";
 import { SplashScreen } from "@/components/global/splash-screen";
+import { WhatsAppButton } from "@/components/global/whatsapp-button";
 import "./globals.css";
 
 const hindSiliguri = Hind_Siliguri({
@@ -92,6 +93,7 @@ export default function RootLayout({
           <Navbar />
           <main className="pb-24 lg:pb-0">{children}</main>
           <Footer />
+          <WhatsAppButton />
         </ThemeProvider>
       </body>
     </html>

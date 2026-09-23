@@ -41,9 +41,9 @@ export const DEFAULT_SOCIAL_LINKS: SocialLinksSettings = {
   },
   whatsapp: {
     enabled: true,
-    url: "https://wa.me/8801700000000",
+    url: "https://wa.me/8801728477095",
     label: "হোয়াটসঅ্যাপ সাপোর্ট",
-    handle: "+880 1700-000000",
+    handle: "+880 1728-477095",
   },
   instagram: {
     enabled: true,
