@@ -15,6 +15,7 @@ export interface LessonMaterial {
   fileType?: string;
   fileSize?: number | string | null;
   sortOrder?: number;
+  isFree?: boolean;
 }
 
 export interface Lesson {

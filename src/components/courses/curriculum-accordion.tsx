@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronDown, PlayCircle, FileText, Lock, Video } from "lucide-react";
+import { ChevronDown, PlayCircle, FileText, Lock, Video, ExternalLink, Sparkles, Download } from "lucide-react";
 import { type CurriculumSection } from "@/lib/data/courses";
 
 interface CurriculumAccordionProps {
@@ -106,7 +106,14 @@ export function CurriculumAccordion({ curriculum, courseSlug }: CurriculumAccord
             {isOpen && (
               <div className="border-t border-border/80 bg-surface divide-y divide-border/50">
                 {section.lessons.map((lesson) => {
-                  const lessonContent = (
+                  const freeMaterials = (lesson.materials || []).filter(
+                    (m) => m.isFree || lesson.isFreePreview
+                  );
+                  const paidMaterials = (lesson.materials || []).filter(
+                    (m) => !m.isFree && !lesson.isFreePreview
+                  );
+
+                  const lessonRow = (
                     <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 text-xs sm:text-sm hover:bg-surface-secondary/40 transition-colors group cursor-pointer">
                       <div className="flex items-center gap-3 min-w-0 pr-3">
                         {lesson.isFreePreview ? (
@@ -143,16 +150,77 @@ export function CurriculumAccordion({ curriculum, courseSlug }: CurriculumAccord
                     </div>
                   );
 
-                  return courseSlug ? (
-                    <Link
-                      key={lesson.id}
-                      href={`/course/${courseSlug}/learn/${lesson.id}`}
-                      className="block"
-                    >
-                      {lessonContent}
-                    </Link>
-                  ) : (
-                    <div key={lesson.id}>{lessonContent}</div>
+                  return (
+                    <div key={lesson.id} className="transition-colors">
+                      {courseSlug ? (
+                        <Link
+                          href={`/course/${courseSlug}/learn/${lesson.id}`}
+                          className="block"
+                        >
+                          {lessonRow}
+                        </Link>
+                      ) : (
+                        <div>{lessonRow}</div>
+                      )}
+
+                      {/* Prominently Highlighted Free Materials (Accessible even if class is paid) */}
+                      {freeMaterials.map((mat) => (
+                        <div
+                          key={mat.id}
+                          className="ml-6 sm:ml-12 mr-3 sm:mr-6 my-1.5 p-2 sm:p-2.5 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-between gap-3 text-xs shadow-2xs group/mat transition-all hover:border-emerald-500/50"
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 shadow-xs">
+                              <FileText className="w-4 h-4" />
+                            </div>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="font-bold text-text font-bengali truncate text-[11.5px] sm:text-xs">
+                                  {mat.title}
+                                </span>
+                                <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-emerald-500/25 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 font-bengali flex items-center gap-0.5">
+                                  <Sparkles className="w-2.5 h-2.5 text-emerald-500" />
+                                  <span>ফ্রি স্টাডি নোট</span>
+                                </span>
+                              </div>
+                              {mat.fileSize && (
+                                <span className="text-[10px] text-text-muted font-sans block mt-0.5">
+                                  {mat.fileSize}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          <a
+                            href={mat.fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="px-2.5 sm:px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bengali font-bold text-[11px] flex items-center gap-1 shrink-0 transition-all shadow-xs hover:shadow-sm active:scale-95 cursor-pointer"
+                            title="ফ্রি স্টাডি নোট ওপেন বা ডাউনলোড করুন"
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                            <span className="hidden xs:inline">ফ্রি পড়ুন / ডাউনলোড</span>
+                            <span className="xs:hidden">ফ্রি</span>
+                          </a>
+                        </div>
+                      ))}
+
+                      {/* Subtle teaser for paid materials under a paid lesson */}
+                      {paidMaterials.length > 0 && (
+                        <div className="ml-6 sm:ml-12 mr-3 sm:mr-6 my-1 p-1.5 sm:p-2 rounded-lg bg-surface-secondary/40 border border-border/50 flex items-center justify-between gap-2 text-[11px] text-text-muted">
+                          <div className="flex items-center gap-1.5 truncate">
+                            <Lock className="w-3 h-3 text-amber-500/70 shrink-0" />
+                            <span className="font-bengali truncate text-[10.5px] sm:text-[11px]">
+                              {paidMaterials.length}টি পেইড লেকচার শিট ও রিসোর্স
+                            </span>
+                          </div>
+                          <span className="text-[9.5px] text-amber-600 dark:text-amber-400 font-bold font-bengali bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20 shrink-0">
+                            ভর্তির পর অ্যাক্সেস
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   );
                 })}
               </div>

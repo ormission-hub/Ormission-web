@@ -83,13 +83,22 @@ export function mapDbCourseToAppCourse(dbCourse: any): Course {
                   formattedSize = rawSize;
                 }
 
+                const isFree = Boolean(
+                  res.isFree ||
+                  res.is_free ||
+                  (typeof res.title === "string" && res.title.includes("[FREE]"))
+                );
+                const rawTitle = res.title || "Study Material";
+                const cleanTitle = typeof rawTitle === "string" ? rawTitle.replace(/\[FREE\]/gi, "").trim() : "Study Material";
+
                 return {
                   id: String(res.id),
-                  title: res.title || "Study Material",
+                  title: cleanTitle || "Study Material",
                   fileUrl: res.file_url || res.fileUrl || "",
                   fileType: res.file_type || res.fileType || "pdf",
                   fileSize: formattedSize,
                   sortOrder: res.sort_order || 0,
+                  isFree,
                 };
               });
 

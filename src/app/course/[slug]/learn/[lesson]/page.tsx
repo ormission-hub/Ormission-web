@@ -548,8 +548,14 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
                       )}
                       {lesson.materials && lesson.materials.length > 0 && (
                         <span
-                          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-sky-500/10 border border-sky-500/25 text-sky-400 text-[10px] font-bengali font-semibold"
-                          title={`${lesson.materials.length}টি স্টাডি ম্যাটেরিয়াল`}
+                          className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md border text-[10px] font-bengali font-semibold ${
+                            lesson.materials.some((m) => m.isFree)
+                              ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-400"
+                              : "bg-sky-500/10 border-sky-500/25 text-sky-400"
+                          }`}
+                          title={`${lesson.materials.length}টি স্টাডি ম্যাটেরিয়াল ${
+                            lesson.materials.some((m) => m.isFree) ? "(ফ্রি সহ)" : ""
+                          }`}
                         >
                           <Paperclip className="w-2.5 h-2.5" />
                           <span>{lesson.materials.length}</span>
@@ -1043,12 +1049,18 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
                     return (
                       <div
                         key={mat.id || mIdx}
-                        className="group flex items-center justify-between gap-3 p-3.5 rounded-xl bg-slate-800/70 hover:bg-slate-800 border border-slate-700/60 hover:border-primary/40 transition-all shadow-sm"
+                        className={`group flex items-center justify-between gap-3 p-3.5 rounded-xl transition-all shadow-sm ${
+                          mat.isFree
+                            ? "bg-emerald-950/20 hover:bg-emerald-950/35 border border-emerald-500/30 hover:border-emerald-500/50"
+                            : "bg-slate-800/70 hover:bg-slate-800 border border-slate-700/60 hover:border-primary/40"
+                        }`}
                       >
                         <div className="flex items-center gap-3 min-w-0">
                           <div
                             className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${
-                              isPdf
+                              mat.isFree
+                                ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-400"
+                                : isPdf
                                 ? "bg-red-500/10 border-red-500/25 text-red-400"
                                 : isDoc
                                 ? "bg-blue-500/10 border-blue-500/25 text-blue-400"
@@ -1066,12 +1078,19 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
                             )}
                           </div>
                           <div className="min-w-0">
-                            <h4
-                              className="text-xs sm:text-sm font-bold text-slate-100 truncate group-hover:text-primary transition-colors"
-                              title={mat.title}
-                            >
-                              {mat.title}
-                            </h4>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <h4
+                                className="text-xs sm:text-sm font-bold text-slate-100 truncate group-hover:text-primary transition-colors"
+                                title={mat.title}
+                              >
+                                {mat.title}
+                              </h4>
+                              {mat.isFree && (
+                                <span className="shrink-0 px-1.5 py-0.5 rounded bg-emerald-500/20 border border-emerald-500/35 text-emerald-400 text-[10px] font-bold font-bengali">
+                                  ✨ ফ্রি
+                                </span>
+                              )}
+                            </div>
                             <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-400 font-sans">
                               <span className="uppercase font-bold tracking-wider text-[10px] text-slate-300">
                                 {isGDrive ? "GOOGLE DRIVE" : (mat.fileType || "FILE")}
@@ -1087,7 +1106,7 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
                         </div>
 
                         <div className="flex items-center gap-1.5 shrink-0">
-                          {Boolean(accessStatus.authorized || currentLesson.isFreePreview) ? (
+                          {Boolean(accessStatus.authorized || currentLesson.isFreePreview || mat.isFree) ? (
                             <>
                               <a
                                 href={previewUrl}
@@ -1103,11 +1122,19 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
                                 download={mat.title}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="px-3 py-1.5 rounded-lg bg-primary/15 hover:bg-primary border border-primary/30 hover:border-primary text-primary hover:text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+                                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs ${
+                                  mat.isFree && !accessStatus.authorized && !currentLesson.isFreePreview
+                                    ? "bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/20"
+                                    : "bg-primary/15 hover:bg-primary border border-primary/30 hover:border-primary text-primary hover:text-white"
+                                }`}
                                 title="ডাউনলোড করুন"
                               >
                                 <Download className="w-3.5 h-3.5" />
-                                <span className="hidden xs:inline">ডাউনলোড</span>
+                                <span className="hidden xs:inline">
+                                  {mat.isFree && !accessStatus.authorized && !currentLesson.isFreePreview
+                                    ? "ফ্রি ডাউনলোড"
+                                    : "ডাউনলোড"}
+                                </span>
                               </a>
                             </>
                           ) : (
