@@ -81,7 +81,7 @@ export async function generateMetadata({ params }: PageProps) {
 
 export default async function CourseDetailPage({ params }: PageProps) {
   const { slug } = await params;
-  const { course, instructor } = await getLiveCourseBySlug(slug);
+  const { course, instructor, instructors } = await getLiveCourseBySlug(slug);
 
   if (!course) {
     notFound();
@@ -206,8 +206,45 @@ export default async function CourseDetailPage({ params }: PageProps) {
                 </div>
               </div>
 
-              {/* Instructor Snapshot Card */}
-              {instructor && (
+              {/* Instructor Snapshot Card (Single or Multi) */}
+              {instructors && instructors.length > 1 ? (
+                <div className="p-3 sm:p-4 rounded-2xl bg-surface-secondary/50 border border-border/60 max-w-2xl">
+                  <div className="flex items-center gap-1.5 text-xs text-text-muted font-bengali mb-2.5">
+                    <span className="font-bold text-text">কোর্স ইন্সট্রাক্টরবৃন্দ</span>
+                    <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary font-bold text-[11px]">
+                      {instructors.length} জন শিক্ষক
+                    </span>
+                    <ShieldCheck className="w-3.5 h-3.5 text-primary" />
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex -space-x-3 overflow-hidden shrink-0 py-0.5">
+                      {instructors.map((inst, idx) => (
+                        <div
+                          key={inst.id || idx}
+                          className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-full overflow-hidden border-2 border-surface dark:border-slate-800 shadow-sm ring-1 ring-primary/25"
+                          title={`${inst.nameBn} (${inst.institutionBn})`}
+                        >
+                          <Image
+                            src={inst.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80"}
+                            alt={inst.nameBn}
+                            fill
+                            sizes="44px"
+                            className="object-cover"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex-1 min-w-[200px]">
+                      <div className="text-xs sm:text-sm font-bold text-text font-bengali leading-snug">
+                        {instructors.map((i) => i.nameBn).join(", ")}
+                      </div>
+                      <div className="text-[11px] sm:text-xs text-primary font-medium line-clamp-1">
+                        {instructors.map((i) => i.institutionBn).filter(Boolean).filter((v, i, a) => a.indexOf(v) === i).join(" • ")}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : instructor ? (
                 <div className="flex items-center gap-3.5 p-3 sm:p-4 rounded-2xl bg-surface-secondary/50 border border-border/60 max-w-xl">
                   <div className="relative w-12 h-12 rounded-full overflow-hidden shrink-0 border-2 border-primary/30 shadow-xs">
                     <Image
@@ -231,7 +268,7 @@ export default async function CourseDetailPage({ params }: PageProps) {
                     </div>
                   </div>
                 </div>
-              )}
+              ) : null}
             </div>
 
             {/* Right Column on Mobile (Inline purchase card for mobile devices) */}
@@ -294,57 +331,88 @@ export default async function CourseDetailPage({ params }: PageProps) {
               <CurriculumAccordion curriculum={course.curriculum || []} courseSlug={slug} />
             </div>
 
-            {/* Instructor Bio Profile */}
-            {instructor && (
+            {/* Instructor Bio Profile (Single or Multiple) */}
+            {((instructors && instructors.length > 0) || instructor) && (
               <div className="bg-surface rounded-2xl sm:rounded-3xl border border-border/80 p-6 sm:p-8 shadow-sm">
-                <h2 className="text-lg sm:text-xl font-black text-text font-bengali mb-6">
-                  ইন্সট্রাক্টর পরিচিতি
-                </h2>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-lg sm:text-xl font-black text-text font-bengali flex items-center gap-2">
+                    <Award className="w-5 h-5 text-primary" />
+                    <span>
+                      {instructors && instructors.length > 1
+                        ? `ইন্সট্রাক্টর পরিচিতি (${instructors.length} জন শিক্ষক)`
+                        : "ইন্সট্রাক্টর পরিচিতি"}
+                    </span>
+                  </h2>
+                  {instructors && instructors.length > 1 && (
+                    <span className="text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full font-bengali">
+                      এক্সপার্ট মেন্টর প্যানেল
+                    </span>
+                  )}
+                </div>
 
-                <div className="flex flex-col sm:flex-row gap-6 items-start">
-                  <div className="relative w-24 h-24 rounded-2xl overflow-hidden shrink-0 border-2 border-primary/25 shadow-md">
-                    <Image
-                      src={instructor.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80"}
-                      alt={instructor.nameBn}
-                      fill
-                      sizes="96px"
-                      className="object-cover"
-                    />
-                  </div>
-
-                  <div className="flex-1">
-                    <h3 className="font-black text-lg sm:text-xl text-text font-bengali mb-1">
-                      {instructor.nameBn}
-                    </h3>
-                    <p className="text-xs text-text-muted font-sans mb-1.5">
-                      {instructor.name}
-                    </p>
-                    <p className="text-xs sm:text-sm text-primary font-bold font-bengali mb-3">
-                      {instructor.institutionBn} • {instructor.department}
-                    </p>
-                    <p className="text-xs sm:text-sm text-text-muted font-bengali leading-relaxed mb-5">
-                      {instructor.bioBn || "অভিজ্ঞ শিক্ষক ও মেন্টর যিনি দীর্ঘ বছর ধরে শিক্ষার্থীদের সঠিক গাইডলাইন প্রদান করে আসছেন।"}
-                    </p>
-
-                    <div className="flex flex-wrap items-center gap-4 text-xs text-text-muted border-t border-border/80 pt-4 font-bengali">
-                      <div className="flex items-center gap-1">
-                        <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                        <span className="font-bold text-text">{instructor.rating || 5.0}</span> রেটিং
+                <div className="space-y-6 divide-y divide-border/60">
+                  {((instructors && instructors.length > 0) ? instructors : [instructor!]).map((inst, index) => (
+                    <div
+                      key={inst.id || index}
+                      className={`flex flex-col sm:flex-row gap-6 items-start ${index > 0 ? "pt-6" : ""}`}
+                    >
+                      <div className="relative w-24 h-24 rounded-2xl overflow-hidden shrink-0 border-2 border-primary/25 shadow-md">
+                        <Image
+                          src={inst.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80"}
+                          alt={inst.nameBn}
+                          fill
+                          sizes="96px"
+                          className="object-cover"
+                        />
+                        {index === 0 && instructors && instructors.length > 1 && (
+                          <div className="absolute bottom-0 inset-x-0 bg-primary/90 text-[10px] text-white font-bold font-bengali text-center py-0.5">
+                            প্রধান মেন্টর
+                          </div>
+                        )}
                       </div>
-                      <div>•</div>
-                      <div>
-                        <span className="font-bold text-text">
-                          {(instructor.studentsCount || 12500).toLocaleString("bn-BD")}
-                        </span> জন শিক্ষার্থী
-                      </div>
-                      <div>•</div>
-                      <div>
-                        <span className="font-bold text-text">
-                          {instructor.coursesCount || 4}টি
-                        </span> কোর্স
+
+                      <div className="flex-1">
+                        <div className="flex flex-wrap items-baseline gap-2 mb-1">
+                          <h3 className="font-black text-lg sm:text-xl text-text font-bengali">
+                            {inst.nameBn}
+                          </h3>
+                          {index === 0 && instructors && instructors.length > 1 && (
+                            <span className="text-[10px] font-bold text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-full font-bengali">
+                              প্রধান শিক্ষক
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-text-muted font-sans mb-1.5">
+                          {inst.name}
+                        </p>
+                        <p className="text-xs sm:text-sm text-primary font-bold font-bengali mb-3">
+                          {inst.institutionBn} • {inst.department}
+                        </p>
+                        <p className="text-xs sm:text-sm text-text-muted font-bengali leading-relaxed mb-5">
+                          {inst.bioBn || "অভিজ্ঞ শিক্ষক ও মেন্টর যিনি দীর্ঘ বছর ধরে শিক্ষার্থীদের সঠিক গাইডলাইন প্রদান করে আসছেন।"}
+                        </p>
+
+                        <div className="flex flex-wrap items-center gap-4 text-xs text-text-muted border-t border-border/80 pt-4 font-bengali">
+                          <div className="flex items-center gap-1">
+                            <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                            <span className="font-bold text-text">{inst.rating || 5.0}</span> রেটিং
+                          </div>
+                          <div>•</div>
+                          <div>
+                            <span className="font-bold text-text">
+                              {(inst.studentsCount || 12500).toLocaleString("bn-BD")}
+                            </span> জন শিক্ষার্থী
+                          </div>
+                          <div>•</div>
+                          <div>
+                            <span className="font-bold text-text">
+                              {inst.coursesCount || 4}টি
+                            </span> কোর্স
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  ))}
                 </div>
               </div>
             )}

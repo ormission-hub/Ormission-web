@@ -43,7 +43,7 @@ export interface CategoryBook {
  */
 export async function getLiveCourseBySlug(
   slug: string
-): Promise<{ course: Course | null; instructor: Instructor | null }> {
+): Promise<{ course: Course | null; instructor: Instructor | null; instructors: Instructor[] }> {
   try {
     const supabase = await createServerClient();
     const { data: dbCourse, error } = await supabase
@@ -89,18 +89,49 @@ export async function getLiveCourseBySlug(
 
     if (!error && dbCourse) {
       const course = mapDbCourseToAppCourse(dbCourse);
-      const instructor =
+      const primaryInstructor =
         mapDbInstructorToAppInstructor(dbCourse.instructors) ||
         INSTRUCTORS.find((i) => i.id === course.instructorId) ||
         INSTRUCTORS[0];
-      return { course, instructor };
+
+      let instructorsList: Instructor[] = [];
+      const instIds = course.instructorIds && course.instructorIds.length > 0
+        ? course.instructorIds
+        : [course.instructorId];
+      const numericIds = instIds.map(Number).filter((n) => !isNaN(n) && n > 0);
+
+      if (numericIds.length > 0) {
+        const { data: dbInstructors } = await supabase
+          .from("instructors")
+          .select("*")
+          .in("id", numericIds);
+
+        if (dbInstructors && dbInstructors.length > 0) {
+          instructorsList = instIds
+            .map((id) => {
+              const found = dbInstructors.find((d: any) => String(d.id) === String(id));
+              return found ? mapDbInstructorToAppInstructor(found) : undefined;
+            })
+            .filter((inst): inst is Instructor => Boolean(inst));
+        }
+      }
+
+      if (instructorsList.length === 0 && primaryInstructor) {
+        instructorsList = [primaryInstructor];
+      }
+
+      return {
+        course,
+        instructor: instructorsList[0] || primaryInstructor,
+        instructors: instructorsList,
+      };
     }
   } catch (err) {
     console.warn("Supabase fetch course by slug failed, falling back:", err);
   }
 
   // No static fallback — course must exist in the real DB
-  return { course: null, instructor: null };
+  return { course: null, instructor: null, instructors: [] };
 }
 
 export async function getLiveCourses(): Promise<Course[]> {

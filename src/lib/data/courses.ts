@@ -65,6 +65,7 @@ export interface Course {
   subcategorySlug: string;
   subcategoryNameBn: string;
   instructorId: string;
+  instructorIds?: string[];
   price: number;
   originalPrice: number;
   rating: number;

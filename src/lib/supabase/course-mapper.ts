@@ -138,6 +138,14 @@ export function mapDbCourseToAppCourse(dbCourse: any): Course {
       ? Number(courseFeatures.reviews_count)
       : (dbCourse.reviews_count !== undefined ? Number(dbCourse.reviews_count) : 125);
 
+    const rawInstructorIds = Array.isArray(courseFeatures.instructor_ids) && courseFeatures.instructor_ids.length > 0
+      ? courseFeatures.instructor_ids
+      : (Array.isArray(dbCourse.instructor_ids) && dbCourse.instructor_ids.length > 0 ? dbCourse.instructor_ids : null);
+
+    const instructorIds: string[] = rawInstructorIds && rawInstructorIds.length > 0
+      ? rawInstructorIds.map(String)
+      : (dbCourse.instructor_id ? [String(dbCourse.instructor_id)] : (inst?.id ? [String(inst.id)] : ["inst-1"]));
+
     return {
       id: String(dbCourse.id),
       slug: dbCourse.slug,
@@ -150,7 +158,8 @@ export function mapDbCourseToAppCourse(dbCourse: any): Course {
       categoryNameBn: cat?.name_bn || cat?.name || "অনলাইন কোর্স",
       subcategorySlug: cat?.slug || "general",
       subcategoryNameBn: cat?.name_bn || cat?.name || "সাধারণ",
-      instructorId: String(dbCourse.instructor_id || inst?.id || "inst-1"),
+      instructorId: String(dbCourse.instructor_id || inst?.id || instructorIds[0] || "inst-1"),
+      instructorIds: instructorIds,
       price: Number(dbCourse.price) || 0,
       originalPrice:
         Number(dbCourse.original_price) && Number(dbCourse.original_price) > Number(dbCourse.price)
