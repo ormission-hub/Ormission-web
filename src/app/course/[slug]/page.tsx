@@ -19,6 +19,7 @@ import {
 import { CurriculumAccordion } from "@/components/courses/curriculum-accordion";
 import { StickyPurchasePanel } from "@/components/courses/sticky-purchase-panel";
 import { CourseCard } from "@/components/courses/course-card";
+import { CourseDescriptionView } from "@/components/courses/course-description-view";
 import { getLiveCourseBySlug, getLiveCourses } from "@/lib/supabase/course-fetcher";
 
 // 3D Boy Student Avatar Component matching Home UI
@@ -94,7 +95,6 @@ export default async function CourseDetailPage({ params }: PageProps) {
   const title = course.titleBn || course.title;
   const subtitle =
     course.subtitleBn ||
-    course.descriptionBn ||
     "দেশসেরা শিক্ষক ও মেন্টরদের তত্ত্বাবধানে সর্বোচ্চ মানের লাইভ ও রেকর্ডেড প্রস্তুতি কোর্স।";
 
   const rating = course.rating || 5.0;
@@ -223,17 +223,16 @@ export default async function CourseDetailPage({ params }: PageProps) {
           <div className="lg:col-span-8 space-y-8 sm:space-y-10">
             {/* Course Description */}
             <div className="bg-surface rounded-2xl sm:rounded-3xl border border-border/80 p-6 sm:p-8 shadow-sm">
-              <h2 className="text-lg sm:text-xl font-black text-text font-bengali mb-4 flex items-center gap-2">
+              <h2 className="text-lg sm:text-xl font-black text-text font-bengali mb-5 flex items-center gap-2.5">
                 <BookOpen className="w-5 h-5 text-primary" />
-                <span>কোর্স বিবরণী</span>
+                <span>কোর্স বিবরণী ও বিষয়সমূহ</span>
               </h2>
 
-              <div className="prose prose-slate dark:prose-invert max-w-none text-xs sm:text-sm text-text font-bengali leading-relaxed space-y-3">
-                <p>{course.descriptionBn || course.description || subtitle}</p>
-                {course.description && course.description !== course.descriptionBn && (
-                  <p className="text-text-muted">{course.description}</p>
-                )}
-              </div>
+              <CourseDescriptionView
+                description={course.descriptionBn || course.description}
+                subtitle={course.subtitleBn}
+                courseTitle={title}
+              />
             </div>
 
             {/* Prerequisites */}

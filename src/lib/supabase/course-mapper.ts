@@ -4,6 +4,60 @@ import { Instructor, INSTRUCTORS } from "../data/instructors";
 export const DEFAULT_COURSE_THUMBNAIL =
   "https://oorovtqwyfrfjfwuufyi.supabase.co/storage/v1/object/public/hero_images/hero_1789356392635_x4rpk6.webp";
 
+/**
+ * Ensures the hero subtitle is a clean, concise paragraph (never a giant wall of points/text).
+ */
+export function extractHeroSubtitle(raw?: string | null): string {
+  if (!raw || typeof raw !== "string" || !raw.trim()) {
+    return "দেশসেরা মেন্টরদের তত্ত্বাবধানে সর্বোচ্চ মানের প্রস্তুতি ও কনসেপ্ট ক্লিয়ারিং";
+  }
+  const trimmed = raw.trim();
+
+  // If already concise and doesn't contain feature markers, return directly
+  const markers = ["কোর্সে যা থাকছে", "কী কী থাকছে", "কোর্সের বৈশিষ্ট্য", "লক্ষ্য:", "উদ্দেশ্য:"];
+  const hasMarker = markers.some((m) => trimmed.includes(m));
+  const hasBullet = /[•\-\*\n]/.test(trimmed);
+
+  if (!hasMarker && !hasBullet && trimmed.length <= 220) {
+    return trimmed;
+  }
+
+  // If there's a marker like "কোর্সে যা থাকছে", extract everything before it
+  for (const m of markers) {
+    const idx = trimmed.indexOf(m);
+    if (idx > 20) {
+      const intro = trimmed.slice(0, idx).trim().replace(/[:—\-\.]+$/, "").trim();
+      if (intro.length >= 20) return intro.endsWith("।") || intro.endsWith(".") ? intro : intro + "।";
+    }
+  }
+
+  // If there are line breaks, take the first non-empty line
+  const lines = trimmed.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  if (lines.length > 0) {
+    const firstLine = lines[0].replace(/^[•\-\*\s]+/, "");
+    if (firstLine.length >= 20 && firstLine.length <= 250) {
+      return firstLine.endsWith("।") || firstLine.endsWith(".") ? firstLine : firstLine + "।";
+    }
+  }
+
+  // Take the first complete sentence ending in । or .
+  const sentences = trimmed.split(/(?<=[।\.!?])/).map((s) => s.trim()).filter(Boolean);
+  if (sentences.length > 0) {
+    let combined = "";
+    for (const s of sentences) {
+      if ((combined + " " + s).trim().length <= 220) {
+        combined = (combined + " " + s).trim();
+      } else {
+        break;
+      }
+    }
+    if (combined.length >= 25) return combined;
+    return sentences[0];
+  }
+
+  return trimmed.slice(0, 180) + "...";
+}
+
 export function mapDbCourseToAppCourse(dbCourse: any): Course {
   const cat = Array.isArray(dbCourse.categories)
     ? dbCourse.categories[0]
@@ -14,10 +68,10 @@ export function mapDbCourseToAppCourse(dbCourse: any): Course {
 
   const titleBn = dbCourse.title_bn || dbCourse.title || "কোর্স";
   const titleEn = dbCourse.title || dbCourse.title_bn || "Course";
-  const subtitleBn =
-    dbCourse.short_description ||
-    "দেশসেরা মেন্টরদের তত্ত্বাবধানে সর্বোচ্চ মানের প্রস্তুতি ও কনসেপ্ট ক্লিয়ারিং";
-  const subtitleEn = dbCourse.short_description || "High quality online preparation course";
+  const subtitleBn = extractHeroSubtitle(dbCourse.short_description);
+  const subtitleEn = extractHeroSubtitle(
+    dbCourse.short_description || "High quality online preparation course"
+  );
 
   const thumbnail =
     dbCourse.thumbnail_url && dbCourse.thumbnail_url.trim() !== ""
