@@ -11,7 +11,6 @@ import {
   Award,
   ChevronRight,
   ArrowRight,
-  ShieldCheck,
   Check,
   Flame,
   Sparkles,
@@ -206,69 +205,7 @@ export default async function CourseDetailPage({ params }: PageProps) {
                 </div>
               </div>
 
-              {/* Instructor Snapshot Card (Single or Multi) */}
-              {instructors && instructors.length > 1 ? (
-                <div className="p-3 sm:p-4 rounded-2xl bg-surface-secondary/50 border border-border/60 max-w-2xl">
-                  <div className="flex items-center gap-1.5 text-xs text-text-muted font-bengali mb-2.5">
-                    <span className="font-bold text-text">কোর্স ইন্সট্রাক্টরবৃন্দ</span>
-                    <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary font-bold text-[11px]">
-                      {instructors.length} জন শিক্ষক
-                    </span>
-                    <ShieldCheck className="w-3.5 h-3.5 text-primary" />
-                  </div>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <div className="flex -space-x-3 overflow-hidden shrink-0 py-0.5">
-                      {instructors.map((inst, idx) => (
-                        <div
-                          key={inst.id || idx}
-                          className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-full overflow-hidden border-2 border-surface dark:border-slate-800 shadow-sm ring-1 ring-primary/25"
-                          title={`${inst.nameBn} (${inst.institutionBn})`}
-                        >
-                          <Image
-                            src={inst.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80"}
-                            alt={inst.nameBn}
-                            fill
-                            sizes="44px"
-                            className="object-cover"
-                          />
-                        </div>
-                      ))}
-                    </div>
-                    <div className="flex-1 min-w-[200px]">
-                      <div className="text-xs sm:text-sm font-bold text-text font-bengali leading-snug">
-                        {instructors.map((i) => i.nameBn).join(", ")}
-                      </div>
-                      <div className="text-[11px] sm:text-xs text-primary font-medium line-clamp-1">
-                        {instructors.map((i) => i.institutionBn).filter(Boolean).filter((v, i, a) => a.indexOf(v) === i).join(" • ")}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ) : instructor ? (
-                <div className="flex items-center gap-3.5 p-3 sm:p-4 rounded-2xl bg-surface-secondary/50 border border-border/60 max-w-xl">
-                  <div className="relative w-12 h-12 rounded-full overflow-hidden shrink-0 border-2 border-primary/30 shadow-xs">
-                    <Image
-                      src={instructor.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80"}
-                      alt={instructor.nameBn}
-                      fill
-                      sizes="48px"
-                      className="object-cover"
-                    />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-1 text-xs text-text-muted font-bengali">
-                      <span>কোর্স ইন্সট্রাক্টর</span>
-                      <ShieldCheck className="w-3.5 h-3.5 text-primary" />
-                    </div>
-                    <div className="text-sm sm:text-base font-bold text-text font-bengali">
-                      {instructor.nameBn}
-                    </div>
-                    <div className="text-xs text-primary font-medium">
-                      {instructor.institutionBn} • {instructor.department}
-                    </div>
-                  </div>
-                </div>
-              ) : null}
+
             </div>
 
             {/* Right Column on Mobile (Inline purchase card for mobile devices) */}
