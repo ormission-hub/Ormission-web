@@ -140,7 +140,7 @@ export function CurriculumAccordion({ curriculum, courseSlug }: CurriculumAccord
                       <div className="flex items-center gap-2 shrink-0">
                         {lesson.isFreePreview && (
                           <span className="px-2 py-0.5 rounded-md text-[10.5px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-bengali">
-                            ফ্রি প্রিভিউ
+                            আনলক
                           </span>
                         )}
                         <span className="text-xs font-semibold text-text-muted font-sans tabular-nums">
@@ -212,7 +212,7 @@ export function CurriculumAccordion({ curriculum, courseSlug }: CurriculumAccord
                           <div className="flex items-center gap-1.5 truncate">
                             <Lock className="w-3 h-3 text-amber-500/70 shrink-0" />
                             <span className="font-bengali truncate text-[10.5px] sm:text-[11px]">
-                              {paidMaterials.length}টি পেইড লেকচার শিট ও রিসোর্স
+                              {paidMaterials.length}টি লক লেকচার শিট ও রিসোর্স
                             </span>
                           </div>
                           <span className="text-[9.5px] text-amber-600 dark:text-amber-400 font-bold font-bengali bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20 shrink-0">

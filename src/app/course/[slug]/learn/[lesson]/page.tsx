@@ -538,12 +538,12 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
                       {lesson.isFreePreview ? (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-bengali font-bold">
                           <Unlock className="w-2.5 h-2.5" />
-                          <span>ফ্রি</span>
+                          <span>আনলক</span>
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/25 text-amber-400 text-[10px] font-bengali font-bold">
                           <Lock className="w-2.5 h-2.5" />
-                          <span>পেইড</span>
+                          <span>লক</span>
                         </span>
                       )}
                       {lesson.materials && lesson.materials.length > 0 && (
@@ -554,7 +554,7 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
                               : "bg-sky-500/10 border-sky-500/25 text-sky-400"
                           }`}
                           title={`${lesson.materials.length}টি স্টাডি ম্যাটেরিয়াল ${
-                            lesson.materials.some((m) => m.isFree) ? "(ফ্রি সহ)" : ""
+                            lesson.materials.some((m) => m.isFree) ? "(আনলক সহ)" : ""
                           }`}
                         >
                           <Paperclip className="w-2.5 h-2.5" />
@@ -984,7 +984,7 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
                 </span>
                 {currentLesson.isFreePreview && (
                   <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[11px] font-bengali font-bold">
-                    ফ্রি প্রিভিউ
+                    আনলক
                   </span>
                 )}
               </div>
