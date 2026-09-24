@@ -411,40 +411,41 @@ export function StickyPurchasePanel({ course }: StickyPurchasePanelProps) {
               </p>
 
               {/* 1. ULTRA-MODERN BUY BUTTON (with rotating laser glow and shine) */}
+              {/* 1. PROFESSIONAL LUXURY ENROLL CTA BUTTON */}
               <button
                 type="button"
                 onClick={handleEnroll}
                 disabled={enrolling}
-                className="group relative w-full p-[2px] rounded-2xl overflow-hidden shadow-[0_10px_28px_rgba(255,95,0,0.45)] hover:shadow-[0_14px_36px_rgba(255,95,0,0.65)] active:scale-[0.98] transition-all duration-300 block mb-3.5 cursor-pointer disabled:opacity-80"
+                className="group relative w-full p-[2px] rounded-2xl overflow-hidden shadow-[0_8px_24px_rgba(255,95,0,0.32)] hover:shadow-[0_12px_32px_rgba(255,95,0,0.48)] active:scale-[0.985] transition-all duration-300 block mb-3.5 cursor-pointer disabled:opacity-80"
               >
-                {/* Animated Conic Laser Border */}
+                {/* Refined Glowing Conic Beam Border */}
                 <div
-                  className="absolute inset-[-100%] animate-[spin_3s_linear_infinite]"
+                  className="absolute inset-[-100%] animate-[spin_4s_linear_infinite] opacity-75 group-hover:opacity-100 transition-opacity"
                   style={{
                     background:
-                      "conic-gradient(from 0deg, transparent 0deg, #FF5F00 120deg, #FFFFFF 180deg, #FF1493 240deg, transparent 360deg)",
+                      "conic-gradient(from 0deg, transparent 0deg, #FF5F00 110deg, #FFFFFF 175deg, #F97316 235deg, transparent 360deg)",
                   }}
                 />
 
-                {/* Inner Button Content */}
-                <div className="relative z-10 w-full py-3.5 sm:py-4 px-6 rounded-[14px] bg-gradient-to-r from-[#FF5F00] via-[#FF3366] to-[#E11D48] text-white flex items-center justify-center gap-2.5 overflow-hidden font-bengali">
-                  {/* Glass Shimmer sweep */}
-                  <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/35 to-transparent pointer-events-none" />
+                {/* Inner Button Body with Specular Highlight */}
+                <div className="relative z-10 w-full py-3.5 sm:py-4 px-6 rounded-[14px] bg-gradient-to-r from-primary via-orange-600 to-amber-600 hover:from-primary-hover hover:via-orange-500 hover:to-amber-500 text-white flex items-center justify-center gap-2.5 overflow-hidden font-bengali shadow-[inset_0_1px_1px_rgba(255,255,255,0.35)] transition-all duration-300">
+                  {/* Glass Shimmer Sweep on Hover */}
+                  <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/30 to-transparent pointer-events-none" />
 
                   {enrolling ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin text-white shrink-0" />
-                      <span className="text-base sm:text-lg font-black tracking-wide text-white drop-shadow-sm">
+                      <span className="text-base sm:text-lg font-bold tracking-wide text-white drop-shadow-sm">
                         যাচাই করা হচ্ছে...
                       </span>
                     </>
                   ) : (
                     <>
-                      <Sparkles className="w-5 h-5 text-amber-300 animate-pulse shrink-0" />
-                      <span className="text-base sm:text-lg font-black tracking-wide text-white drop-shadow-sm">
+                      <Sparkles className="w-5 h-5 text-amber-200 shrink-0 transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110" />
+                      <span className="text-base sm:text-lg font-bold tracking-wide text-white drop-shadow-sm">
                         এখনই কোর্সে ভর্তি হন
                       </span>
-                      <ArrowRight className="w-5 h-5 text-white transition-transform duration-300 group-hover:translate-x-1.5 shrink-0" />
+                      <ArrowRight className="w-5 h-5 text-white/95 transition-transform duration-300 group-hover:translate-x-1.5 shrink-0" />
                     </>
                   )}
                 </div>
@@ -567,8 +568,9 @@ export function StickyPurchasePanel({ course }: StickyPurchasePanelProps) {
                 type="button"
                 onClick={handleEnroll}
                 disabled={enrolling}
-                className="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-black text-white bg-gradient-to-r from-primary via-orange-600 to-rose-600 hover:opacity-95 shadow-lg shadow-primary/30 font-bengali flex items-center gap-1.5 cursor-pointer active:scale-95 disabled:opacity-80"
+                className="group relative px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white bg-gradient-to-r from-primary via-orange-600 to-amber-600 hover:from-primary-hover hover:via-orange-500 hover:to-amber-500 shadow-md shadow-primary/25 font-bengali flex items-center gap-1.5 cursor-pointer active:scale-95 disabled:opacity-80 overflow-hidden shadow-[inset_0_1px_0_rgba(255,255,255,0.3)] transition-all"
               >
+                <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/30 to-transparent pointer-events-none" />
                 {enrolling ? (
                   <>
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -577,7 +579,7 @@ export function StickyPurchasePanel({ course }: StickyPurchasePanelProps) {
                 ) : (
                   <>
                     <span>ভর্তি হন</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
                   </>
                 )}
               </button>
