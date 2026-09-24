@@ -541,7 +541,7 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
                           <span>আনলক</span>
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/25 text-amber-400 text-[10px] font-bengali font-bold">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-500/15 border border-rose-500/30 text-rose-400 text-[10px] font-bengali font-bold">
                           <Lock className="w-2.5 h-2.5" />
                           <span>লক</span>
                         </span>

@@ -210,12 +210,12 @@ export function CurriculumAccordion({ curriculum, courseSlug }: CurriculumAccord
                       {paidMaterials.length > 0 && (
                         <div className="ml-6 sm:ml-12 mr-3 sm:mr-6 my-1 p-1.5 sm:p-2 rounded-lg bg-surface-secondary/40 border border-border/50 flex items-center justify-between gap-2 text-[11px] text-text-muted">
                           <div className="flex items-center gap-1.5 truncate">
-                            <Lock className="w-3 h-3 text-amber-500/70 shrink-0" />
+                            <Lock className="w-3 h-3 text-rose-500/70 shrink-0" />
                             <span className="font-bengali truncate text-[10.5px] sm:text-[11px]">
                               {paidMaterials.length}টি লক লেকচার শিট ও রিসোর্স
                             </span>
                           </div>
-                          <span className="text-[9.5px] text-amber-600 dark:text-amber-400 font-bold font-bengali bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20 shrink-0">
+                          <span className="text-[9.5px] text-rose-400 font-bold font-bengali bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/20 shrink-0">
                             ভর্তির পর অ্যাক্সেস
                           </span>
                         </div>
