@@ -441,7 +441,6 @@ export function StickyPurchasePanel({ course }: StickyPurchasePanelProps) {
                     </>
                   ) : (
                     <>
-                      <Sparkles className="w-5 h-5 text-amber-200 shrink-0 transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110" />
                       <span className="text-base sm:text-lg font-bold tracking-wide text-white drop-shadow-sm">
                         এখনই কোর্সে ভর্তি হন
                       </span>
