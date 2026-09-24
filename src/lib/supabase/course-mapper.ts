@@ -189,11 +189,15 @@ export function mapDbCourseToAppCourse(dbCourse: any): Course {
       "২৪/৭ স্পেশাল মেন্টর ফোরাম ও ডাউট সলভিং সাপোর্ট",
       "পূর্ণাঙ্গ মডেল টেস্ট ও ইনস্ট্যান্ট রেজাল্ট এনালাইসিস",
     ],
-    prerequisites: [
-      "এসএসসি বা এইচএসসি পর্যায়ের বেসিক পাঠ্যপুস্তক ধারণা",
-      "নিয়মিত ক্লাস ও প্র্যাকটিস শিট অনুশীলনের মানসিকতা",
-      "ইন্টারনেট কানেকশন ও স্মার্টফোন বা কম্পিউটার",
-    ],
+    prerequisites: (
+      Array.isArray(courseFeatures.prerequisites) && courseFeatures.prerequisites.length > 0
+        ? courseFeatures.prerequisites.filter((p: any) => typeof p === "string" && p.trim().length > 0)
+        : [
+            "এসএসসি বা এইচএসসি পর্যায়ের বেসিক পাঠ্যপুস্তক ধারণা",
+            "নিয়মিত ক্লাস ও প্র্যাকটিস শিট অনুশীলনের মানসিকতা",
+            "ইন্টারনেট কানেকশন ও স্মার্টফোন বা কম্পিউটার",
+          ]
+    ),
     curriculum: mappedCurriculum,
     faqs: [
       {
