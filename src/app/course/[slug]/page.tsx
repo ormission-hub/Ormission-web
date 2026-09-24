@@ -108,30 +108,30 @@ export default async function CourseDetailPage({ params }: PageProps) {
   return (
     <div className="bg-background min-h-screen pb-24 lg:pb-16">
       {/* Top Breadcrumb & Hero Header */}
-      <div className="bg-surface/90 dark:bg-slate-900/90 border-b border-border/80 py-8 sm:py-12 lg:py-14 relative overflow-hidden">
+      <div className="bg-surface/90 dark:bg-slate-900/90 border-b border-border/80 pt-20 sm:pt-24 lg:pt-28 pb-8 sm:pb-12 lg:pb-14 relative overflow-hidden">
         {/* Subtle Ambient Glow Blobs */}
         <div className="absolute top-0 right-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-10 w-80 h-80 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="container-main relative z-10">
           {/* Breadcrumbs */}
-          <nav className="flex items-center gap-2 text-xs text-text-muted mb-5 font-bengali overflow-x-auto no-scrollbar">
-            <Link href="/" className="hover:text-primary transition-colors shrink-0">
+          <nav className="flex items-center gap-2 text-xs text-slate-300 dark:text-slate-300 mb-5 font-bengali overflow-x-auto no-scrollbar py-1">
+            <Link href="/" className="hover:text-primary transition-colors shrink-0 font-medium text-slate-300 dark:text-slate-300 hover:underline">
               হোম
             </Link>
-            <ChevronRight className="w-3 h-3 text-border shrink-0" />
-            <Link href="/courses" className="hover:text-primary transition-colors shrink-0">
+            <ChevronRight className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
+            <Link href="/courses" className="hover:text-primary transition-colors shrink-0 font-medium text-slate-300 dark:text-slate-300 hover:underline">
               সকল কোর্স
             </Link>
-            <ChevronRight className="w-3 h-3 text-border shrink-0" />
+            <ChevronRight className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
             <Link
               href={`/category/${course.categorySlug}`}
-              className="hover:text-primary transition-colors shrink-0"
+              className="hover:text-primary transition-colors shrink-0 font-medium text-slate-300 dark:text-slate-300 hover:underline"
             >
               {categoryName}
             </Link>
-            <ChevronRight className="w-3 h-3 text-border shrink-0" />
-            <span className="text-text font-bold truncate max-w-xs shrink-0">
+            <ChevronRight className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
+            <span className="text-white font-bold truncate max-w-xs shrink-0 bg-white/10 dark:bg-white/10 px-2.5 py-0.5 rounded-md border border-white/10">
               {title}
             </span>
           </nav>
