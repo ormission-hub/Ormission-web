@@ -872,7 +872,8 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
                       }
                       alt={course.titleBn || course.title}
                       fill
-                      unoptimized={Boolean(course.thumbnail?.startsWith("http"))}
+                      sizes="88px"
+                      loading="lazy"
                       className="object-cover transition-transform duration-300 hover:scale-105"
                     />
                   </div>

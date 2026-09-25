@@ -1,24 +1,29 @@
 import type { Metadata } from "next";
+import dynamic from "next/dynamic";
 import { Hind_Siliguri, Inter } from "next/font/google";
 import { Navbar } from "@/components/global/navbar";
 import { Footer } from "@/components/global/footer";
 import { ThemeProvider } from "@/components/global/theme-provider";
 import { SplashScreen } from "@/components/global/splash-screen";
-import { WhatsAppButton } from "@/components/global/whatsapp-button";
 import "./globals.css";
+
+const WhatsAppButton = dynamic(() =>
+  import("@/components/global/whatsapp-button").then((m) => m.WhatsAppButton)
+);
 
 const hindSiliguri = Hind_Siliguri({
   subsets: ["bengali", "latin"],
-  weight: ["300", "400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-hind-siliguri",
   display: "swap",
+  preload: true,
 });
 
 const inter = Inter({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800", "900"],
   variable: "--font-inter",
   display: "swap",
+  preload: true,
 });
 
 export const metadata: Metadata = {

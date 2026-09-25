@@ -629,3 +629,9 @@ h1, h2, h3, h4, h5, h6, p, span, a, button, input, select, textarea {
   font-size: 0.75rem;
 }
 
+/* Performance: Defer offscreen rendering & layout reflows for below-the-fold sections */
+.content-visibility-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 700px;
+}
+

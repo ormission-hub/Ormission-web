@@ -46,7 +46,6 @@ export function BrandLogo({
           width={iconSizes[size].width}
           height={iconSizes[size].height}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          priority
         />
       </div>
 

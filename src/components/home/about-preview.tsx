@@ -297,10 +297,9 @@ export function AboutPreview({
                       src={photoSrc}
                       alt={currentInstructor.name_bn || currentInstructor.name}
                       fill
-                      sizes="(max-width: 640px) 200px, (max-width: 1024px) 240px, 260px"
+                      sizes="(max-width: 640px) 192px, (max-width: 1024px) 224px, 240px"
                       className="object-cover object-top"
-                      priority
-                      unoptimized={photoSrc.startsWith("http")}
+                      loading="lazy"
                     />
                   </div>
 

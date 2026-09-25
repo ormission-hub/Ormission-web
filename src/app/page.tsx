@@ -1,10 +1,18 @@
 import { HeroSection } from "@/components/home/hero-section";
 import { StatsBar } from "@/components/home/stats-bar";
 import { CategoryCoursesShowcase } from "@/components/home/category-courses-showcase";
-import { AboutPreview } from "@/components/home/about-preview";
-import { FreeMaterialBanner } from "@/components/home/free-material-banner";
-import { Testimonials } from "@/components/home/testimonials";
+import dynamicImport from "next/dynamic";
 import { createClient } from "@/lib/supabase/server";
+
+const AboutPreview = dynamicImport(() =>
+  import("@/components/home/about-preview").then((m) => m.AboutPreview)
+);
+const FreeMaterialBanner = dynamicImport(() =>
+  import("@/components/home/free-material-banner").then((m) => m.FreeMaterialBanner)
+);
+const Testimonials = dynamicImport(() =>
+  import("@/components/home/testimonials").then((m) => m.Testimonials)
+);
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;

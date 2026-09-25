@@ -5,15 +5,21 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 
 export function SplashScreen() {
-  const [isVisible, setIsVisible] = useState(true);
+  const [isVisible, setIsVisible] = useState(false);
 
-  // Fast 350ms entry for an ultra snappy, native-app feel
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsVisible(false);
-    }, 350);
-
-    return () => clearTimeout(timer);
+    // Only show once per session to avoid blocking return navigation or repeated audits
+    try {
+      const seen = sessionStorage.getItem("ormission_splash_seen");
+      if (!seen) {
+        sessionStorage.setItem("ormission_splash_seen", "1");
+        setIsVisible(true);
+        const timer = setTimeout(() => {
+          setIsVisible(false);
+        }, 150);
+        return () => clearTimeout(timer);
+      }
+    } catch {}
   }, []);
 
   return (
@@ -24,8 +30,7 @@ export function SplashScreen() {
           initial={{ opacity: 1 }}
           exit={{
             opacity: 0,
-            scale: 1.04,
-            transition: { duration: 0.35, ease: [0.16, 1, 0.3, 1] },
+            transition: { duration: 0.2, ease: "easeOut" },
           }}
           className="fixed inset-0 z-[999999] flex flex-col items-center justify-center bg-[#050A18] select-none"
         >
@@ -33,12 +38,7 @@ export function SplashScreen() {
           <div className="absolute w-72 h-72 rounded-full bg-blue-600/30 blur-3xl pointer-events-none" />
 
           {/* Minimal Elegant Brand Centerpiece */}
-          <motion.div
-            initial={{ scale: 0.88, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.35, ease: "easeOut" }}
-            className="relative z-10 flex flex-col items-center text-center"
-          >
+          <div className="relative z-10 flex flex-col items-center text-center">
             {/* Glowing Logo Badge */}
             <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-white/10 p-3.5 backdrop-blur-md border border-white/20 shadow-[0_8px_32px_rgba(1,44,148,0.7)] flex items-center justify-center overflow-hidden mb-3">
               <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent animate-glass-shimmer pointer-events-none" />
@@ -47,7 +47,6 @@ export function SplashScreen() {
                 alt="Ormission Logo"
                 width={80}
                 height={80}
-                priority
                 className="w-full h-full object-contain drop-shadow-md"
               />
             </div>
@@ -64,7 +63,7 @@ export function SplashScreen() {
             <p className="text-[10px] sm:text-xs font-bold tracking-[0.25em] text-blue-200/80 uppercase mt-1">
               Learn · Build · Grow
             </p>
-          </motion.div>
+          </div>
         </motion.div>
       )}
     </AnimatePresence>

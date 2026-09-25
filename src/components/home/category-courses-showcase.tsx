@@ -18,18 +18,10 @@ import {
   Flame,
   ArrowUpRight
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
+import { zoomIn, staggerContainer } from "@/lib/animations";
 import { DbFeaturedCourse } from "./featured-courses";
 import { createClient } from "@/lib/supabase/client";
-import {
-  staggerContainer,
-  scrollReveal,
-  zoomIn,
-  zoomInUp,
-  flipLeft,
-  flipRight,
-  hoverLiftProps,
-} from "@/lib/animations";
 
 // ==========================================
 // Bondi Pathshala 3D Illustration Icons
@@ -857,8 +849,8 @@ export function CategoryCoursesShowcase({
                               src={course.thumbnail_url}
                               alt={title}
                               fill
-                              sizes="(max-width: 768px) 100vw, 400px"
-                              unoptimized={Boolean(course.thumbnail_url?.startsWith("http"))}
+                              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 380px"
+                              loading="lazy"
                               className="object-cover group-hover:scale-105 transition-transform duration-500"
                             />
                           ) : (
@@ -1067,11 +1059,13 @@ export function CategoryCoursesShowcase({
                     {/* Book Image */}
                     <div className="relative w-28 sm:w-32 aspect-[3/4] rounded-lg overflow-hidden shadow-md group-hover/cover:shadow-xl group-hover/cover:scale-105 transition-all duration-300 flex items-center justify-center bg-white dark:bg-slate-800 border border-border/40">
                       {book.cover_image ? (
-                        /* eslint-disable-next-line @next/next/no-img-element */
-                        <img
+                        <Image
                           src={book.cover_image}
                           alt={book.title}
-                          className="w-full h-full object-contain"
+                          fill
+                          sizes="128px"
+                          loading="lazy"
+                          className="object-contain"
                         />
                       ) : (
                         <div className="flex flex-col items-center justify-center p-3 text-center">

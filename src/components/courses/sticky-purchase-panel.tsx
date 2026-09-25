@@ -209,8 +209,8 @@ export function StickyPurchasePanel({ course }: StickyPurchasePanelProps) {
             src={thumbnail}
             alt={course.titleBn || course.title}
             fill
-            sizes="(max-width: 1200px) 100vw, 450px"
-            unoptimized={Boolean(thumbnail.startsWith("http"))}
+            sizes="(max-width: 1024px) 100vw, 450px"
+            loading="lazy"
             className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
           />
 

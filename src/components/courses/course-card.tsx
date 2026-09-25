@@ -115,8 +115,8 @@ export function CourseCard({ course }: CourseCardProps) {
             src={thumbnail}
             alt={title}
             fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 420px"
-            unoptimized={Boolean(thumbnail.startsWith("http"))}
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
+            loading="lazy"
             className="object-cover group-hover:scale-108 transition-transform duration-500 ease-out"
           />
         ) : (

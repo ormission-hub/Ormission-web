@@ -499,8 +499,9 @@ export function AboutPageClient({
                               }
                               width={192}
                               height={192}
+                              loading="lazy"
+                              sizes="192px"
                               className="w-full h-full object-cover object-top"
-                              unoptimized
                             />
                           ) : (
                             <div className="w-full h-full bg-gradient-to-br from-primary/20 to-purple-500/20 flex items-center justify-center">

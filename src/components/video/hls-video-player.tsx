@@ -465,8 +465,9 @@ export function HlsVideoPlayer({
                 src={thumbnailUrl}
                 alt={title || "Lecture"}
                 fill
+                sizes="(max-width: 1024px) 100vw, 800px"
                 className="object-cover opacity-75"
-                priority
+                loading="lazy"
               />
             )}
             <div className="absolute inset-0 bg-black/40" />

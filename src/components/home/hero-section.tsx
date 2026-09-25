@@ -289,7 +289,7 @@ export function HeroSection({
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentSlide.id || currentIndex}
-                initial={{ opacity: 0, scale: 1.01 }}
+                initial={currentIndex === 0 ? false : { opacity: 0, scale: 1.01 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.99 }}
                 transition={{ duration: 0.5, ease: "easeInOut" }}
@@ -301,7 +301,9 @@ export function HeroSection({
                     alt={currentSlide.title || "Ormission Hero Banner"}
                     fill
                     priority={currentIndex === 0}
-                    sizes="(max-width: 768px) 100vw, 1200px"
+                    fetchPriority={currentIndex === 0 ? "high" : "low"}
+                    loading={currentIndex === 0 ? "eager" : "lazy"}
+                    sizes="100vw"
                     className="object-cover object-top group-hover:scale-[1.015] transition-transform duration-500"
                   />
 

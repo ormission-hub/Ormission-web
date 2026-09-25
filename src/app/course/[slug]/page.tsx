@@ -296,6 +296,7 @@ export default async function CourseDetailPage({ params }: PageProps) {
                           alt={inst.nameBn}
                           fill
                           sizes="96px"
+                          loading="lazy"
                           className="object-cover"
                         />
                         {index === 0 && instructors && instructors.length > 1 && (

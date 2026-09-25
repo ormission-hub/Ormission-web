@@ -267,7 +267,8 @@ export default function MyCoursesPage() {
                       src={thumb}
                       alt={order.courseTitle || "Course"}
                       fill
-                      unoptimized
+                      loading="lazy"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
                       className="object-cover"
                     />
 

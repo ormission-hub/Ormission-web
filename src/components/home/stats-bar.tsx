@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useEffect, useState } from "react";
-import { useInView } from "framer-motion";
 
 export interface StatsBarProps {
   totalStudents?: number;
@@ -14,11 +13,34 @@ export interface StatsBarProps {
 
 function AnimatedNumber({ target, suffix }: { target: number; suffix: string }) {
   const [count, setCount] = useState(0);
+  const [hasAnimated, setHasAnimated] = useState(false);
   const ref = useRef<HTMLSpanElement>(null);
-  const isInView = useInView(ref, { once: true });
 
   useEffect(() => {
-    if (!isInView) return;
+    const el = ref.current;
+    if (!el || hasAnimated) return;
+
+    if (typeof IntersectionObserver === "undefined") {
+      setHasAnimated(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setHasAnimated(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasAnimated]);
+
+  useEffect(() => {
+    if (!hasAnimated) return;
 
     const prefersReducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
@@ -48,7 +70,7 @@ function AnimatedNumber({ target, suffix }: { target: number; suffix: string }) 
     }
 
     requestAnimationFrame(animate);
-  }, [isInView, target]);
+  }, [hasAnimated, target]);
 
   const formatted = count.toLocaleString("en-US");
 
