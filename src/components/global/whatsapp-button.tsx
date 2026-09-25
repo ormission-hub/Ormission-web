@@ -69,7 +69,7 @@ export function WhatsAppButton() {
         const { data, error } = await supabase
           .from("site_settings")
           .select("key, value")
-          .in("key", ["social_links", "contact_whatsapp", "contact_phone"]);
+          .in("key", ["social_links", "contact_whatsapp", "contact_phone", "contact_messenger"]);
 
         if (error || !isSubscribed || !data) return;
 
@@ -94,11 +94,18 @@ export function WhatsAppButton() {
           if (raw) activeWa = formatWhatsAppUrl(raw);
         }
 
-        // 3. Contact phone / hotline
+        // 3. Contact phone / hotline (Direct Call)
         const phoneRow = data.find((d) => d.key === "contact_phone");
         if (phoneRow?.value) {
           const raw = typeof phoneRow.value === "string" ? phoneRow.value.trim() : "";
           if (raw) activePhone = raw;
+        }
+
+        // 4. Contact messenger
+        const messengerRow = data.find((d) => d.key === "contact_messenger");
+        if (messengerRow?.value) {
+          const raw = typeof messengerRow.value === "string" ? messengerRow.value.trim() : "";
+          if (raw) activeFb = raw;
         }
 
         if (activeWa) setWhatsappUrl(formatWhatsAppUrl(activeWa));
