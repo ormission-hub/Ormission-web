@@ -1,4 +1,4 @@
-import { Course, CurriculumSection } from "../data/courses";
+import { Course, CurriculumSection, SectionType } from "../data/courses";
 import { Instructor, INSTRUCTORS } from "../data/instructors";
 
 export const DEFAULT_COURSE_THUMBNAIL =
@@ -96,11 +96,38 @@ export function mapDbCourseToAppCourse(dbCourse: any): Course {
           ? [...sec.lessons].sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0))
           : [];
 
+        let detectedType: SectionType = (sec.section_type as SectionType) || "content";
+        let cleanTitle = sec.title || `Chapter ${sIdx + 1}`;
+        let cleanTitleBn = sec.title_bn || sec.title || `অধ্যায় ${sIdx + 1}`;
+
+        // Check if explicitly tagged like [demo], [exam], [outline], etc.
+        const match = (cleanTitle || "").match(/^\[(demo|outline|content|exam|other)\]\s*(.*)$/i) ||
+                      (cleanTitleBn || "").match(/^\[(demo|outline|content|exam|other)\]\s*(.*)$/i);
+
+        if (match) {
+          detectedType = match[1].toLowerCase() as SectionType;
+          cleanTitle = cleanTitle.replace(/^\[(demo|outline|content|exam|other)\]\s*/i, "").trim();
+          cleanTitleBn = cleanTitleBn.replace(/^\[(demo|outline|content|exam|other)\]\s*/i, "").trim();
+        } else if (!sec.section_type) {
+          // Smart inference for existing courses:
+          const lowerBn = (cleanTitleBn || "").toLowerCase();
+          const lowerEn = (cleanTitle || "").toLowerCase();
+          const hasFree = sortedLessons.some((l: any) => l.is_preview === true || l.isFreePreview === true);
+
+          if (hasFree || lowerBn.includes("ডেমো") || lowerBn.includes("ফ্রি") || lowerEn.includes("demo") || lowerEn.includes("free")) {
+            detectedType = "demo";
+          } else if (lowerBn.includes("আউটলাইন") || lowerBn.includes("সিলেবাস") || lowerEn.includes("outline") || lowerEn.includes("syllabus")) {
+            detectedType = "outline";
+          } else if (lowerBn.includes("পরীক্ষা") || lowerBn.includes("এক্সাম") || lowerBn.includes("টেস্ট") || lowerEn.includes("exam") || lowerEn.includes("test")) {
+            detectedType = "exam";
+          }
+        }
+
         return {
           id: String(sec.id || `sec-${sIdx + 1}`),
-          title: sec.title || sec.title_bn || `Chapter ${sIdx + 1}`,
-          titleBn: sec.title_bn || sec.title || `অধ্যায় ${sIdx + 1}`,
-          sectionType: sec.section_type || "content",
+          title: cleanTitle,
+          titleBn: cleanTitleBn,
+          sectionType: detectedType,
           lessons: sortedLessons.map((les: any, lIdx: number) => {
             const isFree = les.is_preview === true || les.isFreePreview === true;
             const rawServers = Array.isArray(les.lesson_servers) ? les.lesson_servers : [];

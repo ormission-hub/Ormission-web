@@ -56,7 +56,6 @@ export async function getLiveCourseBySlug(
           id,
           title,
           title_bn,
-          section_type,
           sort_order,
           lessons (
             id,
@@ -127,11 +126,25 @@ export async function getLiveCourseBySlug(
         instructors: instructorsList,
       };
     }
+
+    if (error) {
+      console.warn("Supabase fetch course by slug error:", slug, error.message);
+    }
   } catch (err) {
-    console.warn("Supabase fetch course by slug failed, falling back:", err);
+    console.warn("Supabase fetch course by slug failed:", err);
   }
 
-  // No static fallback — course must exist in the real DB
+  // Fallback to static mock courses if DB does not have it (e.g. previewing demo courses)
+  const staticCourse = COURSES.find((c) => c.slug === slug);
+  if (staticCourse) {
+    const primaryInstructor = INSTRUCTORS.find((i) => i.id === staticCourse.instructorId) || INSTRUCTORS[0];
+    return {
+      course: staticCourse,
+      instructor: primaryInstructor,
+      instructors: [primaryInstructor],
+    };
+  }
+
   return { course: null, instructor: null, instructors: [] };
 }
 
@@ -148,7 +161,6 @@ export async function getLiveCourses(): Promise<Course[]> {
           id,
           title,
           title_bn,
-          section_type,
           sort_order,
           lessons (
             id,
