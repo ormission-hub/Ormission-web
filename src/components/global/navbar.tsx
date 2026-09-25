@@ -20,6 +20,8 @@ import {
   Receipt,
   User as UserIcon,
   LogOut,
+  Laptop,
+  Check,
 } from "lucide-react";
 import { BrandLogo } from "@/components/global/brand-logo";
 import { useTheme } from "@/components/global/theme-provider";
@@ -125,7 +127,9 @@ export function Navbar() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
-  const { resolvedTheme, toggleTheme } = useTheme();
+  const themeMenuRef = useRef<HTMLDivElement>(null);
+  const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
+  const { theme, resolvedTheme, setTheme, toggleTheme } = useTheme();
   const pathname = usePathname();
   const router = useRouter();
 
@@ -147,11 +151,14 @@ export function Navbar() {
     };
   }, []);
 
-  // Close user dropdown on outside click
+  // Close user & theme dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
         setIsUserMenuOpen(false);
+      }
+      if (themeMenuRef.current && !themeMenuRef.current.contains(e.target as Node)) {
+        setIsThemeMenuOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -276,20 +283,107 @@ export function Navbar() {
                 <Search className="w-4.5 h-4.5" />
               </button>
 
-              {/* Dark/Light Theme Toggle */}
-              <button
-                type="button"
-                onClick={toggleTheme}
-                className="p-2 rounded-lg text-text-muted hover:text-text hover:bg-surface-secondary transition-colors border border-transparent hover:border-border"
-                title={resolvedTheme === "dark" ? "লাইট মোডে স্যুইচ করুন" : "ডার্ক মোডে স্যুইচ করুন"}
-                aria-label="Toggle theme"
-              >
-                {resolvedTheme === "dark" ? (
-                  <Sun className="w-4.5 h-4.5 text-accent animate-spin-once" />
-                ) : (
-                  <Moon className="w-4.5 h-4.5 text-primary" />
-                )}
-              </button>
+              {/* Theme Mode Selector (Auto / Light / Dark) */}
+              <div className="relative" ref={themeMenuRef}>
+                <button
+                  type="button"
+                  onClick={() => setIsThemeMenuOpen(!isThemeMenuOpen)}
+                  className="p-2 rounded-xl text-text-muted hover:text-text hover:bg-surface-secondary transition-all border border-transparent hover:border-border cursor-pointer flex items-center gap-1.5"
+                  title={`থিম: ${
+                    theme === "system"
+                      ? "অটো (ডিভাইস অনুযায়ী)"
+                      : theme === "dark"
+                      ? "ডার্ক মোড"
+                      : "লাইট মোড"
+                  }`}
+                  aria-label="Theme mode"
+                >
+                  {theme === "system" ? (
+                    <Laptop className="w-4.5 h-4.5 text-primary" />
+                  ) : resolvedTheme === "dark" ? (
+                    <Moon className="w-4.5 h-4.5 text-sky-400" />
+                  ) : (
+                    <Sun className="w-4.5 h-4.5 text-amber-500" />
+                  )}
+                  {theme === "system" && (
+                    <span className="hidden xl:inline text-[10px] font-bold font-bengali text-text-muted/80 bg-surface-secondary px-1.5 py-0.2 rounded-md border border-border/60">
+                      অটো
+                    </span>
+                  )}
+                </button>
+
+                <AnimatePresence>
+                  {isThemeMenuOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 top-full mt-2 w-48 rounded-2xl bg-surface/95 dark:bg-slate-900/95 backdrop-blur-xl border border-border shadow-xl p-1.5 z-50 font-bengali space-y-0.5"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTheme("system");
+                          setIsThemeMenuOpen(false);
+                        }}
+                        className={cn(
+                          "w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-colors cursor-pointer text-left",
+                          theme === "system"
+                            ? "bg-primary/10 text-primary font-bold"
+                            : "text-text hover:bg-surface-secondary font-medium"
+                        )}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Laptop className="w-4 h-4 text-primary" />
+                          <span>অটো (ডিভাইস অনুযায়ী)</span>
+                        </div>
+                        {theme === "system" && <Check className="w-3.5 h-3.5 text-primary" />}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTheme("light");
+                          setIsThemeMenuOpen(false);
+                        }}
+                        className={cn(
+                          "w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-colors cursor-pointer text-left",
+                          theme === "light"
+                            ? "bg-primary/10 text-primary font-bold"
+                            : "text-text hover:bg-surface-secondary font-medium"
+                        )}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Sun className="w-4 h-4 text-amber-500" />
+                          <span>লাইট মোড</span>
+                        </div>
+                        {theme === "light" && <Check className="w-3.5 h-3.5 text-primary" />}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTheme("dark");
+                          setIsThemeMenuOpen(false);
+                        }}
+                        className={cn(
+                          "w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-colors cursor-pointer text-left",
+                          theme === "dark"
+                            ? "bg-primary/10 text-primary font-bold"
+                            : "text-text hover:bg-surface-secondary font-medium"
+                        )}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Moon className="w-4 h-4 text-sky-400" />
+                          <span>ডার্ক মোড</span>
+                        </div>
+                        {theme === "dark" && <Check className="w-3.5 h-3.5 text-primary" />}
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
 
               {/* Auth Buttons: Logged In User Pill vs Login/Register */}
               {user ? (
@@ -412,6 +506,60 @@ export function Navbar() {
                             <UserIcon className="w-4 h-4 text-primary" />
                             <span>প্রোফাইল সেটিংস</span>
                           </Link>
+                        </div>
+
+                        {/* Theme Switcher inside User Menu */}
+                        <div className="px-3 py-2 border-t border-border/70 mt-1">
+                          <div className="text-[10.5px] font-bold text-text-muted mb-1.5 font-bengali flex items-center justify-between">
+                            <span>থিম মোড</span>
+                            <span className="text-[10px] text-primary font-bold">
+                              {theme === "system" ? "অটো" : theme === "dark" ? "ডার্ক" : "লাইট"}
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-3 gap-1 bg-surface-secondary p-1 rounded-xl border border-border/60">
+                            <button
+                              type="button"
+                              onClick={() => setTheme("system")}
+                              className={cn(
+                                "flex items-center justify-center gap-1 py-1 rounded-lg text-[10.5px] font-bold font-bengali transition-all cursor-pointer",
+                                theme === "system"
+                                  ? "bg-surface text-primary shadow-xs"
+                                  : "text-text-muted hover:text-text"
+                              )}
+                              title="ডিভাইসের থিম অনুযায়ী"
+                            >
+                              <Laptop className="w-3 h-3" />
+                              <span>অটো</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setTheme("light")}
+                              className={cn(
+                                "flex items-center justify-center gap-1 py-1 rounded-lg text-[10.5px] font-bold font-bengali transition-all cursor-pointer",
+                                theme === "light"
+                                  ? "bg-surface text-amber-500 shadow-xs"
+                                  : "text-text-muted hover:text-text"
+                              )}
+                              title="লাইট মোড"
+                            >
+                              <Sun className="w-3 h-3" />
+                              <span>লাইট</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setTheme("dark")}
+                              className={cn(
+                                "flex items-center justify-center gap-1 py-1 rounded-lg text-[10.5px] font-bold font-bengali transition-all cursor-pointer",
+                                theme === "dark"
+                                  ? "bg-surface text-sky-400 shadow-xs"
+                                  : "text-text-muted hover:text-text"
+                              )}
+                              title="ডার্ক মোড"
+                            >
+                              <Moon className="w-3 h-3" />
+                              <span>ডার্ক</span>
+                            </button>
+                          </div>
                         </div>
 
                         <div className="p-1.5 pt-1 border-t border-border/80 mt-1">
