@@ -20,10 +20,11 @@ import {
   ChevronDown,
   Layers,
   ArrowUpDown,
+  Loader2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
-import { DEFAULT_BOOKS, normalizeBookItem, type BookItem } from "@/lib/data/books";
+import { normalizeBookItem, type BookItem } from "@/lib/data/books";
 export type { BookItem };
 
 function BooksContent() {
@@ -32,7 +33,7 @@ function BooksContent() {
   const popularParam = searchParams.get("popular");
   const isPopularQuery = filterParam === "popular" || popularParam === "true";
 
-  const [books, setBooks] = useState<BookItem[]>(DEFAULT_BOOKS);
+  const [books, setBooks] = useState<BookItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [onlyPopular, setOnlyPopular] = useState(isPopularQuery);
@@ -56,13 +57,15 @@ function BooksContent() {
           .from("site_settings")
           .select("value")
           .eq("key", "ormission_books")
-          .single();
+          .maybeSingle();
 
-        if (!error && data?.value && Array.isArray(data.value) && data.value.length > 0) {
-          setBooks(data.value);
+        if (!error && data?.value && Array.isArray(data.value)) {
+          setBooks(data.value.map((b: any, idx: number) => normalizeBookItem(b, idx)));
+        } else {
+          setBooks([]);
         }
       } catch {
-        // Fallback to default
+        setBooks([]);
       } finally {
         setLoading(false);
       }
@@ -200,25 +203,34 @@ function BooksContent() {
         )}
 
         {/* Books Grid */}
-        {filteredBooks.length === 0 ? (
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <Loader2 className="w-10 h-10 text-primary animate-spin mb-3" />
+            <p className="text-sm font-semibold text-text-muted font-bengali">বইসমূহ লোড হচ্ছে...</p>
+          </div>
+        ) : filteredBooks.length === 0 ? (
           <div className="p-12 rounded-3xl bg-surface border border-border text-center max-w-lg mx-auto">
             <BookOpen className="w-12 h-12 text-text-muted/40 mx-auto mb-3" />
             <h3 className="text-lg font-bold text-text font-bengali mb-1">কোনো বই পাওয়া যায়নি</h3>
             <p className="text-xs text-text-muted font-bengali mb-4">
-              আপনার ফিল্টারের সাথে মিলে এমন কোনো বই নেই।
+              {books.length === 0
+                ? "ডাটাবেজে বর্তমানে কোনো বই যুক্ত করা হয়নি।"
+                : "আপনার ফিল্টারের সাথে মিলে এমন কোনো বই নেই।"}
             </p>
-            <button
-              type="button"
-              onClick={() => {
-                setSearchQuery("");
-                setSelectedCategory("all");
-                setOnlyPopular(false);
-                setSortBy("default");
-              }}
-              className="btn btn-primary btn-sm font-bengali cursor-pointer"
-            >
-              সকল ফিল্টার রিসেট করুন
-            </button>
+            {books.length > 0 && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery("");
+                  setSelectedCategory("all");
+                  setOnlyPopular(false);
+                  setSortBy("default");
+                }}
+                className="btn btn-primary btn-sm font-bengali cursor-pointer"
+              >
+                সকল ফিল্টার রিসেট করুন
+              </button>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-7">

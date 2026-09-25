@@ -30,7 +30,6 @@ import {
   flipRight,
   hoverLiftProps,
 } from "@/lib/animations";
-import { DEFAULT_BOOKS } from "@/lib/data/books";
 
 // ==========================================
 // Bondi Pathshala 3D Illustration Icons
@@ -249,9 +248,6 @@ function OurBooksIllustration() {
   );
 }
 
-// Fallback Curated Books
-const defaultOrmissionBooks = DEFAULT_BOOKS;
-
 // 3D Boy Student Avatar Component
 export function StudentAvatar3D() {
   return (
@@ -387,7 +383,7 @@ export function CategoryCoursesShowcase({
   const [coursesList, setCoursesList] = useState<DbFeaturedCourse[]>(courses);
   const [pinnedIds, setPinnedIds] = useState<(number | string)[]>(pinnedCourseIds);
   const [booksList, setBooksList] = useState<any[]>(
-    initialBooks && initialBooks.length > 0 ? initialBooks : defaultOrmissionBooks
+    initialBooks && initialBooks.length > 0 ? initialBooks : []
   );
 
   // Sync if server props change
@@ -995,6 +991,7 @@ export function CategoryCoursesShowcase({
         {/* ============================================================ */}
         {/* 2. PINNED BOOKS SLIDESHOW (Side-sliding horizontal carousel) */}
         {/* ============================================================ */}
+        {pinnedBooks.length > 0 && (
         <div className="pt-5 sm:pt-6 border-t border-border/60">
           <div className="flex items-center justify-between gap-3 mb-3.5 sm:mb-4">
             <div className="flex items-center gap-2.5 sm:gap-3">
@@ -1179,6 +1176,7 @@ export function CategoryCoursesShowcase({
             </div>
           )}
         </div>
+        )}
       </div>
     </section>
   );
