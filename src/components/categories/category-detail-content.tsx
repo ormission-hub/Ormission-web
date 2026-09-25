@@ -221,18 +221,14 @@ export function CategoryDetailContent({
                     whileHover={{ y: -5, transition: { duration: 0.2 } }}
                     className="group flex flex-col bg-surface border border-border/80 rounded-2xl overflow-hidden shadow-xs hover:shadow-2xl hover:shadow-primary/15 hover:border-primary/50 transition-all duration-300 h-full"
                   >
-                    {/* Book Cover Banner */}
-                    <div
-                      className={`relative h-48 w-full bg-gradient-to-br ${
-                        book.cover_gradient || "from-blue-600 to-indigo-700"
-                      } p-4 flex flex-col justify-between overflow-hidden`}
+                    {/* Clean Book Cover Area (No background color gradients) */}
+                    <Link
+                      href={`/books/${book.id}`}
+                      className="relative h-52 sm:h-56 w-full bg-slate-50/80 dark:bg-slate-900/50 p-4 flex flex-col items-center justify-center overflow-hidden border-b border-border/60 group/cover"
                     >
-                      <div className="absolute -right-8 -bottom-8 w-32 h-32 rounded-full bg-white/10 blur-xl pointer-events-none" />
-                      <div className="absolute left-0 top-0 w-full h-full bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.18),transparent_65%)] pointer-events-none" />
-
                       {/* Top Badges */}
-                      <div className="relative z-10 flex items-center justify-between gap-2">
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black text-white bg-black/40 backdrop-blur-md border border-white/20 font-bengali">
+                      <div className="absolute top-3 inset-x-3 z-10 flex items-center justify-between gap-2 pointer-events-none">
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold text-primary bg-primary/10 backdrop-blur-md border border-primary/20 font-bengali">
                           {book.category}
                         </span>
                         <div className="flex items-center gap-1.5">
@@ -250,21 +246,19 @@ export function CategoryDetailContent({
                         </div>
                       </div>
 
-                      {/* Cover Photo / Title Display */}
-                      <div className="relative z-10 my-auto text-center px-2 py-1">
+                      {/* Clean Book Image */}
+                      <div className="relative w-24 sm:w-28 aspect-[3/4] rounded-lg overflow-hidden shadow-md group-hover/cover:shadow-xl group-hover/cover:scale-105 transition-all duration-300 flex items-center justify-center bg-white dark:bg-slate-800 border border-border/40">
                         {book.cover_image ? (
-                          <div className="relative mx-auto w-24 h-32 rounded shadow-2xl overflow-hidden border border-white/30 transform group-hover:scale-105 transition-transform duration-300">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                              src={book.cover_image}
-                              alt={book.title}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
+                          /* eslint-disable-next-line @next/next/no-img-element */
+                          <img
+                            src={book.cover_image}
+                            alt={book.title}
+                            className="w-full h-full object-contain"
+                          />
                         ) : (
-                          <div className="flex flex-col items-center justify-center p-2 rounded-xl bg-black/20 backdrop-blur-xs border border-white/10">
-                            <BookOpen className="w-8 h-8 text-white/80 mb-1.5 group-hover:rotate-6 transition-transform" />
-                            <span className="text-xs font-black text-white font-bengali line-clamp-2 leading-tight">
+                          <div className="flex flex-col items-center justify-center p-2 text-center">
+                            <BookOpen className="w-8 h-8 text-primary/70 mb-1" />
+                            <span className="text-[10px] font-bold text-text line-clamp-2 font-bengali">
                               {book.title}
                             </span>
                           </div>
@@ -272,11 +266,17 @@ export function CategoryDetailContent({
                       </div>
 
                       {/* Cover Footer Tags */}
-                      <div className="relative z-10 flex items-center justify-between text-[11px] font-bold text-white/90 font-bengali">
-                        <span>{book.format}</span>
-                        {book.pages && <span>{book.pages}</span>}
+                      <div className="absolute bottom-2.5 inset-x-3 z-10 flex items-center justify-between pointer-events-none">
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold font-bengali bg-surface/90 backdrop-blur-md text-text-muted border border-border/60">
+                          {book.format}
+                        </span>
+                        {book.pages && (
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold font-bengali bg-surface/90 backdrop-blur-md text-text-muted border border-border/60">
+                            {book.pages}
+                          </span>
+                        )}
                       </div>
-                    </div>
+                    </Link>
 
                     {/* Book Details */}
                     <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-4">
@@ -295,9 +295,11 @@ export function CategoryDetailContent({
                         </div>
 
                         {/* Title & Subtitle */}
-                        <h3 className="text-base font-black text-text font-bengali leading-snug group-hover:text-primary transition-colors line-clamp-2">
-                          {book.title}
-                        </h3>
+                        <Link href={`/books/${book.id}`} className="block group/title">
+                          <h3 className="text-base font-black text-text font-bengali leading-snug group-hover/title:text-primary transition-colors line-clamp-2">
+                            {book.title}
+                          </h3>
+                        </Link>
 
                         {book.subtitle && (
                           <p className="text-xs text-text-muted font-bengali line-clamp-2 leading-relaxed">
@@ -326,25 +328,13 @@ export function CategoryDetailContent({
                         </div>
 
                         <div className="flex items-center gap-2">
-                          {book.order_url ? (
-                            <a
-                              href={book.order_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex-1 btn btn-primary btn-sm text-xs font-bold font-bengali flex items-center justify-center gap-1.5 shadow-xs"
-                            >
-                              <ShoppingBag className="w-3.5 h-3.5" />
-                              <span>অর্ডার করুন</span>
-                            </a>
-                          ) : (
-                            <Link
-                              href={`/books?id=${book.id}`}
-                              className="flex-1 btn btn-primary btn-sm text-xs font-bold font-bengali flex items-center justify-center gap-1.5 shadow-xs"
-                            >
-                              <ShoppingBag className="w-3.5 h-3.5" />
-                              <span>অর্ডার করুন</span>
-                            </Link>
-                          )}
+                          <Link
+                            href={`/books/${book.id}`}
+                            className="flex-1 btn btn-primary btn-sm text-xs font-bold font-bengali flex items-center justify-center gap-1.5 shadow-xs"
+                          >
+                            <ShoppingBag className="w-3.5 h-3.5" />
+                            <span>সংগ্রহ করুন</span>
+                          </Link>
 
                           {book.preview_pdf_url && (
                             <button

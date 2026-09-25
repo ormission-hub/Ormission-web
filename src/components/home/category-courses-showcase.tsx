@@ -30,6 +30,7 @@ import {
   flipRight,
   hoverLiftProps,
 } from "@/lib/animations";
+import { DEFAULT_BOOKS } from "@/lib/data/books";
 
 // ==========================================
 // Bondi Pathshala 3D Illustration Icons
@@ -249,72 +250,7 @@ function OurBooksIllustration() {
 }
 
 // Fallback Curated Books
-const defaultOrmissionBooks = [
-  {
-    id: "book-1",
-    title: "এইচএসসি পদার্থবিজ্ঞান মাস্টার ফর্মুলা বুক",
-    subtitle: "১ম ও ২য় পত্রের সকল সূত্রের প্রমাণ, শর্টকাট ট্রিকস ও বোর্ড প্রশ্ন সমাধান",
-    category: "এইচএসসি বিজ্ঞান",
-    price: 380,
-    original_price: 500,
-    cover_gradient: "from-blue-600 via-indigo-600 to-sky-700",
-    pages: "৩২০ পৃষ্ঠা",
-    format: "হার্ডকভার + ই-বুক",
-    rating: 5.0,
-    reviews_count: 1420,
-    features: ["অধ্যায়ভিত্তিক সকল সূত্র ও মাত্রা", "বিগত ১০ বছরের বোর্ড প্রশ্ন সমাধান", "টাইপভিত্তিক শর্টকাট মেথড"],
-    is_pinned: true,
-    is_popular: true,
-  },
-  {
-    id: "book-2",
-    title: "বুয়েট ও ইঞ্জিনিয়ারিং বিগত ২০ বছরের প্রশ্নব্যাংক",
-    subtitle: "বুয়েট, রুয়েট, কুয়েট, চুয়েটের অধ্যায়ভিত্তিক নিখুঁত প্রশ্ন বিশ্লেষণ ও সমাধান",
-    category: "ইঞ্জিনিয়ারিং ভর্তি",
-    price: 550,
-    original_price: 720,
-    cover_gradient: "from-purple-700 via-indigo-800 to-slate-900",
-    pages: "৫৪০ পৃষ্ঠা",
-    format: "হার্ডকভার প্রিন্ট",
-    rating: 5.0,
-    reviews_count: 980,
-    features: ["বিগত ২০ বছরের বুয়েট প্রশ্ন", "অধ্যায়ভিত্তিক ওয়েইটেজ এনালাইসিস", "কঠিন ম্যাথের সহজ বিকল্প টেকনিক"],
-    is_pinned: true,
-    is_popular: true,
-  },
-  {
-    id: "book-3",
-    title: "মেডিকেল বায়োলজি নেমোনিক্স ও হাই-ইল্ড হ্যান্ডবুক",
-    subtitle: "ডিএমসি ও শীর্ষ মেডিকেল শিক্ষার্থীদের তৈরিকৃত মনে রাখার স্পেশাল হ্যান্ডনোট",
-    category: "মেডিকেল ভর্তি",
-    price: 320,
-    original_price: 450,
-    cover_gradient: "from-emerald-600 via-teal-700 to-cyan-800",
-    pages: "২৮০ পৃষ্ঠা",
-    format: "৪ কালার আর্ট প্রিন্ট",
-    rating: 4.9,
-    reviews_count: 1650,
-    features: ["১০০% চিত্রসহ রঙিন ডায়াগ্রাম", "জাদুকরী নেমোনিক্স ও শর্টকাট", "বোটানি ও জুয়োলজির পূর্ণাঙ্গ কাভারেজ"],
-    is_pinned: true,
-    is_popular: true,
-  },
-  {
-    id: "book-4",
-    title: "এইচএসসি রসায়ন অর্গানিক রিঅ্যাকশন রঙিন রোডম্যাপ",
-    subtitle: "জৈব রসায়নের সকল বিক্রিয়া ও পারস্পরিক রূপান্তরের এক নজরে রঙিন ফ্লোচার্ট",
-    category: "এইচএসসি একাডেমি",
-    price: 290,
-    original_price: 390,
-    cover_gradient: "from-orange-600 via-amber-600 to-red-600",
-    pages: "১৯০ পৃষ্ঠা",
-    format: "প্রিমিয়াম আর্ট পেপার",
-    rating: 5.0,
-    reviews_count: 840,
-    features: ["সম্পূর্ণ বিক্রিয়ার রঙিন মেগা ফ্লোচার্ট", "সকল গুরুত্বপূর্ণ নেম রিঅ্যাকশন", "এডমিশন স্পেশাল কনভার্সন ট্রিকস"],
-    is_pinned: true,
-    is_popular: true,
-  },
-];
+const defaultOrmissionBooks = DEFAULT_BOOKS;
 
 // 3D Boy Student Avatar Component
 export function StudentAvatar3D() {
@@ -1099,103 +1035,126 @@ export function CategoryCoursesShowcase({
             onScroll={handleBookScroll}
             className="flex gap-5 sm:gap-6 overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar py-3 px-1 -mx-1"
           >
-            {pinnedBooks.map((book, idx) => (
-              <div
-                key={book.id}
-                className="w-[84vw] xs:w-[300px] sm:w-[320px] lg:w-[340px] shrink-0 snap-start group flex flex-col bg-surface border border-border/80 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:shadow-primary/15 hover:border-primary/50 hover:-translate-y-1 transition-all duration-300 h-full"
-              >
-                {/* Book Visual Mockup Cover Area */}
+            {pinnedBooks.map((book, idx) => {
+              const discountPct =
+                (book.original_price || book.originalPrice || 0) > book.price
+                  ? Math.round(
+                      (((book.original_price || book.originalPrice) - book.price) /
+                        (book.original_price || book.originalPrice)) *
+                        100
+                    )
+                  : 0;
+
+              return (
                 <div
-                  className={`relative h-48 sm:h-52 w-full bg-gradient-to-br ${book.cover_gradient || book.coverGradient || "from-blue-600 via-indigo-600 to-sky-700"} p-4 sm:p-5 flex flex-col justify-between overflow-hidden`}
+                  key={book.id}
+                  className="w-[84vw] xs:w-[300px] sm:w-[320px] lg:w-[340px] shrink-0 snap-start group flex flex-col bg-surface border border-border/80 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:shadow-primary/15 hover:border-primary/50 hover:-translate-y-1 transition-all duration-300 h-full"
                 >
-                  <div className="absolute -right-8 -bottom-8 w-32 h-32 rounded-full bg-white/10 blur-xl pointer-events-none" />
-                  <div className="absolute left-0 top-0 w-full h-full bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.18),transparent_65%)] pointer-events-none" />
-
-                  {/* Badges */}
-                  <div className="relative z-10 flex items-center justify-between gap-2">
-                    <span className="px-2.5 py-0.5 rounded-full text-[10.5px] font-black text-white bg-black/40 backdrop-blur-md border border-white/20 font-bengali">
-                      {book.category}
-                    </span>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black text-white bg-primary shadow-sm font-bengali flex items-center gap-1">
-                      <Pin className="w-2.5 h-2.5 fill-white/30" /> পিন করা
-                    </span>
-                  </div>
-
-                  {/* 3D Book Spine Mockup */}
-                  <div className="relative z-10 flex items-center gap-3 my-auto">
-                    <div className="w-14 h-20 rounded-md bg-white/20 backdrop-blur-md border border-white/30 shadow-2xl flex flex-col items-center justify-center p-2 text-white shrink-0 group-hover:scale-105 transition-transform duration-300">
-                      <BookOpen className="w-7 h-7 mb-1 text-white drop-shadow-sm" />
-                      <span className="text-[8.5px] font-black tracking-widest text-white/90">ORMISSION</span>
-                    </div>
-                    <div className="text-white space-y-1">
-                      <span className="inline-block px-2 py-0.5 rounded bg-white/25 text-[10px] font-bold">
-                        {book.format || "হার্ডকভার প্রিন্ট"}
+                  {/* Clean Book Image Cover Area (No background color gradients) */}
+                  <Link
+                    href={`/books/${book.id}`}
+                    className="relative h-52 sm:h-56 w-full bg-slate-50/80 dark:bg-slate-900/50 p-4 flex flex-col items-center justify-center overflow-hidden border-b border-border/60 group/cover"
+                  >
+                    {/* Badges */}
+                    <div className="absolute top-3 inset-x-3 z-10 flex items-center justify-between gap-2 pointer-events-none">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold text-primary bg-primary/10 backdrop-blur-md border border-primary/20 font-bengali">
+                        {book.category}
                       </span>
-                      <p className="text-xs font-semibold text-white/90 font-bengali">
-                        {book.pages || "৩২০ পৃষ্ঠা"}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Book Details */}
-                <div className="p-5 flex flex-col flex-1">
-                  <h4 className="text-base sm:text-lg font-black text-text group-hover:text-primary transition-colors line-clamp-1 mb-1.5 font-bengali">
-                    {book.title}
-                  </h4>
-                  <p className="text-xs text-text-muted line-clamp-2 mb-3 leading-relaxed font-bengali">
-                    {book.subtitle}
-                  </p>
-
-                  {/* Key features */}
-                  {Array.isArray(book.features) && book.features.length > 0 && (
-                    <div className="space-y-1.5 mb-4">
-                      {book.features.slice(0, 2).map((feat: string, fIdx: number) => (
-                        <div key={fIdx} className="flex items-center gap-1.5 text-[11.5px] font-medium text-slate-600 dark:text-slate-300 font-bengali">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-primary shrink-0" />
-                          <span className="truncate">{feat}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* 5-Star Rating */}
-                  <div className="flex items-center justify-between gap-2 mb-4 pt-2.5 border-t border-border/40">
-                    <div className="flex items-center gap-1">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                      ))}
-                      <span className="text-xs font-bold text-text ml-1">{book.rating || "5.0"}</span>
-                    </div>
-                    <span className="text-[11px] text-text-muted font-bengali">
-                      ({(book.reviews_count || book.reviewsCount || 1200).toLocaleString("en-US")}+ রিভিউ)
-                    </span>
-                  </div>
-
-                  {/* Pricing & CTA */}
-                  <div className="mt-auto pt-3 border-t border-border/60 flex items-center justify-between">
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-xl font-black text-primary tabular-nums">
-                        ৳{book.price.toLocaleString("en-US")}
-                      </span>
-                      {(book.original_price || book.originalPrice) > book.price && (
-                        <span className="text-xs text-text-muted line-through tabular-nums">
-                          ৳{(book.original_price || book.originalPrice).toLocaleString("en-US")}
+                      {discountPct > 0 && (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-black text-white bg-rose-500 font-sans shadow-xs">
+                          -{discountPct}%
                         </span>
                       )}
                     </div>
 
-                    <Link
-                      href="/books"
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-primary hover:bg-primary-hover shadow-md shadow-primary/25 hover:shadow-lg hover:shadow-primary/35 transition-all duration-200 group-hover:scale-105 font-bengali"
-                    >
-                      <ShoppingBag className="w-3.5 h-3.5" />
-                      <span>সংগ্রহ করুন</span>
+                    {/* Book Image */}
+                    <div className="relative w-28 sm:w-32 aspect-[3/4] rounded-lg overflow-hidden shadow-md group-hover/cover:shadow-xl group-hover/cover:scale-105 transition-all duration-300 flex items-center justify-center bg-white dark:bg-slate-800 border border-border/40">
+                      {book.cover_image ? (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img
+                          src={book.cover_image}
+                          alt={book.title}
+                          className="w-full h-full object-contain"
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center p-3 text-center">
+                          <BookOpen className="w-8 h-8 text-primary/70 mb-1" />
+                          <span className="text-[10px] font-bold text-text line-clamp-2 font-bengali">
+                            {book.title}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </Link>
+
+                  {/* Book Details */}
+                  <div className="p-4 sm:p-5 flex flex-col flex-1">
+                    <Link href={`/books/${book.id}`} className="block group/title">
+                      <h4 className="text-base sm:text-lg font-black text-text group-hover/title:text-primary transition-colors line-clamp-1 mb-1 font-bengali">
+                        {book.title}
+                      </h4>
                     </Link>
+                    <p className="text-xs text-text-muted line-clamp-2 mb-3 leading-relaxed font-bengali">
+                      {book.subtitle}
+                    </p>
+
+                    {/* Key features */}
+                    {Array.isArray(book.features) && book.features.length > 0 && (
+                      <div className="space-y-1.5 mb-4">
+                        {book.features.slice(0, 2).map((feat: string, fIdx: number) => (
+                          <div
+                            key={fIdx}
+                            className="flex items-center gap-1.5 text-[11.5px] font-medium text-text-muted font-bengali"
+                          >
+                            <CheckCircle2 className="w-3.5 h-3.5 text-primary shrink-0" />
+                            <span className="truncate">{feat}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Rating */}
+                    {book.rating && (
+                      <div className="flex items-center justify-between gap-2 mb-4 pt-2.5 border-t border-border/40">
+                        <div className="flex items-center gap-1">
+                          {[...Array(5)].map((_, i) => (
+                            <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                          ))}
+                          <span className="text-xs font-bold text-text ml-1">{book.rating}</span>
+                        </div>
+                        {Boolean(book.reviews_count || book.reviewsCount) && (
+                          <span className="text-[11px] text-text-muted font-bengali">
+                            ({(book.reviews_count || book.reviewsCount).toLocaleString("en-US")}+ রিভিউ)
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Pricing & CTA */}
+                    <div className="mt-auto pt-3 border-t border-border/60 flex items-center justify-between">
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-xl font-black text-primary tabular-nums font-sans">
+                          ৳{book.price.toLocaleString("en-US")}
+                        </span>
+                        {(book.original_price || book.originalPrice) > book.price && (
+                          <span className="text-xs text-text-muted line-through tabular-nums font-sans">
+                            ৳{(book.original_price || book.originalPrice).toLocaleString("en-US")}
+                          </span>
+                        )}
+                      </div>
+
+                      <Link
+                        href={`/books/${book.id}`}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-primary hover:bg-primary-hover shadow-md shadow-primary/25 hover:shadow-lg hover:shadow-primary/35 transition-all duration-200 group-hover:scale-105 font-bengali"
+                      >
+                        <ShoppingBag className="w-3.5 h-3.5" />
+                        <span>সংগ্রহ করুন</span>
+                      </Link>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Dots Indicator */}
