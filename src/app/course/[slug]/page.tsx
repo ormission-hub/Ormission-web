@@ -108,7 +108,7 @@ export default async function CourseDetailPage({ params }: PageProps) {
   return (
     <div className="bg-background min-h-screen pb-24 lg:pb-16">
       {/* Top Breadcrumb & Hero Header */}
-      <div className="bg-surface/90 dark:bg-slate-900/90 border-b border-border/80 pt-20 sm:pt-24 lg:pt-28 pb-8 sm:pb-12 lg:pb-14 relative overflow-hidden">
+      <div className="bg-surface/90 dark:bg-slate-900/90 border-b border-border/80 pt-24 sm:pt-28 lg:pt-32 pb-8 sm:pb-12 lg:pb-14 relative overflow-hidden">
         {/* Subtle Ambient Glow Blobs */}
         <div className="absolute top-0 right-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-10 w-80 h-80 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />

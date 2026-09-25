@@ -184,7 +184,7 @@ export function CategoryDirectoryClient({
   return (
     <div className="min-h-screen bg-background text-text selection:bg-primary/20 selection:text-primary">
       {/* Ambient background glows */}
-      <div className="relative overflow-hidden pt-8 pb-16 lg:pt-12 lg:pb-24">
+      <div className="relative overflow-hidden pt-24 pb-16 sm:pt-28 sm:pb-20 lg:pt-32 lg:pb-24">
         <div
           className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[350px] rounded-full opacity-20 pointer-events-none blur-3xl"
           style={{

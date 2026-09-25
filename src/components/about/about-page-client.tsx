@@ -230,7 +230,7 @@ export function AboutPageClient({
   return (
     <div className="bg-background min-h-screen">
       {/* ─── Hero Section ─── */}
-      <section className="relative overflow-hidden pt-12 pb-16 sm:pt-16 sm:pb-20 lg:pt-20 lg:pb-28">
+      <section className="relative overflow-hidden pt-24 pb-16 sm:pt-28 sm:pb-20 lg:pt-32 lg:pb-28">
         {/* Ambient backgrounds */}
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-gradient-to-br from-primary/8 via-rose-500/5 to-transparent rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-gradient-to-tl from-purple-500/8 via-indigo-500/5 to-transparent rounded-full blur-3xl pointer-events-none" />

@@ -188,7 +188,7 @@ export function FreeResourcesClient({ initialResources }: FreeResourcesClientPro
   };
 
   return (
-    <div className="bg-background min-h-screen py-8 sm:py-12 lg:py-16 text-text selection:bg-secondary/20 selection:text-secondary overflow-hidden">
+    <div className="bg-background min-h-screen pt-24 pb-12 sm:pt-28 sm:pb-16 lg:pt-32 lg:pb-20 text-text selection:bg-secondary/20 selection:text-secondary overflow-hidden">
       <div className="container-main relative">
         {/* Ambient radial glow */}
         <div

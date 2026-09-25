@@ -36,7 +36,7 @@ export default async function CategoryDetailPage({ params }: PageProps) {
   }
 
   return (
-    <div className="bg-background min-h-screen py-8 lg:py-12">
+    <div className="bg-background min-h-screen pt-24 pb-12 sm:pt-28 sm:pb-14 lg:pt-32 lg:pb-16">
       <div className="container-main">
         {/* Breadcrumb Navigation */}
         <nav

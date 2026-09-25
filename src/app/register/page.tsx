@@ -175,7 +175,7 @@ function RegisterContent() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#060911] text-slate-900 dark:text-slate-100 py-10 lg:py-16 relative overflow-hidden flex items-center justify-center transition-colors duration-300">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#060911] text-slate-900 dark:text-slate-100 pt-24 pb-12 sm:pt-28 sm:pb-16 lg:py-16 relative overflow-hidden flex items-center justify-center transition-colors duration-300">
       {/* Background Ambient Lighting */}
       <div className="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] bg-blue-500/10 dark:bg-blue-600/15 rounded-full blur-[140px] pointer-events-none -z-10" />
       <div className="absolute top-[20%] right-[-5%] w-[550px] h-[550px] bg-indigo-500/8 dark:bg-indigo-600/12 rounded-full blur-[160px] pointer-events-none -z-10" />

@@ -8,7 +8,7 @@ export const metadata = {
 
 export default function RefundPolicyPage() {
   return (
-    <div className="bg-background min-h-screen py-10 lg:py-16">
+    <div className="bg-background min-h-screen pt-24 pb-12 sm:pt-28 sm:pb-16 lg:py-16">
       <div className="container-main max-w-3xl">
         <div className="mb-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/10 text-secondary text-xs font-semibold font-bengali mb-3">

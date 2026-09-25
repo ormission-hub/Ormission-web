@@ -180,7 +180,7 @@ export function CoursesClient({
   };
 
   return (
-    <div className="bg-background min-h-screen py-8 sm:py-12 lg:py-14">
+    <div className="bg-background min-h-screen pt-24 pb-12 sm:pt-28 sm:pb-14 lg:pt-32 lg:pb-16">
       <div className="container-main">
         {/* Page Header matching Home UI aesthetics */}
         <div className="max-w-3xl mb-8 sm:mb-10">

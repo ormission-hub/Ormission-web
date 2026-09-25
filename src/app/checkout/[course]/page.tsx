@@ -507,7 +507,7 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
   }
 
   return (
-    <div className="relative min-h-screen bg-background text-text py-6 md:py-10 lg:py-14 overflow-hidden">
+    <div className="relative min-h-screen bg-background text-text pt-24 pb-12 sm:pt-28 sm:pb-14 lg:pt-32 lg:pb-16 overflow-hidden">
       {/* Background Ambient Glows */}
       <div className="absolute top-10 left-1/4 -translate-x-1/2 w-96 h-96 bg-primary/10 rounded-full blur-3xl pointer-events-none -z-10" />
       <div className="absolute top-80 right-10 w-96 h-96 bg-secondary/10 rounded-full blur-3xl pointer-events-none -z-10" />
