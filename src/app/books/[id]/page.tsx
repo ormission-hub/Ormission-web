@@ -2,8 +2,6 @@
 
 import { useEffect, useState, use } from "react";
 import Link from "next/link";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
 import {
   BookOpen,
   Star,
@@ -14,52 +12,27 @@ import {
   ShieldCheck,
   FileText,
   Sparkles,
-  Phone,
-  User,
-  MapPin,
   ChevronRight,
   Share2,
   Check,
   Loader2,
-  HelpCircle,
-  Package,
-  Layers,
   ArrowRight,
-  Eye,
   X,
-  CreditCard,
-  Building,
+  ExternalLink,
 } from "lucide-react";
 import { fetchBookById, fetchAllBooks, type BookItem } from "@/lib/data/books";
-import { createClient } from "@/lib/supabase/client";
 
 interface BookDetailPageProps {
   params: Promise<{ id: string }>;
 }
 
 export default function BookDetailPage({ params }: BookDetailPageProps) {
-  const router = useRouter();
   const resolvedParams = use(params);
   const bookId = resolvedParams.id;
 
   const [book, setBook] = useState<BookItem | null>(null);
   const [relatedBooks, setRelatedBooks] = useState<BookItem[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // Order modal & form states
-  const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
-  const [quantity, setQuantity] = useState(1);
-  const [customerName, setCustomerName] = useState("");
-  const [customerPhone, setCustomerPhone] = useState("");
-  const [deliveryAddress, setDeliveryAddress] = useState("");
-  const [district, setDistrict] = useState("ঢাকা");
-  const [paymentMethod, setPaymentMethod] = useState<"cod" | "bkash" | "nagad">("cod");
-  const [orderNotes, setOrderNotes] = useState("");
-  const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
-  const [orderSuccessData, setOrderSuccessData] = useState<{
-    orderNumber: string;
-    totalAmount: number;
-  } | null>(null);
 
   // PDF Preview Modal
   const [showPdfModal, setShowPdfModal] = useState(false);
@@ -83,116 +56,19 @@ export default function BookDetailPage({ params }: BookDetailPageProps) {
     loadData();
   }, [bookId]);
 
-  // Pre-fill user data if authenticated
-  useEffect(() => {
-    async function loadUserProfile() {
-      try {
-        const supabase = createClient();
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        if (session?.user) {
-          if (session.user.user_metadata?.full_name) {
-            setCustomerName(session.user.user_metadata.full_name);
-          }
-          if (session.user.phone) {
-            setCustomerPhone(session.user.phone);
-          }
-        }
-      } catch {
-        // Guest mode fallback
-      }
-    }
-    loadUserProfile();
-  }, []);
-
   const handleShare = () => {
     if (navigator.share && book) {
-      navigator.share({
-        title: book.title,
-        text: book.subtitle,
-        url: window.location.href,
-      }).catch(() => {});
+      navigator
+        .share({
+          title: book.title,
+          text: book.subtitle,
+          url: window.location.href,
+        })
+        .catch(() => {});
     } else {
       navigator.clipboard.writeText(window.location.href);
       setCopiedLink(true);
       setTimeout(() => setCopiedLink(false), 2500);
-    }
-  };
-
-  const handlePlaceOrder = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!book) return;
-
-    if (!customerName.trim()) {
-      alert("অনুগ্রহ করে আপনার নাম লিখুন।");
-      return;
-    }
-    if (!customerPhone.trim() || customerPhone.length < 11) {
-      alert("অনুগ্রহ করে একটি সঠিক মোবাইল নম্বর দিন (কমপক্ষে ১১ ডিজিট)।");
-      return;
-    }
-    if (!deliveryAddress.trim()) {
-      alert("অনুগ্রহ করে আপনার সম্পূর্ণ ডেলিভারি ঠিকানা লিখুন।");
-      return;
-    }
-
-    setIsSubmittingOrder(true);
-
-    try {
-      const orderNumber = `ORM-BK-${Math.floor(100000 + Math.random() * 900000)}`;
-      const deliveryFee = district === "ঢাকা" ? 60 : 100;
-      const totalAmount = book.price * quantity + deliveryFee;
-
-      const supabase = createClient();
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      // Store in orders or fallback to notification
-      const orderPayload = {
-        item_type: "book",
-        book_id: book.id,
-        book_title: book.title,
-        quantity,
-        unit_price: book.price,
-        delivery_fee: deliveryFee,
-        total_amount: totalAmount,
-        customer_name: customerName.trim(),
-        customer_phone: customerPhone.trim(),
-        delivery_address: deliveryAddress.trim(),
-        district,
-        payment_method: paymentMethod,
-        order_notes: orderNotes.trim(),
-        order_number: orderNumber,
-        status: "pending",
-        user_id: session?.user?.id || null,
-        created_at: new Date().toISOString(),
-      };
-
-      try {
-        await supabase.from("orders").insert({
-          user_id: session?.user?.id || null,
-          course_id: null,
-          original_amount: book.original_price * quantity,
-          discount_amount: (book.original_price - book.price) * quantity,
-          final_amount: totalAmount,
-          status: "pending",
-          payment_method: paymentMethod,
-          notes: JSON.stringify(orderPayload),
-        });
-      } catch (dbErr) {
-        console.warn("Direct order table insert failed, recorded in local session:", dbErr);
-      }
-
-      setOrderSuccessData({
-        orderNumber,
-        totalAmount,
-      });
-    } catch (err: any) {
-      alert("অর্ডার প্রক্রিয়া করতে সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।");
-    } finally {
-      setIsSubmittingOrder(false);
     }
   };
 
@@ -231,8 +107,11 @@ export default function BookDetailPage({ params }: BookDetailPageProps) {
       ? Math.round(((book.original_price - book.price) / book.original_price) * 100)
       : 0;
 
-  const deliveryFee = district === "ঢাকা" ? 60 : 100;
-  const grandTotal = book.price * quantity + deliveryFee;
+  // External order link set by admin (e.g. Rokomari, Wafilife, or custom link)
+  const targetOrderUrl =
+    book.order_url && book.order_url.trim().length > 0
+      ? book.order_url.trim()
+      : `https://www.rokomari.com/book/search?term=${encodeURIComponent(book.title)}`;
 
   return (
     <div className="min-h-screen bg-background pt-24 pb-20 sm:pt-28 sm:pb-24 font-bengali">
@@ -402,7 +281,7 @@ export default function BookDetailPage({ params }: BookDetailPageProps) {
               )}
             </div>
 
-            {/* Pricing Box */}
+            {/* Pricing Box & Direct Purchase Link */}
             <div className="p-4 sm:p-5 rounded-2xl bg-surface border border-border/80 shadow-xs mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <span className="text-xs text-text-muted block mb-1">নির্ধারিত মূল্য:</span>
@@ -426,16 +305,22 @@ export default function BookDetailPage({ params }: BookDetailPageProps) {
                 </span>
               </div>
 
-              {/* Order / Collect Button */}
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => setIsOrderModalOpen(true)}
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3.5 rounded-xl text-sm sm:text-base font-bold text-white bg-primary hover:bg-primary-hover shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/35 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
+              {/* Direct Order Button (Opens Admin's link, e.g. Rokomari, Wafilife, or custom link) */}
+              <div className="flex flex-col sm:items-end gap-1.5">
+                <a
+                  href={targetOrderUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3.5 rounded-xl text-sm sm:text-base font-bold text-white bg-primary hover:bg-primary-hover shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/35 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer font-bengali"
                 >
                   <ShoppingBag className="w-5 h-5" />
                   <span>সংগ্রহ করুন / অর্ডার করুন</span>
-                </button>
+                  <ExternalLink className="w-4 h-4 opacity-80" />
+                </a>
+                <span className="text-[11px] text-text-muted flex items-center gap-1 font-bengali">
+                  <ExternalLink className="w-3 h-3 text-primary shrink-0" />
+                  <span>রকমারি বা অনলাইন শপ থেকে অর্ডার করুন</span>
+                </span>
               </div>
             </div>
 
@@ -574,302 +459,17 @@ export default function BookDetailPage({ params }: BookDetailPageProps) {
             )}
           </div>
         </div>
-        <button
-          type="button"
-          onClick={() => setIsOrderModalOpen(true)}
-          className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white bg-primary hover:bg-primary-hover shadow-md shadow-primary/25 cursor-pointer"
+        <a
+          href={targetOrderUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white bg-primary hover:bg-primary-hover shadow-md shadow-primary/25 cursor-pointer font-bengali"
         >
           <ShoppingBag className="w-4 h-4" />
           <span>সংগ্রহ করুন</span>
-        </button>
+          <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+        </a>
       </div>
-
-      {/* ============================================================ */}
-      {/* ORDER MODAL (সংগ্রহ / অর্ডার করুন) */}
-      {/* ============================================================ */}
-      {isOrderModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs overflow-y-auto">
-          <div className="relative w-full max-w-lg bg-surface border border-border rounded-3xl p-6 sm:p-7 shadow-2xl my-8 font-bengali">
-            {/* Close Button */}
-            <button
-              type="button"
-              onClick={() => {
-                setIsOrderModalOpen(false);
-                setOrderSuccessData(null);
-              }}
-              className="absolute top-4 right-4 p-2 rounded-full text-text-muted hover:text-text hover:bg-surface-secondary transition-colors cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            {orderSuccessData ? (
-              /* Success Confirmation View */
-              <div className="text-center py-4">
-                <div className="w-16 h-16 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center mx-auto mb-4">
-                  <CheckCircle2 className="w-10 h-10" />
-                </div>
-                <h3 className="text-xl sm:text-2xl font-black text-text mb-2">
-                  আপনার অর্ডারটি সফলভাবে গ্রহণ করা হয়েছে!
-                </h3>
-                <p className="text-xs sm:text-sm text-text-muted mb-4 max-w-sm mx-auto">
-                  অরমিশন টিম থেকে অতি দ্রুত আপনার নম্বরে কল করে অর্ডার নিশ্চিত ও ডেলিভারি তথ্য ভেরিফাই করা হবে।
-                </p>
-
-                <div className="p-4 rounded-2xl bg-surface-secondary/60 border border-border/80 text-left mb-6 space-y-2 text-xs sm:text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-text-muted">অর্ডার নম্বর:</span>
-                    <span className="font-bold text-primary font-sans">{orderSuccessData.orderNumber}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-text-muted">বইয়ের নাম:</span>
-                    <span className="font-bold text-text truncate max-w-[200px]">{book.title}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-text-muted">কপি:</span>
-                    <span className="font-bold text-text">{quantity} টি</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-text-muted">মোট প্রদেয় বিল:</span>
-                    <span className="font-black text-text font-sans">
-                      ৳{orderSuccessData.totalAmount.toLocaleString("en-US")}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-text-muted">পেমেন্ট মেথড:</span>
-                    <span className="font-bold text-emerald-600">
-                      {paymentMethod === "cod" ? "ক্যাশ অন ডেলিভারি (হাতে পেয়ে টাকা)" : paymentMethod.toUpperCase()}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex gap-3 justify-center">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsOrderModalOpen(false);
-                      setOrderSuccessData(null);
-                    }}
-                    className="px-6 py-2.5 rounded-xl bg-primary text-white text-xs sm:text-sm font-bold shadow-md hover:bg-primary-hover transition-colors cursor-pointer"
-                  >
-                    ঠিক আছে
-                  </button>
-                </div>
-              </div>
-            ) : (
-              /* Order Form View */
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <ShoppingBag className="w-5 h-5 text-primary" />
-                  <h3 className="text-lg sm:text-xl font-black text-text">বইটি সংগ্রহ করুন</h3>
-                </div>
-                <p className="text-xs text-text-muted mb-5">
-                  নিচের তথ্যগুলো পূরণ করে সরাসরি ক্যাশ অন ডেলিভারিতে অর্ডার কনফার্ম করুন।
-                </p>
-
-                {/* Book Mini Summary Card */}
-                <div className="p-3 rounded-2xl bg-surface-secondary/60 border border-border/80 flex items-center justify-between gap-3 mb-5">
-                  <div className="min-w-0">
-                    <h4 className="text-xs sm:text-sm font-bold text-text truncate">{book.title}</h4>
-                    <span className="text-xs text-primary font-bold font-sans">
-                      ৳{book.price} / কপি
-                    </span>
-                  </div>
-
-                  {/* Quantity Stepper */}
-                  <div className="flex items-center gap-2 border border-border rounded-xl px-2 py-1 bg-surface">
-                    <button
-                      type="button"
-                      onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                      className="w-6 h-6 flex items-center justify-center text-text font-bold hover:text-primary cursor-pointer"
-                    >
-                      -
-                    </button>
-                    <span className="text-xs font-bold font-sans min-w-[16px] text-center">
-                      {quantity}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setQuantity((q) => Math.min(10, q + 1))}
-                      className="w-6 h-6 flex items-center justify-center text-text font-bold hover:text-primary cursor-pointer"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-
-                <form onSubmit={handlePlaceOrder} className="space-y-3.5 text-left">
-                  {/* Name */}
-                  <div>
-                    <label className="text-xs font-bold text-text block mb-1">
-                      আপনার নাম <span className="text-rose-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
-                      <input
-                        type="text"
-                        required
-                        placeholder="আপনার পূর্ণ নাম"
-                        value={customerName}
-                        onChange={(e) => setCustomerName(e.target.value)}
-                        className="input w-full pl-10 text-xs sm:text-sm h-10.5 font-bengali"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Phone */}
-                  <div>
-                    <label className="text-xs font-bold text-text block mb-1">
-                      মোবাইল নম্বর <span className="text-rose-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
-                      <input
-                        type="tel"
-                        required
-                        placeholder="০১৭xxxxxxxx"
-                        value={customerPhone}
-                        onChange={(e) => setCustomerPhone(e.target.value)}
-                        className="input w-full pl-10 text-xs sm:text-sm h-10.5 font-sans"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Delivery District */}
-                  <div>
-                    <label className="text-xs font-bold text-text block mb-1">
-                      ডেলিভারি এরিয়া / জেলা <span className="text-rose-500">*</span>
-                    </label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setDistrict("ঢাকা")}
-                        className={`p-2 rounded-xl text-xs font-bold border transition-all text-center cursor-pointer ${
-                          district === "ঢাকা"
-                            ? "bg-primary/10 border-primary text-primary"
-                            : "bg-surface border-border text-text-muted hover:border-text-muted"
-                        }`}
-                      >
-                        ঢাকার ভিতরে (৬০ ৳)
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setDistrict("ঢাকার বাইরে")}
-                        className={`p-2 rounded-xl text-xs font-bold border transition-all text-center cursor-pointer ${
-                          district === "ঢাকার বাইরে"
-                            ? "bg-primary/10 border-primary text-primary"
-                            : "bg-surface border-border text-text-muted hover:border-text-muted"
-                        }`}
-                      >
-                        ঢাকার বাইরে (১০০ ৳)
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Address */}
-                  <div>
-                    <label className="text-xs font-bold text-text block mb-1">
-                      পূর্ণাঙ্গ ডেলিভারি ঠিকানা <span className="text-rose-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <MapPin className="absolute left-3.5 top-3 w-4 h-4 text-text-muted" />
-                      <textarea
-                        required
-                        rows={2}
-                        placeholder="বাসা/হোল্ডিং নম্বর, রোড, এলাকা, থানা ও জেলা..."
-                        value={deliveryAddress}
-                        onChange={(e) => setDeliveryAddress(e.target.value)}
-                        className="input w-full pl-10 text-xs sm:text-sm py-2 font-bengali"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Payment Method */}
-                  <div>
-                    <label className="text-xs font-bold text-text block mb-1">
-                      পেমেন্ট মেথড
-                    </label>
-                    <div className="grid grid-cols-3 gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setPaymentMethod("cod")}
-                        className={`p-2 rounded-xl text-xs font-bold border transition-all text-center cursor-pointer flex flex-col items-center justify-center gap-1 ${
-                          paymentMethod === "cod"
-                            ? "bg-emerald-500/10 border-emerald-500 text-emerald-600"
-                            : "bg-surface border-border text-text-muted"
-                        }`}
-                      >
-                        <Truck className="w-4 h-4" />
-                        <span>ক্যাশ অন ডেলিভারি</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setPaymentMethod("bkash")}
-                        className={`p-2 rounded-xl text-xs font-bold border transition-all text-center cursor-pointer flex flex-col items-center justify-center gap-1 ${
-                          paymentMethod === "bkash"
-                            ? "bg-rose-500/10 border-rose-500 text-rose-600"
-                            : "bg-surface border-border text-text-muted"
-                        }`}
-                      >
-                        <CreditCard className="w-4 h-4" />
-                        <span>বিকাশ</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setPaymentMethod("nagad")}
-                        className={`p-2 rounded-xl text-xs font-bold border transition-all text-center cursor-pointer flex flex-col items-center justify-center gap-1 ${
-                          paymentMethod === "nagad"
-                            ? "bg-amber-500/10 border-amber-500 text-amber-600"
-                            : "bg-surface border-border text-text-muted"
-                        }`}
-                      >
-                        <Building className="w-4 h-4" />
-                        <span>নগদ</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Order Total Breakdown */}
-                  <div className="pt-3 border-t border-border/60 text-xs space-y-1.5 font-bengali">
-                    <div className="flex justify-between text-text-muted">
-                      <span>বইয়ের মূল্য ({quantity}টি):</span>
-                      <span className="font-sans">৳{(book.price * quantity).toLocaleString("en-US")}</span>
-                    </div>
-                    <div className="flex justify-between text-text-muted">
-                      <span>ডেলিভারি চার্জ:</span>
-                      <span className="font-sans">৳{deliveryFee}</span>
-                    </div>
-                    <div className="flex justify-between text-sm font-black text-text pt-1 border-t border-border/40">
-                      <span>সর্বমোট প্রদেয় বিল:</span>
-                      <span className="text-primary font-sans text-base">
-                        ৳{grandTotal.toLocaleString("en-US")}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Submit Button */}
-                  <button
-                    type="submit"
-                    disabled={isSubmittingOrder}
-                    className="w-full mt-4 py-3.5 rounded-xl bg-primary hover:bg-primary-hover text-white text-sm font-bold shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/35 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
-                  >
-                    {isSubmittingOrder ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>অর্ডার সম্পন্ন হচ্ছে...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Check className="w-4 h-4" />
-                        <span>অর্ডার কনফার্ম করুন (৳{grandTotal.toLocaleString("en-US")})</span>
-                      </>
-                    )}
-                  </button>
-                </form>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* ============================================================ */}
       {/* SAMPLE PDF PREVIEW MODAL */}
@@ -906,18 +506,18 @@ export default function BookDetailPage({ params }: BookDetailPageProps) {
             {/* Modal Footer */}
             <div className="p-3 border-t border-border flex items-center justify-between gap-3 bg-surface">
               <span className="text-xs text-text-muted">
-                পুরো বইটি সংগ্রহ করতে এখনই অর্ডার সম্পন্ন করুন।
+                পুরো বইটি সংগ্রহ করতে নির্ধারিত অনলাইন শপ থেকে অর্ডার করুন।
               </span>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowPdfModal(false);
-                  setIsOrderModalOpen(true);
-                }}
-                className="px-4 py-2 rounded-xl bg-primary text-white text-xs font-bold shadow-md hover:bg-primary-hover transition-colors cursor-pointer"
+              <a
+                href={targetOrderUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-white text-xs font-bold shadow-md hover:bg-primary-hover transition-colors cursor-pointer"
               >
-                অর্ডার করুন
-              </button>
+                <ShoppingBag className="w-3.5 h-3.5" />
+                <span>সংগ্রহ করুন</span>
+                <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+              </a>
             </div>
           </div>
         </div>
