@@ -61,6 +61,7 @@ export default function CoursePlayerPage({ params }: PlayerPageProps) {
               id,
               title,
               title_bn,
+              section_type,
               sort_order,
               lessons (
                 id,

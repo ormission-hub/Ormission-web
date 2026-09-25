@@ -56,6 +56,7 @@ export async function getLiveCourseBySlug(
           id,
           title,
           title_bn,
+          section_type,
           sort_order,
           lessons (
             id,
@@ -147,6 +148,7 @@ export async function getLiveCourses(): Promise<Course[]> {
           id,
           title,
           title_bn,
+          section_type,
           sort_order,
           lessons (
             id,

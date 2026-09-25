@@ -100,6 +100,7 @@ export function mapDbCourseToAppCourse(dbCourse: any): Course {
           id: String(sec.id || `sec-${sIdx + 1}`),
           title: sec.title || sec.title_bn || `Chapter ${sIdx + 1}`,
           titleBn: sec.title_bn || sec.title || `অধ্যায় ${sIdx + 1}`,
+          sectionType: sec.section_type || "content",
           lessons: sortedLessons.map((les: any, lIdx: number) => {
             const isFree = les.is_preview === true || les.isFreePreview === true;
             const rawServers = Array.isArray(les.lesson_servers) ? les.lesson_servers : [];

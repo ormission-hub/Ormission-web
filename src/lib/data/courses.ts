@@ -30,10 +30,21 @@ export interface Lesson {
   materials?: LessonMaterial[];
 }
 
+export type SectionType = "demo" | "outline" | "content" | "exam" | "other";
+
+export const SECTION_TYPE_LABELS: Record<SectionType, string> = {
+  demo: "ডেমো ক্লাস",
+  outline: "কোর্স আউটলাইন",
+  content: "কোর্স কন্টেন্ট",
+  exam: "পরীক্ষা",
+  other: "অন্যান্য",
+};
+
 export interface CurriculumSection {
   id: string;
   title: string;
   titleBn: string;
+  sectionType?: SectionType;
   lessons: Lesson[];
 }
 
@@ -137,7 +148,8 @@ export const COURSES: Course[] = [
       {
         id: "sec-1",
         title: "Section 1: Mechanics & Dynamics Foundations",
-        titleBn: "অধ্যায় ১: নিউটনিয়ান বলবিদ্যা ও গতিবিদ্যা",
+        titleBn: "অধ্যায় ১: নিউটনিয়ান বলবিদ্যা ও গতিবিদ্যা (ফ্রি ডেমো)",
+        sectionType: "demo",
         lessons: [
           { id: "l-1-1", title: "Course Introduction & Strategic Roadmap", titleBn: "কোর্স পরিচিতি ও বুয়েট পদার্থবিজ্ঞান স্ট্র্যাটেজি", duration: "18:40", isFreePreview: true },
           { id: "l-1-2", title: "Inertial Frames & Pseudo Forces in Pulley Systems", titleBn: "জড় প্রসঙ্গ কাঠামো ও পুলি সিস্টেমে অপকেন্দ্র বল", duration: "42:15", isFreePreview: true },
@@ -149,6 +161,7 @@ export const COURSES: Course[] = [
         id: "sec-2",
         title: "Section 2: Work, Energy & Power Mastery",
         titleBn: "অধ্যায় ২: কাজ, শক্তি ও ক্ষমতা",
+        sectionType: "outline",
         lessons: [
           { id: "l-2-1", title: "Conservative vs Non-Conservative Force Calculus", titleBn: "সংরক্ষণশীল বল ও বিভব শক্তি সমীকরণ", duration: "35:20", isFreePreview: false },
           { id: "l-2-2", title: "Spring Complex Systems & Elastic Potential Energy", titleBn: "স্প্রিং সংযোগ এবং স্থিতিস্থাপক শক্তি সমস্যা", duration: "50:12", isFreePreview: false },
@@ -159,6 +172,7 @@ export const COURSES: Course[] = [
         id: "sec-3",
         title: "Section 3: Rotational Dynamics & Moment of Inertia",
         titleBn: "অধ্যায় ৩: ঘূর্ণন গতিবিদ্যা ও জড়তার ভ্রামক",
+        sectionType: "content",
         lessons: [
           { id: "l-3-1", title: "Parallel & Perpendicular Axis Theorems", titleBn: "সমান্তরাল ও লম্ব অক্ষ উপপাদ্যের বাস্তব প্রয়োগ", duration: "46:25", isFreePreview: false },
           { id: "l-3-2", title: "Torque, Angular Momentum Conservation", titleBn: "টর্ক এবং কৌণিক ভরবেগের সংরক্ষণ নীতি", duration: "54:10", isFreePreview: false },
@@ -168,6 +182,7 @@ export const COURSES: Course[] = [
         id: "sec-4",
         title: "Section 4: Thermodynamics & Heat Engine Cycle",
         titleBn: "অধ্যায় ৪: তাপগতিবিদ্যা ও ইঞ্জিন সাইকেল",
+        sectionType: "exam",
         lessons: [
           { id: "l-4-1", title: "First Law Applications in Isothermal & Adiabatic", titleBn: "সমোষ্ণ ও রুদ্ধতাপীয় প্রক্রিয়ার সম্পূর্ণ গাণিতিক রূপ", duration: "52:00", isFreePreview: false },
           { id: "l-4-2", title: "Carnot Engine & Entropy Variations", titleBn: "কার্নো চক্র ও এনট্রপির নিখুঁত হিসাব", duration: "48:15", isFreePreview: false },
