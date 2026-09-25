@@ -18,10 +18,11 @@ export default async function Home() {
   let pinnedCourseIds: (number | string)[] = [];
   let initialBooks: any[] = [];
   let initialInstructors: any[] = [];
+  let aboutSettings: any = null;
 
   try {
     const supabase = await createClient();
-    const [catRes, courseRes, testRes, instRes, heroRes, pinnedRes, booksRes] = await Promise.all([
+    const [catRes, courseRes, testRes, instRes, heroRes, pinnedRes, booksRes, aboutRes] = await Promise.all([
       supabase
         .from("categories")
         .select("id, name_bn, name, slug, icon_name, description, display_order, is_published")
@@ -56,7 +57,7 @@ export default async function Home() {
         .order("display_order", { ascending: true }),
       supabase
         .from("instructors")
-        .select("id, name, name_bn, designation, institution, bio, photo_url, display_order, is_featured", { count: "exact" })
+        .select("id, name, name_bn, designation, institution, bio, photo_url, credentials, seo_title, display_order, is_featured", { count: "exact" })
         .eq("is_published", true)
         .order("display_order", { ascending: true })
         .order("id", { ascending: true }),
@@ -74,6 +75,11 @@ export default async function Home() {
         .from("site_settings")
         .select("value")
         .eq("key", "ormission_books")
+        .single(),
+      supabase
+        .from("site_settings")
+        .select("value")
+        .eq("key", "about_settings")
         .single(),
     ]);
 
@@ -96,6 +102,9 @@ export default async function Home() {
     }
     if (booksRes.data?.value && Array.isArray(booksRes.data.value)) {
       initialBooks = booksRes.data.value;
+    }
+    if (aboutRes.data?.value && typeof aboutRes.data.value === "object") {
+      aboutSettings = aboutRes.data.value;
     }
   } catch (err) {
     console.error("Error fetching home data from Supabase:", err);
@@ -123,7 +132,7 @@ export default async function Home() {
 
       {/* 4. About Us: Authentic Group Photo & Narrative */}
       <div className="content-visibility-auto">
-        <AboutPreview initialInstructors={initialInstructors} />
+        <AboutPreview initialInstructors={initialInstructors} initialAboutSettings={aboutSettings} />
       </div>
 
       {/* 5. Free Study Materials & Mentorship Banner */}
