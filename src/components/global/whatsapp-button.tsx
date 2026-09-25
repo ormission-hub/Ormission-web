@@ -1,16 +1,16 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, X } from "lucide-react";
-import { WhatsAppIcon } from "@/components/global/social-icons";
+import { Phone, PhoneCall, X, MessageCircle } from "lucide-react";
+import { WhatsAppIcon, MessengerIcon } from "@/components/global/social-icons";
 import { createClient } from "@/lib/supabase/client";
-import { DEFAULT_SOCIAL_LINKS } from "@/lib/data/social-links";
 
 const DEFAULT_MESSAGE = "আসসালামু আলাইকুম! Ormission প্ল্যাটফর্ম ও কোর্স সম্পর্কে বিস্তারিত জানতে চাচ্ছি।";
+const DEFAULT_PHONE = "01741347039";
 
 function formatWhatsAppUrl(rawUrlOrNumber: string): string {
-  if (!rawUrlOrNumber) return "https://wa.me/8801728477095";
+  if (!rawUrlOrNumber) return "https://wa.me/8801741347039";
   const trimmed = rawUrlOrNumber.trim();
   if (trimmed.startsWith("http")) return trimmed;
 
@@ -20,15 +20,44 @@ function formatWhatsAppUrl(rawUrlOrNumber: string): string {
   } else if (digits.length === 10 && digits.startsWith("1")) {
     digits = "880" + digits;
   }
-  return digits ? `https://wa.me/${digits}` : "https://wa.me/8801728477095";
+  return digits ? `https://wa.me/${digits}` : "https://wa.me/8801741347039";
+}
+
+function formatMessengerUrl(facebookUrlOrHandle: string): string {
+  if (!facebookUrlOrHandle) return "https://m.me/ormission";
+  const trimmed = facebookUrlOrHandle.trim();
+  if (trimmed.startsWith("https://m.me/")) return trimmed;
+
+  try {
+    const clean = trimmed.replace(/\/+$/, "");
+    const parts = clean.split("/");
+    const lastPart = parts[parts.length - 1];
+    if (lastPart && !lastPart.includes("facebook.com")) {
+      return `https://m.me/${lastPart}`;
+    }
+  } catch {}
+  return "https://m.me/ormission";
+}
+
+function formatPhoneDisplay(rawPhone: string): string {
+  if (!rawPhone) return "01741-347039";
+  const digits = rawPhone.replace(/[^0-9]/g, "");
+  if (digits.length === 11) {
+    return `${digits.slice(0, 5)}-${digits.slice(5)}`;
+  }
+  return rawPhone;
 }
 
 export function WhatsAppButton() {
   const [mounted, setMounted] = useState(false);
-  const [showTooltip, setShowTooltip] = useState(false);
-  const [tooltipDismissed, setTooltipDismissed] = useState(false);
-  const [whatsappUrl, setWhatsappUrl] = useState<string>("https://wa.me/8801728477095");
+  const [isOpen, setIsOpen] = useState(false);
+  const [whatsappUrl, setWhatsappUrl] = useState<string>("https://wa.me/8801741347039");
+  const [messengerUrl, setMessengerUrl] = useState<string>("https://m.me/ormission");
+  const [phoneNumber, setPhoneNumber] = useState<string>(DEFAULT_PHONE);
   const [isEnabled, setIsEnabled] = useState(true);
+  const [showTooltip, setShowTooltip] = useState(false);
+
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -40,178 +69,278 @@ export function WhatsAppButton() {
         const { data, error } = await supabase
           .from("site_settings")
           .select("key, value")
-          .in("key", ["social_links", "contact_whatsapp"]);
+          .in("key", ["social_links", "contact_whatsapp", "contact_phone"]);
 
         if (error || !isSubscribed || !data) return;
 
-        let activeUrl = "";
+        let activeWa = "";
+        let activeFb = "";
+        let activePhone = "";
         let enabled = true;
 
-        // 1. Check social_links
+        // 1. Social links
         const socialRow = data.find((d) => d.key === "social_links");
         if (socialRow?.value) {
           const val = typeof socialRow.value === "string" ? JSON.parse(socialRow.value) : socialRow.value;
-          if (val?.whatsapp) {
-            if (val.whatsapp.url) activeUrl = val.whatsapp.url;
-            if (val.whatsapp.enabled !== undefined) enabled = val.whatsapp.enabled;
-          }
+          if (val?.whatsapp?.url) activeWa = val.whatsapp.url;
+          if (val?.facebook?.url) activeFb = val.facebook.url;
+          if (val?.whatsapp?.enabled !== undefined) enabled = val.whatsapp.enabled;
         }
 
-        // 2. Check contact_whatsapp (from Settings tab)
-        const contactRow = data.find((d) => d.key === "contact_whatsapp");
-        if (contactRow?.value) {
-          const raw = typeof contactRow.value === "string" ? contactRow.value.trim() : "";
-          if (raw) {
-            activeUrl = formatWhatsAppUrl(raw);
-          }
+        // 2. Contact whatsapp
+        const waRow = data.find((d) => d.key === "contact_whatsapp");
+        if (waRow?.value) {
+          const raw = typeof waRow.value === "string" ? waRow.value.trim() : "";
+          if (raw) activeWa = formatWhatsAppUrl(raw);
         }
 
-        if (activeUrl) {
-          setWhatsappUrl(formatWhatsAppUrl(activeUrl));
+        // 3. Contact phone / hotline
+        const phoneRow = data.find((d) => d.key === "contact_phone");
+        if (phoneRow?.value) {
+          const raw = typeof phoneRow.value === "string" ? phoneRow.value.trim() : "";
+          if (raw) activePhone = raw;
         }
+
+        if (activeWa) setWhatsappUrl(formatWhatsAppUrl(activeWa));
+        if (activeFb) setMessengerUrl(formatMessengerUrl(activeFb));
+        if (activePhone) {
+          setPhoneNumber(activePhone);
+        } else if (activeWa) {
+          const digits = activeWa.replace(/[^0-9]/g, "");
+          const localNum = digits.startsWith("880") ? "0" + digits.slice(3) : digits;
+          if (localNum) setPhoneNumber(localNum);
+        }
+
         setIsEnabled(enabled);
       } catch (err) {
-        console.warn("Could not load WhatsApp settings:", err);
+        console.warn("Could not load contact settings:", err);
       }
     }
 
     loadConfig();
-
-    // Check if dismissed previously in session
-    const dismissed = sessionStorage.getItem("ormission_wa_dismissed");
-    if (dismissed) {
-      setTooltipDismissed(true);
-    } else {
-      // Auto pop tooltip gently after 3.5 seconds
-      const timer = setTimeout(() => {
-        if (isSubscribed) setShowTooltip(true);
-      }, 3500);
-      return () => {
-        isSubscribed = false;
-        clearTimeout(timer);
-      };
-    }
 
     return () => {
       isSubscribed = false;
     };
   }, []);
 
+  // Close on outside click
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setIsOpen(false);
+      }
+    }
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleKeyDown);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen]);
+
   if (!mounted || !isEnabled) {
     return null;
   }
 
-  // Construct target WhatsApp URL with pre-filled message
-  let targetUrl = whatsappUrl || "https://wa.me/8801728477095";
-  if (!targetUrl.includes("text=")) {
-    const separator = targetUrl.includes("?") ? "&" : "?";
-    targetUrl = `${targetUrl}${separator}text=${encodeURIComponent(DEFAULT_MESSAGE)}`;
+  // Construct target WhatsApp URL with prefilled greeting
+  let targetWhatsAppUrl = whatsappUrl || "https://wa.me/8801741347039";
+  if (!targetWhatsAppUrl.includes("text=")) {
+    const separator = targetWhatsAppUrl.includes("?") ? "&" : "?";
+    targetWhatsAppUrl = `${targetWhatsAppUrl}${separator}text=${encodeURIComponent(DEFAULT_MESSAGE)}`;
   }
 
-  const handleDismissTooltip = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setShowTooltip(false);
-    setTooltipDismissed(true);
-    try {
-      sessionStorage.setItem("ormission_wa_dismissed", "true");
-    } catch {}
-  };
+  const phoneDigits = phoneNumber.replace(/[^0-9+]/g, "") || DEFAULT_PHONE;
+  const displayPhone = formatPhoneDisplay(phoneNumber);
 
   return (
     <div
-      className="fixed bottom-[4.75rem] right-3 sm:bottom-24 sm:right-5 lg:bottom-6 lg:right-6 z-[55] flex items-end gap-2.5 select-none pointer-events-none"
-      aria-label="WhatsApp চ্যাট উইজেট"
+      ref={containerRef}
+      className="fixed bottom-[4.75rem] right-3 sm:bottom-24 sm:right-5 lg:bottom-6 lg:right-6 z-[55] select-none"
+      aria-label="যোগাযোগ বাটন"
     >
-      {/* Floating Chat Bubble / Tooltip */}
+      {/* Stacked Options (WhatsApp, Messenger, Direct Call) - উপর-নিচে */}
       <AnimatePresence>
-        {showTooltip && !tooltipDismissed && (
+        {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 12, scale: 0.92 }}
+            initial={{ opacity: 0, y: 15, scale: 0.92 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.92 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
-            className="pointer-events-auto relative max-w-[230px] sm:max-w-[260px] bg-white dark:bg-slate-900 border border-emerald-500/30 dark:border-emerald-500/25 rounded-2xl p-3 shadow-[0_10px_30px_rgba(0,0,0,0.18)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.5)] backdrop-blur-xl"
+            exit={{ opacity: 0, y: 12, scale: 0.92 }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            className="absolute bottom-full right-0 mb-3 w-[250px] sm:w-[270px] flex flex-col gap-1.5 p-2 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200/90 dark:border-slate-800 shadow-[0_12px_36px_rgba(0,0,0,0.2)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.6)]"
           >
-            {/* Close Button */}
-            <button
-              onClick={handleDismissTooltip}
-              aria-label="বার্তা বন্ধ করুন"
-              className="absolute -top-1.5 -left-1.5 w-4 h-4 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 border border-slate-300 dark:border-slate-700 flex items-center justify-center transition-colors shadow-xs"
-            >
-              <X className="w-2.5 h-2.5" />
-            </button>
-
-            {/* Bubble Header */}
-            <div className="flex items-center gap-1.5 mb-1">
-              <span className="relative flex h-1.5 w-1.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
-              </span>
-              <span className="text-[11px] font-bold text-slate-800 dark:text-slate-100 font-bengali">
-                Ormission সাপোর্ট টিম
-              </span>
-              <span className="ml-auto text-[9px] text-emerald-600 dark:text-emerald-400 font-medium font-bengali">
+            {/* Header info */}
+            <div className="px-2.5 pt-1.5 pb-2 flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80">
+              <div className="flex items-center gap-1.5">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                </span>
+                <span className="text-[11px] font-bold text-slate-800 dark:text-slate-100 font-bengali">
+                  সরাসরি যোগাযোগ করুন
+                </span>
+              </div>
+              <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-semibold font-bengali">
                 অনলাইন
               </span>
             </div>
 
-            {/* Bubble Body */}
-            <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-snug font-bengali">
-              যেকোনো কোর্স বা ভর্তি সহায়তায় মেসেজ দিন।
-            </p>
-
-            {/* Bubble Action Link */}
+            {/* 1. WhatsApp Option */}
             <a
-              href={targetUrl}
+              href={targetWhatsAppUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-2 flex items-center justify-center gap-1.5 w-full py-1 px-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white font-bengali font-semibold text-[10px] shadow-xs transition-all duration-200 active:scale-95"
+              onClick={() => setIsOpen(false)}
+              className="group flex items-center gap-2.5 p-2 rounded-xl bg-slate-50/90 hover:bg-emerald-50/90 dark:bg-slate-800/50 dark:hover:bg-emerald-950/40 border border-slate-200/60 hover:border-emerald-300 dark:border-slate-700/60 dark:hover:border-emerald-700/60 transition-all duration-200 active:scale-[0.98]"
             >
-              <MessageCircle className="w-3 h-3" />
-              <span>চ্যাট শুরু করুন</span>
+              <div className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full bg-[#25D366] text-white flex items-center justify-center shrink-0 shadow-[0_3px_10px_rgba(37,211,102,0.35)] group-hover:scale-108 transition-transform">
+                <WhatsAppIcon size={18} className="text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                    WhatsApp
+                  </span>
+                  <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 font-semibold font-bengali">
+                    চ্যাট
+                  </span>
+                </div>
+                <p className="text-[10.5px] text-slate-500 dark:text-slate-400 font-bengali truncate">
+                  হোয়াটসঅ্যাপে মেসেজ পাঠান
+                </p>
+              </div>
             </a>
 
-            {/* Tail pointer arrow pointing towards the button */}
-            <div className="hidden sm:block absolute top-1/2 -right-1 -translate-y-1/2 w-2.5 h-2.5 bg-white dark:bg-slate-900 border-t border-r border-emerald-500/30 dark:border-emerald-500/25 rotate-45" />
+            {/* 2. Messenger Option */}
+            <a
+              href={messengerUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setIsOpen(false)}
+              className="group flex items-center gap-2.5 p-2 rounded-xl bg-slate-50/90 hover:bg-blue-50/90 dark:bg-slate-800/50 dark:hover:bg-blue-950/40 border border-slate-200/60 hover:border-blue-300 dark:border-slate-700/60 dark:hover:border-blue-700/60 transition-all duration-200 active:scale-[0.98]"
+            >
+              <div className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full bg-gradient-to-tr from-[#0084FF] via-[#0099FF] to-[#00C6FF] text-white flex items-center justify-center shrink-0 shadow-[0_3px_10px_rgba(0,132,255,0.35)] group-hover:scale-108 transition-transform">
+                <MessengerIcon size={17} className="text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                    Messenger
+                  </span>
+                  <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 font-semibold font-bengali">
+                    ফেসবুক
+                  </span>
+                </div>
+                <p className="text-[10.5px] text-slate-500 dark:text-slate-400 font-bengali truncate">
+                  মেসেঞ্জারে ইনবক্স করুন
+                </p>
+              </div>
+            </a>
+
+            {/* 3. Direct Call Option */}
+            <a
+              href={`tel:${phoneDigits}`}
+              onClick={() => setIsOpen(false)}
+              className="group flex items-center gap-2.5 p-2 rounded-xl bg-slate-50/90 hover:bg-teal-50/90 dark:bg-slate-800/50 dark:hover:bg-teal-950/40 border border-slate-200/60 hover:border-teal-300 dark:border-slate-700/60 dark:hover:border-teal-700/60 transition-all duration-200 active:scale-[0.98]"
+            >
+              <div className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full bg-gradient-to-tr from-emerald-600 via-teal-600 to-emerald-500 text-white flex items-center justify-center shrink-0 shadow-[0_3px_10px_rgba(20,184,166,0.35)] group-hover:scale-108 transition-transform">
+                <PhoneCall className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+                    Direct Call
+                  </span>
+                  <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-teal-100 dark:bg-teal-950/80 text-teal-700 dark:text-teal-300 font-semibold font-bengali">
+                    কল করুন
+                  </span>
+                </div>
+                <p className="text-[10.5px] text-slate-600 dark:text-slate-300 font-mono font-medium truncate">
+                  {displayPhone}
+                </p>
+              </div>
+            </a>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Main WhatsApp Floating Action Button (More compact & sleek) */}
-      <motion.div
-        className="pointer-events-auto relative group"
-        initial={{ scale: 0, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.2 }}
-        onMouseEnter={() => !tooltipDismissed && setShowTooltip(true)}
-      >
-        {/* Glowing Pulsing Aura */}
-        <span className="absolute -inset-0.5 rounded-full bg-emerald-400/30 dark:bg-emerald-500/25 blur-xs animate-pulse pointer-events-none group-hover:bg-emerald-400/50 transition-colors" />
+      {/* Floating Call Trigger Button (More compact: 40px mobile / 44px desktop) */}
+      <div className="relative group">
+        {/* Subtle hover tooltip (when menu is closed) */}
+        {!isOpen && showTooltip && (
+          <div className="hidden sm:block absolute bottom-1/2 right-full -translate-y-1/2 mr-2.5 px-2.5 py-1 rounded-lg bg-slate-900/90 text-white text-[11px] font-bengali whitespace-nowrap shadow-md pointer-events-none backdrop-blur-xs border border-white/10">
+            কল বা মেসেজ করুন
+          </div>
+        )}
 
-        {/* Ambient Ring Wave */}
-        <span className="absolute inset-0 rounded-full border border-emerald-400/50 animate-ping pointer-events-none opacity-40 duration-1000" />
+        {/* Ambient Ring Wave (only when closed) */}
+        {!isOpen && (
+          <>
+            <span className="absolute -inset-0.5 rounded-full bg-emerald-500/25 blur-xs animate-pulse pointer-events-none" />
+            <span className="absolute inset-0 rounded-full border border-emerald-400/40 animate-ping pointer-events-none opacity-40 duration-1000" />
+          </>
+        )}
 
-        {/* Unread Message Pill Badge */}
-        <div className="absolute -top-0.5 -right-0.5 z-10 w-3.5 h-3.5 rounded-full bg-rose-500 border border-white dark:border-slate-950 flex items-center justify-center shadow-xs">
-          <span className="text-[8px] font-bold text-white leading-none">1</span>
-        </div>
-
-        {/* Compact Circular Link Button: 42px on mobile, 48px on sm/desktop */}
-        <a
-          href={targetUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="WhatsApp-এ মেসেজ পাঠান"
-          className="relative flex items-center justify-center w-[42px] h-[42px] sm:w-12 sm:h-12 rounded-full bg-gradient-to-tr from-[#20ba59] to-[#25D366] text-white shadow-[0_6px_18px_rgba(37,211,102,0.4)] hover:shadow-[0_8px_24px_rgba(37,211,102,0.6)] hover:scale-108 active:scale-95 transition-all duration-300 ring-1 ring-white/30 overflow-hidden"
+        {/* Compact Circular Trigger Button */}
+        <button
+          type="button"
+          onClick={() => {
+            setIsOpen((prev) => !prev);
+            setShowTooltip(false);
+          }}
+          onMouseEnter={() => setShowTooltip(true)}
+          onMouseLeave={() => setShowTooltip(false)}
+          aria-expanded={isOpen}
+          aria-label={isOpen ? "যোগাযোগ মেনু বন্ধ করুন" : "যোগাযোগ করুন (Call / WhatsApp / Messenger)"}
+          className={`relative flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full text-white shadow-[0_6px_20px_rgba(16,185,129,0.38)] hover:shadow-[0_8px_24px_rgba(16,185,129,0.55)] active:scale-95 transition-all duration-300 ring-2 ring-white/40 dark:ring-white/20 cursor-pointer overflow-hidden ${
+            isOpen
+              ? "bg-slate-800 hover:bg-slate-700 shadow-slate-900/30"
+              : "bg-gradient-to-tr from-emerald-600 via-teal-500 to-emerald-400 hover:scale-106"
+          }`}
         >
           {/* Subtle Glass Shimmer Reflection */}
-          <div className="absolute inset-0 bg-gradient-to-b from-white/25 via-transparent to-black/10 rounded-full pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-transparent to-black/10 rounded-full pointer-events-none" />
 
-          {/* Official WhatsApp Icon */}
-          <WhatsAppIcon size={22} className="sm:hidden drop-shadow-xs text-white relative z-10 transition-transform duration-300 group-hover:rotate-6" />
-          <WhatsAppIcon size={25} className="hidden sm:block drop-shadow-xs text-white relative z-10 transition-transform duration-300 group-hover:rotate-6" />
-        </a>
-      </motion.div>
+          {/* Animated Icon: Call / Phone icon rotates to X when open */}
+          <AnimatePresence mode="wait" initial={false}>
+            {isOpen ? (
+              <motion.div
+                key="close"
+                initial={{ rotate: -90, opacity: 0 }}
+                animate={{ rotate: 0, opacity: 1 }}
+                exit={{ rotate: 90, opacity: 0 }}
+                transition={{ duration: 0.18 }}
+                className="relative z-10 flex items-center justify-center"
+              >
+                <X className="w-5 h-5 text-white" />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="call"
+                initial={{ rotate: 90, opacity: 0 }}
+                animate={{ rotate: 0, opacity: 1 }}
+                exit={{ rotate: -90, opacity: 0 }}
+                transition={{ duration: 0.18 }}
+                className="relative z-10 flex items-center justify-center"
+              >
+                <Phone className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-white drop-shadow-xs" />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </button>
+      </div>
     </div>
   );
 }
+
+// Re-export as QuickContactWidget for clean semantics
+export { WhatsAppButton as QuickContactWidget };
