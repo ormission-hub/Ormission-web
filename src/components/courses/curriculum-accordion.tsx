@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   PlayCircle,
   FileText,
   Lock,
@@ -41,6 +43,27 @@ import {
   ITEM_TYPE_INFO,
 } from "@/lib/section-types";
 
+// English labels for tab navigation requested by user
+const TAB_ENGLISH_LABELS: Record<string, string> = {
+  demo: "Demo Class",
+  all: "Course Outline",
+  academic: "Academic Prep",
+  outline: "Course Outline",
+  basic: "Basic Classes",
+  solving: "Problem Solving",
+  exam: "Exam & Model Tests",
+  pre_admission: "Pre-Admission",
+  admission: "Full Admission",
+  resource: "Resources & Notes",
+  other: "Other Modules",
+};
+
+function getTabDisplayLabel(key: string, customLabel?: string | null): string {
+  if (key.startsWith("custom:")) return key.slice(7) || "Custom Tab";
+  if (customLabel && key === "custom") return customLabel;
+  return TAB_ENGLISH_LABELS[key] || labelForTabKey(key, customLabel);
+}
+
 interface CurriculumAccordionProps {
   curriculum: CurriculumSection[];
   courseSlug?: string;
@@ -52,6 +75,11 @@ export function CurriculumAccordion({ curriculum, courseSlug }: CurriculumAccord
   // Active Category / Section Filter Tab
   const [activeTab, setActiveTab] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Horizontal scroll tracking for tabs
+  const tabsContainerRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
 
   // Track open sections & open subjects
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
@@ -90,12 +118,12 @@ export function CurriculumAccordion({ curriculum, courseSlug }: CurriculumAccord
 
     const demoCount = curriculum.filter((s) => matchesCurriculumTab(s, "demo")).length;
     if (demoCount > 0) {
-      list.push({ key: "demo", label: "ডেমো ক্লাস (Demo)", count: demoCount, icon: PlayCircle });
+      list.push({ key: "demo", label: "Demo Class", count: demoCount, icon: PlayCircle });
     }
 
     list.push({
       key: "all",
-      label: "কোর্স আউটলাইন",
+      label: "Course Outline",
       count: curriculum.length,
       icon: Layers,
     });
@@ -104,7 +132,7 @@ export function CurriculumAccordion({ curriculum, courseSlug }: CurriculumAccord
     for (const key of orderedKnown) {
       list.push({
         key,
-        label: labelForTabKey(key),
+        label: getTabDisplayLabel(key),
         count: counts.get(key) || 0,
         icon: TAB_ICONS[key] || BookOpen,
       });
@@ -116,7 +144,7 @@ export function CurriculumAccordion({ curriculum, courseSlug }: CurriculumAccord
         key,
         label: labelForTabKey(key),
         count: counts.get(key) || 0,
-        icon: Sparkles,
+        icon: BookOpen,
       });
     }
 
@@ -127,6 +155,41 @@ export function CurriculumAccordion({ curriculum, courseSlug }: CurriculumAccord
 
     return list;
   }, [curriculum]);
+
+  // Check scroll position for left/right arrow visibility
+  const checkScroll = () => {
+    const el = tabsContainerRef.current;
+    if (!el) return;
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+    setCanScrollLeft(scrollLeft > 6);
+    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 6);
+  };
+
+  useEffect(() => {
+    checkScroll();
+    const handleResize = () => checkScroll();
+    window.addEventListener("resize", handleResize);
+
+    const t1 = setTimeout(checkScroll, 100);
+    const t2 = setTimeout(checkScroll, 400);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, [tabs]);
+
+  const scrollTabs = (direction: "left" | "right") => {
+    const el = tabsContainerRef.current;
+    if (!el) return;
+    const scrollAmount = Math.max(el.clientWidth * 0.75, 200);
+    el.scrollBy({
+      left: direction === "left" ? -scrollAmount : scrollAmount,
+      behavior: "smooth",
+    });
+    setTimeout(checkScroll, 320);
+  };
 
   const filteredSections = useMemo(() => {
     let result = [...curriculum];
@@ -208,7 +271,7 @@ export function CurriculumAccordion({ curriculum, courseSlug }: CurriculumAccord
         if (map.has(key) && map.get(key)!.length > 0) {
           groups.push({
             key,
-            label: labelForTabKey(key),
+            label: getTabDisplayLabel(key),
             sections: map.get(key)!,
           });
           map.delete(key);
@@ -218,7 +281,7 @@ export function CurriculumAccordion({ curriculum, courseSlug }: CurriculumAccord
       for (const [key, secs] of map.entries()) {
         groups.push({
           key,
-          label: labelForTabKey(key),
+          label: getTabDisplayLabel(key),
           sections: secs,
         });
       }
@@ -675,8 +738,8 @@ export function CurriculumAccordion({ curriculum, courseSlug }: CurriculumAccord
     const secType = section.sectionType || "academic";
     const typeLabel =
       secType === "custom"
-        ? section.tabLabel || "কাস্টম ট্যাব"
-        : labelForTabKey(secType);
+        ? section.tabLabel || "Custom Tab"
+        : getTabDisplayLabel(secType);
 
     return (
       <div
@@ -849,10 +912,36 @@ export function CurriculumAccordion({ curriculum, courseSlug }: CurriculumAccord
 
   return (
     <div className="space-y-5">
-      {/* 1. EdgeCourse BD-Style Category Tabs / Pills Navigation */}
+      {/* 1. Category Tabs Navigation with Border Container & Scroll Controls */}
       {tabs.length > 1 && (
-        <div className="relative">
-          <div className="flex items-center gap-2 overflow-x-auto pb-1.5 no-scrollbar scroll-smooth">
+        <div className="relative p-1.5 sm:p-2 rounded-2xl bg-surface-secondary/40 dark:bg-surface-secondary/25 border border-border/80 shadow-2xs backdrop-blur-xs flex items-center gap-1 sm:gap-2">
+          {/* Left Scroll Arrow */}
+          <button
+            type="button"
+            onClick={() => scrollTabs("left")}
+            disabled={!canScrollLeft}
+            className={`w-7 h-7 sm:w-8 sm:h-8 rounded-xl border flex items-center justify-center transition-all shrink-0 select-none ${
+              canScrollLeft
+                ? "bg-surface hover:bg-surface-secondary text-text border-border shadow-xs hover:scale-105 active:scale-95 cursor-pointer"
+                : "opacity-25 text-text-muted border-transparent cursor-not-allowed"
+            }`}
+            title="পূর্ববর্তী ট্যাবগুলো দেখুন"
+            aria-label="Scroll tabs left"
+          >
+            <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+          </button>
+
+          {/* Left Gradient Fade Mask */}
+          {canScrollLeft && (
+            <div className="pointer-events-none absolute left-9 sm:left-11 top-1.5 bottom-1.5 w-6 sm:w-10 bg-gradient-to-r from-surface-secondary/90 via-surface-secondary/40 to-transparent z-10 rounded-l-lg" />
+          )}
+
+          {/* Scrollable Tabs Track */}
+          <div
+            ref={tabsContainerRef}
+            onScroll={checkScroll}
+            className="flex items-center gap-2 overflow-x-auto py-0.5 px-0.5 no-scrollbar scroll-smooth flex-1 touch-pan-x"
+          >
             {tabs.map((tab) => {
               const isActive = activeTab === tab.key;
               const Icon = tab.icon;
@@ -867,10 +956,10 @@ export function CurriculumAccordion({ curriculum, courseSlug }: CurriculumAccord
                       setOpenSections((prev) => ({ ...prev, [matching.id]: true }));
                     }
                   }}
-                  className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold font-bengali whitespace-nowrap flex items-center gap-2 transition-all cursor-pointer shrink-0 shadow-2xs ${
+                  className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap flex items-center gap-2 transition-all cursor-pointer shrink-0 shadow-2xs ${
                     isActive
                       ? "bg-emerald-600 text-white shadow-emerald-500/20 shadow-md ring-2 ring-emerald-500/30"
-                      : "bg-surface-secondary/80 hover:bg-surface-secondary text-text-muted hover:text-text border border-border/70"
+                      : "bg-surface hover:bg-surface-secondary text-text-muted hover:text-text border border-border/70"
                   }`}
                 >
                   <Icon className={`w-3.5 h-3.5 ${isActive ? "text-white" : "text-emerald-500"}`} />
@@ -879,7 +968,7 @@ export function CurriculumAccordion({ curriculum, courseSlug }: CurriculumAccord
                     className={`px-1.5 py-0.2 rounded-full text-[10.5px] font-mono font-bold ${
                       isActive
                         ? "bg-white/20 text-white"
-                        : "bg-surface text-text-muted border border-border/60"
+                        : "bg-surface-secondary text-text-muted border border-border/60"
                     }`}
                   >
                     {tab.count}
@@ -888,6 +977,27 @@ export function CurriculumAccordion({ curriculum, courseSlug }: CurriculumAccord
               );
             })}
           </div>
+
+          {/* Right Gradient Fade Mask */}
+          {canScrollRight && (
+            <div className="pointer-events-none absolute right-9 sm:right-11 top-1.5 bottom-1.5 w-6 sm:w-10 bg-gradient-to-l from-surface-secondary/90 via-surface-secondary/40 to-transparent z-10 rounded-r-lg" />
+          )}
+
+          {/* Right Scroll Arrow */}
+          <button
+            type="button"
+            onClick={() => scrollTabs("right")}
+            disabled={!canScrollRight}
+            className={`w-7 h-7 sm:w-8 sm:h-8 rounded-xl border flex items-center justify-center transition-all shrink-0 select-none ${
+              canScrollRight
+                ? "bg-surface hover:bg-surface-secondary text-text border-border shadow-xs hover:scale-105 active:scale-95 cursor-pointer"
+                : "opacity-25 text-text-muted border-transparent cursor-not-allowed"
+            }`}
+            title="পরবর্তী ট্যাবগুলো দেখতে ক্লিক করুন বা সোয়াইপ করুন"
+            aria-label="Scroll tabs right"
+          >
+            <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+          </button>
         </div>
       )}
 

@@ -13,7 +13,6 @@ import {
   ArrowRight,
   Check,
   Flame,
-  Sparkles,
   GraduationCap,
 } from "lucide-react";
 import { CurriculumAccordion } from "@/components/courses/curriculum-accordion";
@@ -256,9 +255,8 @@ export default async function CourseDetailPage({ params }: PageProps) {
             {/* Curriculum Accordion */}
             <div className="bg-surface rounded-2xl sm:rounded-3xl border border-border/80 p-6 sm:p-8 shadow-sm">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg sm:text-xl font-black text-text font-bengali flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-primary" />
-                  <span>কোর্স কারিকুলাম ও সিলেবাস</span>
+                <h2 className="text-lg sm:text-xl font-black text-text font-bengali">
+                  কোর্স কারিকুলাম ও সিলেবাস
                 </h2>
                 <span className="text-xs font-bold text-text-muted font-bengali">
                   {durationHours} ঘণ্টার পূর্ণাঙ্গ সিলেবাস
