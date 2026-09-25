@@ -1,4 +1,8 @@
-import { Course, CurriculumSection, SectionType } from "../data/courses";
+import { Course, CurriculumSection } from "../data/courses";
+import {
+  inferSectionTypeFromTitle,
+  parseSectionTypeFromTitles,
+} from "../section-types";
 import { Instructor, INSTRUCTORS } from "../data/instructors";
 
 export const DEFAULT_COURSE_THUMBNAIL =
@@ -96,31 +100,15 @@ export function mapDbCourseToAppCourse(dbCourse: any): Course {
           ? [...sec.lessons].sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0))
           : [];
 
-        let detectedType: SectionType = (sec.section_type as SectionType) || "content";
-        let cleanTitle = sec.title || `Chapter ${sIdx + 1}`;
-        let cleanTitleBn = sec.title_bn || sec.title || `অধ্যায় ${sIdx + 1}`;
+        const parsed = parseSectionTypeFromTitles(sec.title, sec.title_bn, sec.section_type);
+        let detectedType = parsed.sectionType;
+        let cleanTitle = parsed.cleanTitle || `Chapter ${sIdx + 1}`;
+        let cleanTitleBn = parsed.cleanTitleBn || parsed.cleanTitle || `অধ্যায় ${sIdx + 1}`;
+        const tabLabel = parsed.tabLabel;
 
-        // Check if explicitly tagged like [demo], [exam], [outline], etc.
-        const match = (cleanTitle || "").match(/^\[(demo|outline|content|exam|other)\]\s*(.*)$/i) ||
-                      (cleanTitleBn || "").match(/^\[(demo|outline|content|exam|other)\]\s*(.*)$/i);
-
-        if (match) {
-          detectedType = match[1].toLowerCase() as SectionType;
-          cleanTitle = cleanTitle.replace(/^\[(demo|outline|content|exam|other)\]\s*/i, "").trim();
-          cleanTitleBn = cleanTitleBn.replace(/^\[(demo|outline|content|exam|other)\]\s*/i, "").trim();
-        } else if (!sec.section_type) {
-          // Smart inference for existing courses:
-          const lowerBn = (cleanTitleBn || "").toLowerCase();
-          const lowerEn = (cleanTitle || "").toLowerCase();
+        if (!parsed.hasTag && !sec.section_type) {
           const hasFree = sortedLessons.some((l: any) => l.is_preview === true || l.isFreePreview === true);
-
-          if (hasFree || lowerBn.includes("ডেমো") || lowerBn.includes("ফ্রি") || lowerEn.includes("demo") || lowerEn.includes("free")) {
-            detectedType = "demo";
-          } else if (lowerBn.includes("আউটলাইন") || lowerBn.includes("সিলেবাস") || lowerEn.includes("outline") || lowerEn.includes("syllabus")) {
-            detectedType = "outline";
-          } else if (lowerBn.includes("পরীক্ষা") || lowerBn.includes("এক্সাম") || lowerBn.includes("টেস্ট") || lowerEn.includes("exam") || lowerEn.includes("test")) {
-            detectedType = "exam";
-          }
+          detectedType = inferSectionTypeFromTitle(cleanTitle, cleanTitleBn, hasFree);
         }
 
         return {
@@ -128,7 +116,25 @@ export function mapDbCourseToAppCourse(dbCourse: any): Course {
           title: cleanTitle,
           titleBn: cleanTitleBn,
           sectionType: detectedType,
+          tabLabel,
+          subject: parsed.subject,
           lessons: sortedLessons.map((les: any, lIdx: number) => {
+            let itemType: any = "video";
+            let parsedMeta: any = {};
+            if (les.content && typeof les.content === "string") {
+              try {
+                parsedMeta = JSON.parse(les.content);
+                if (parsedMeta && parsedMeta.itemType) {
+                  itemType = parsedMeta.itemType;
+                }
+              } catch {
+                // not JSON
+              }
+            }
+            if (!parsedMeta.itemType && les.type && ["video", "exam", "material", "live", "resource"].includes(les.type)) {
+              itemType = les.type;
+            }
+
             const isFree = les.is_preview === true || les.isFreePreview === true;
             const rawServers = Array.isArray(les.lesson_servers) ? les.lesson_servers : [];
             const mappedServers = rawServers
@@ -165,7 +171,7 @@ export function mapDbCourseToAppCourse(dbCourse: any): Course {
                   formattedSize = rawSize;
                 }
 
-                const isFree = Boolean(
+                const isFreeMat = Boolean(
                   res.isFree ||
                   res.is_free ||
                   (typeof res.title === "string" && res.title.includes("[FREE]"))
@@ -180,22 +186,43 @@ export function mapDbCourseToAppCourse(dbCourse: any): Course {
                   fileType: res.file_type || res.fileType || "pdf",
                   fileSize: formattedSize,
                   sortOrder: res.sort_order || 0,
-                  isFree,
+                  isFree: isFreeMat,
                 };
               });
+
+            const defaultTitleBn =
+              itemType === "exam"
+                ? `পরীক্ষা ${lIdx + 1}`
+                : itemType === "material"
+                ? `লেকচার শিট ${lIdx + 1}`
+                : itemType === "live"
+                ? `লাইভ ক্লাস ${lIdx + 1}`
+                : itemType === "resource"
+                ? `রিসোর্স ${lIdx + 1}`
+                : `ক্লাস ${lIdx + 1}`;
 
             return {
               id: String(les.id || `les-${sIdx + 1}-${lIdx + 1}`),
               title: les.title || les.title_bn || `Class ${lIdx + 1}`,
-              titleBn: les.title_bn || les.title || `ক্লাস ${lIdx + 1}`,
+              titleBn: les.title_bn || les.title || defaultTitleBn,
+              itemType,
               duration: les.video_duration
                 ? `${les.video_duration}:00`
-                : les.duration || "30:00",
+                : les.duration || (itemType === "exam" ? "25:00" : "30:00"),
               isFreePreview: isFree,
               resourcesCount: mappedMaterials.length,
               materials: mappedMaterials,
+              // Rich Item Metadata
+              examUrl: parsedMeta.examUrl || (itemType === "exam" ? primaryUrl : undefined),
+              marks: parsedMeta.marks,
+              questionsCount: parsedMeta.questionsCount,
+              liveUrl: parsedMeta.liveUrl || (itemType === "live" ? primaryUrl : undefined),
+              liveTime: parsedMeta.liveTime,
+              livePlatform: parsedMeta.livePlatform || "zoom",
+              fileUrl: parsedMeta.fileUrl || (itemType === "material" ? primaryUrl : undefined),
+              fileSize: parsedMeta.fileSize,
+              externalUrl: parsedMeta.externalUrl || (itemType === "resource" ? primaryUrl : undefined),
               // SECURITY: Only expose videoUrl and full server URLs for free preview lessons
-              // Paid lesson URLs are ONLY served via /api/course/access after auth check
               videoUrl: isFree ? primaryUrl : undefined,
               servers: isFree
                 ? fallbackServers

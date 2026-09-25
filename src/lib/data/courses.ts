@@ -1,5 +1,8 @@
 import { INSTRUCTORS, type Instructor } from "./instructors";
 import { CATEGORIES } from "./categories";
+import { type SectionType, type LessonItemType, SECTION_TYPE_LABELS as SHARED_SECTION_TYPE_LABELS } from "../section-types";
+
+export type { SectionType, LessonItemType };
 
 export interface LessonServer {
   id?: string;
@@ -22,29 +25,34 @@ export interface Lesson {
   id: string;
   title: string;
   titleBn: string;
+  itemType?: LessonItemType;
   duration: string; // e.g. "24:15"
   isFreePreview: boolean;
   videoUrl?: string;
   servers?: LessonServer[];
   resourcesCount?: number;
   materials?: LessonMaterial[];
+  // Rich Item Metadata
+  examUrl?: string;
+  marks?: number | string;
+  questionsCount?: number | string;
+  liveUrl?: string;
+  liveTime?: string;
+  livePlatform?: string;
+  fileUrl?: string;
+  fileSize?: string;
+  externalUrl?: string;
 }
 
-export type SectionType = "demo" | "outline" | "content" | "exam" | "other";
-
-export const SECTION_TYPE_LABELS: Record<SectionType, string> = {
-  demo: "ডেমো ক্লাস",
-  outline: "কোর্স আউটলাইন",
-  content: "কোর্স কন্টেন্ট",
-  exam: "পরীক্ষা",
-  other: "অন্যান্য",
-};
+export const SECTION_TYPE_LABELS = SHARED_SECTION_TYPE_LABELS;
 
 export interface CurriculumSection {
   id: string;
   title: string;
   titleBn: string;
   sectionType?: SectionType;
+  tabLabel?: string;
+  subject?: string;
   lessons: Lesson[];
 }
 
