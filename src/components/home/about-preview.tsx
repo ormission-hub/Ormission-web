@@ -96,38 +96,59 @@ export function AboutPreview({
     }
   }, [initialAboutSettings]);
 
-  // Client-side realtime / refresh fallback
+  // Client-side realtime / refresh fallback — only fetch if SSR data was missing
   useEffect(() => {
     const supabase = createClient();
-    const fetchFresh = async () => {
-      try {
-        const [instRes, settRes] = await Promise.all([
-          supabase
-            .from("instructors")
-            .select("id, name, name_bn, designation, institution, bio, photo_url, credentials, seo_title, display_order, is_featured")
-            .eq("is_published", true)
-            .order("display_order", { ascending: true })
-            .order("id", { ascending: true }),
-          supabase
-            .from("site_settings")
-            .select("value")
-            .eq("key", "about_settings")
-            .single(),
-        ]);
 
-        if (instRes.data && instRes.data.length > 0) {
-          setInstructorsList(instRes.data.filter((i: AboutInstructor) => i.is_featured !== false));
+    if ((!initialInstructors || initialInstructors.length === 0) && !initialAboutSettings) {
+      const fetchFresh = async () => {
+        try {
+          const [instRes, settRes] = await Promise.all([
+            supabase
+              .from("instructors")
+              .select("id, name, name_bn, designation, institution, bio, photo_url, credentials, seo_title, display_order, is_featured")
+              .eq("is_published", true)
+              .order("display_order", { ascending: true })
+              .order("id", { ascending: true }),
+            supabase
+              .from("site_settings")
+              .select("value")
+              .eq("key", "about_settings")
+              .single(),
+          ]);
+
+          if (instRes.data && instRes.data.length > 0) {
+            setInstructorsList(instRes.data.filter((i: AboutInstructor) => i.is_featured !== false));
+          }
+          if (settRes.data?.value && typeof settRes.data.value === "object") {
+            setSettings(settRes.data.value);
+          }
+        } catch (err) {
+          console.error("Error refreshing about data client-side:", err);
         }
-        if (settRes.data?.value && typeof settRes.data.value === "object") {
-          setSettings(settRes.data.value);
+      };
+
+      fetchFresh();
+    }
+
+    // Subscribe to realtime updates for live changes when admin modifies settings
+    const channel = supabase
+      .channel("about-preview-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "site_settings", filter: "key=eq.about_settings" },
+        (payload: any) => {
+          if (payload?.new?.value && typeof payload.new.value === "object") {
+            setSettings(payload.new.value);
+          }
         }
-      } catch (err) {
-        console.error("Error refreshing about data client-side:", err);
-      }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
     };
-
-    fetchFresh();
-  }, []);
+  }, [initialInstructors, initialAboutSettings]);
 
   const activeList = instructorsList.length > 0 ? instructorsList : [DEFAULT_FOUNDER];
   const safeIndex = activeIndex >= activeList.length ? 0 : activeIndex;
@@ -298,6 +319,7 @@ export function AboutPreview({
                       alt={currentInstructor.name_bn || currentInstructor.name}
                       fill
                       sizes="(max-width: 640px) 192px, (max-width: 1024px) 224px, 240px"
+                      quality={80}
                       className="object-cover object-top"
                       loading="lazy"
                     />

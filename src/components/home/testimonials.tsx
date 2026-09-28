@@ -33,27 +33,26 @@ export function Testimonials({
   useEffect(() => {
     if (initialTestimonials && initialTestimonials.length > 0) {
       setTestimonials(initialTestimonials);
-      return;
-    }
+    } else if (!initialTestimonials) {
+      async function loadTestimonials() {
+        const supabase = createClient();
+        try {
+          const { data, error } = await supabase
+            .from("testimonials")
+            .select("id, student_name, student_photo, course_name, batch, review, rating, display_order")
+            .eq("is_published", true)
+            .order("display_order", { ascending: true });
 
-    async function loadTestimonials() {
-      const supabase = createClient();
-      try {
-        const { data, error } = await supabase
-          .from("testimonials")
-          .select("id, student_name, student_photo, course_name, batch, review, rating, display_order")
-          .eq("is_published", true)
-          .order("display_order", { ascending: true });
-
-        if (!error && data && data.length > 0) {
-          setTestimonials(data);
+          if (!error && data && data.length > 0) {
+            setTestimonials(data);
+          }
+        } catch {
+          // Silent fallback
         }
-      } catch {
-        // Silent fallback
       }
-    }
 
-    loadTestimonials();
+      loadTestimonials();
+    }
   }, [initialTestimonials]);
 
   const total = testimonials.length;
@@ -315,6 +314,7 @@ export function Testimonials({
                         alt={current.student_name}
                         fill
                         sizes="64px"
+                        quality={75}
                         loading="lazy"
                         className="rounded-full object-cover"
                       />

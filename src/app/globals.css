@@ -551,10 +551,33 @@ h1, h2, h3, h4, h5, h6, p, span, a, button, input, select, textarea {
     -webkit-backdrop-filter: blur(4px) !important;
   }
 
+  /* Kill infinite border-beam rotation animations on mobile —
+     conic-gradient + 300% oversize elements running at 60fps are the primary
+     cause of scroll jank on low-end phones */
+  .border-beam-sharp {
+    display: none !important;
+  }
+
+  /* Disable continuous glass shimmer sweep on mobile */
+  .animate-glass-shimmer {
+    animation: none !important;
+  }
+
+  /* Pause all infinite animations during scroll to prevent GPU stalls */
+  .animate-border-rotate,
+  .animate-border-rotate-fast {
+    animation: none !important;
+  }
+
   /* Skip offscreen layout & paint calculation until scrolled into view */
   .content-visibility-auto {
     content-visibility: auto;
     contain-intrinsic-size: 1px 550px;
+  }
+
+  /* Remove will-change hints on mobile to prevent excessive GPU layer promotion */
+  .anim-hover-lift {
+    will-change: auto;
   }
 }
 

@@ -16,10 +16,8 @@ import {
   ChevronRight,
   Pin,
   Flame,
-  ArrowUpRight
+  ArrowUpRight,
 } from "lucide-react";
-import { motion } from "framer-motion";
-import { zoomIn, staggerContainer } from "@/lib/animations";
 import { DbFeaturedCourse } from "./featured-courses";
 import { createClient } from "@/lib/supabase/client";
 
@@ -403,7 +401,8 @@ export function CategoryCoursesShowcase({
     }
   }, [initialBooks]);
 
-  // Client-side fetch & Realtime subscriptions
+  // Realtime-only subscriptions — server already passes initial data via props
+  // Only re-fetch when admin makes changes (Realtime push), not on page load
   useEffect(() => {
     const supabase = createClient();
 
@@ -479,9 +478,8 @@ export function CategoryCoursesShowcase({
       }
     };
 
-    fetchFreshCategories();
-    fetchFreshCourses();
-    fetchSettings();
+    // NO initial fetch calls — server data is already passed via props
+    // Only subscribe to Realtime channels for admin-triggered updates
 
     const catChannel = supabase
       .channel("categories_rt_showcase")
@@ -621,12 +619,9 @@ export function CategoryCoursesShowcase({
     const catSlug = cat.slug === "school" ? "ssc" : cat.slug;
 
     return (
-      <motion.div
+      <div
         key={cat.id || cat.slug}
-        variants={zoomIn}
-        whileHover={{ y: -3, scale: 1.02, transition: { duration: 0.15 } }}
-        whileTap={{ scale: 0.98 }}
-        className="w-full sm:w-auto min-w-0 flex-1 sm:flex-initial"
+        className="w-full sm:w-auto min-w-0 flex-1 sm:flex-initial transition-transform duration-150 hover:-translate-y-0.5 hover:scale-[1.02] active:scale-[0.98]"
       >
         <Link
           href={`/category/${catSlug}`}
@@ -668,7 +663,7 @@ export function CategoryCoursesShowcase({
             </span>
           </div>
         </Link>
-      </motion.div>
+      </div>
     );
   };
 
@@ -732,11 +727,7 @@ export function CategoryCoursesShowcase({
 
       <div className="container-main relative z-10">
         {/* Category Pills: 3 on Top Row, 2 on Bottom Row */}
-        <motion.div
-          variants={staggerContainer}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.2 }}
+        <div
           className="flex flex-col items-center justify-center gap-2.5 sm:gap-3.5 mb-5 sm:mb-7 w-full px-1.5 sm:px-0"
         >
           <div className="grid grid-cols-3 gap-2 sm:gap-4 w-full max-w-[430px] sm:max-w-none sm:flex sm:flex-wrap sm:items-center sm:justify-center">
@@ -750,7 +741,7 @@ export function CategoryCoursesShowcase({
               )}
             </div>
           )}
-        </motion.div>
+        </div>
 
         {/* Stats Bar (Audience / Students) placed directly between Category Pills and Course Cards */}
         {statsBar && (
@@ -850,6 +841,7 @@ export function CategoryCoursesShowcase({
                               alt={title}
                               fill
                               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 380px"
+                              quality={75}
                               loading="lazy"
                               className="object-cover group-hover:scale-105 transition-transform duration-500"
                             />
@@ -1064,6 +1056,7 @@ export function CategoryCoursesShowcase({
                           alt={book.title}
                           fill
                           sizes="128px"
+                          quality={75}
                           loading="lazy"
                           className="object-contain"
                         />

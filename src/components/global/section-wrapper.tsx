@@ -1,7 +1,6 @@
 "use client";
 
-import { useRef } from "react";
-import { motion, useInView } from "framer-motion";
+import { useRef, useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface SectionWrapperProps {
@@ -19,7 +18,37 @@ export function SectionWrapper({
   noAnimation = false,
 }: SectionWrapperProps) {
   const ref = useRef<HTMLElement>(null);
-  const isInView = useInView(ref, { once: true, margin: "-60px" });
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    if (noAnimation) return;
+    const el = ref.current;
+    if (!el) return;
+
+    // Skip animation if user prefers reduced motion
+    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setIsVisible(true);
+      return;
+    }
+
+    if (typeof IntersectionObserver === "undefined") {
+      setIsVisible(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "-60px 0px", threshold: 0 }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [noAnimation]);
 
   if (noAnimation) {
     return (
@@ -30,15 +59,17 @@ export function SectionWrapper({
   }
 
   return (
-    <motion.section
+    <section
       ref={ref}
       id={id}
       className={cn("w-full py-4 sm:py-6", className)}
-      initial={{ opacity: 0, y: 24 }}
-      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
+      style={{
+        opacity: isVisible ? 1 : 0,
+        transform: isVisible ? "translateY(0)" : "translateY(24px)",
+        transition: "opacity 0.5s ease-out, transform 0.5s ease-out",
+      }}
     >
       <div className="container-main">{children}</div>
-    </motion.section>
+    </section>
   );
 }

@@ -113,34 +113,11 @@ export function HeroSection({
     }
   }, [initialHeroData]);
 
-  // Client load & Realtime sync with Supabase
+  // Realtime sync only — server already passes initial data via initialHeroData prop
   useEffect(() => {
     const supabase = createClient();
 
-    async function loadData() {
-      try {
-        const heroRes = await supabase
-          .from("site_settings")
-          .select("value")
-          .eq("key", "hero_settings")
-          .single();
-
-        if (heroRes.data?.value && typeof heroRes.data.value === "object") {
-          const val = heroRes.data.value;
-          setHeroData((prev) => ({
-            ...prev,
-            ...val,
-            photos: filterRealPhotos(val.photos),
-          }));
-        }
-      } catch (err) {
-        // Silent fallback
-      }
-    }
-
-    loadData();
-
-    // Instant Realtime updates whenever admin saves or adds photos
+    // Realtime updates whenever admin saves or adds photos (no initial fetch needed)
     const channel = supabase
       .channel("realtime-hero-settings")
       .on(
@@ -304,6 +281,7 @@ export function HeroSection({
                     fetchPriority={currentIndex === 0 ? "high" : "low"}
                     loading={currentIndex === 0 ? "eager" : "lazy"}
                     sizes="100vw"
+                    quality={80}
                     className="object-cover object-top group-hover:scale-[1.015] transition-transform duration-500"
                   />
 
