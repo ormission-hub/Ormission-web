@@ -102,6 +102,11 @@ export function HeroSection({
   });
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Sync if server data changes
   useEffect(() => {
@@ -286,17 +291,19 @@ export function HeroSection({
             >
               {slides.map((slide, idx) => (
                 <div key={slide.id || idx} className="relative w-full h-full shrink-0">
-                  <Image
-                    src={slide.url}
-                    alt={slide.title || "Ormission Hero Banner"}
-                    fill
-                    priority={idx === 0}
-                    fetchPriority={idx === 0 ? "high" : "low"}
-                    loading={idx === 0 ? "eager" : "lazy"}
-                    sizes="100vw"
-                    quality={75}
-                    className="object-cover object-top"
-                  />
+                  {(idx === 0 || mounted) && (
+                    <Image
+                      src={slide.url}
+                      alt={slide.title || "Ormission Hero Banner"}
+                      fill
+                      priority={idx === 0}
+                      fetchPriority={idx === 0 ? "high" : "low"}
+                      loading={idx === 0 ? "eager" : "lazy"}
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 1200px"
+                      quality={75}
+                      className="object-cover object-top"
+                    />
+                  )}
 
                   {/* Over-Image CTA Buttons (Bottom-Left) */}
                   <div className="absolute bottom-3 sm:bottom-6 md:bottom-8 left-4 sm:left-8 md:left-12 lg:left-16 z-20 flex items-center gap-2 sm:gap-3.5 max-w-[calc(100%-85px)] sm:max-w-none">

@@ -11,11 +11,11 @@ const WhatsAppButton = dynamic(() =>
 );
 
 const hindSiliguri = Hind_Siliguri({
-  subsets: ["bengali", "latin"],
-  weight: ["400", "600", "700"],
+  subsets: ["bengali"],
+  weight: ["400", "600"],
   variable: "--font-hind-siliguri",
   display: "swap",
-  preload: true,
+  preload: false,
 });
 
 const inter = Inter({
