@@ -4,7 +4,6 @@ import { Hind_Siliguri, Inter } from "next/font/google";
 import { Navbar } from "@/components/global/navbar";
 import { Footer } from "@/components/global/footer";
 import { ThemeProvider } from "@/components/global/theme-provider";
-import { SplashScreen } from "@/components/global/splash-screen";
 import "./globals.css";
 
 const WhatsAppButton = dynamic(() =>
@@ -111,7 +110,6 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen bg-background text-text antialiased font-sans">
         <ThemeProvider>
-          <SplashScreen />
           <Navbar />
           <main className="pb-24 lg:pb-0">{children}</main>
           <Footer />

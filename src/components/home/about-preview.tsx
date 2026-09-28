@@ -435,10 +435,13 @@ export function AboutPreview({
               >
                 <span className="w-5 h-5 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-700 flex-shrink-0 flex items-center justify-center text-[10px] font-bold">
                   {inst.photo_url ? (
-                    <img
+                    <Image
                       src={inst.photo_url}
-                      alt=""
+                      alt={inst.name_bn || inst.name}
+                      width={20}
+                      height={20}
                       className="w-full h-full object-cover object-top"
+                      loading="lazy"
                     />
                   ) : (
                     <span>{(inst.name_bn || inst.name).charAt(0)}</span>

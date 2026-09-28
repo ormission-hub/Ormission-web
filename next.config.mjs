@@ -4,6 +4,9 @@ const nextConfig = {
   devIndicators: false,
   compress: true,
   poweredByHeader: false,
+  compiler: {
+    removeConsole: process.env.NODE_ENV === "production" ? { exclude: ["error"] } : false,
+  },
   images: {
     formats: ["image/avif", "image/webp"],
     deviceSizes: [360, 414, 640, 750, 828, 1080, 1200],
@@ -111,6 +114,8 @@ const nextConfig = {
       "@radix-ui/react-slot",
       "@radix-ui/react-tabs",
       "@radix-ui/react-toast",
+      "@supabase/supabase-js",
+      "@supabase/ssr",
     ],
   },
 };

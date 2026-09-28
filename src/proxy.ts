@@ -35,6 +35,20 @@ const AI_BOT_SIGNATURES = [
   "mj12bot",
 ];
 
+// Whitelist search engines, Google Lighthouse, and legitimate performance audit bots
+const SEARCH_AND_AUDIT_BOTS = [
+  "googlebot",
+  "google-inspectiontool",
+  "chrome-lighthouse",
+  "google-lighthouse",
+  "lighthouse",
+  "pagespeed",
+  "ptst",
+  "pingdom",
+  "gtmetrix",
+  "bingbot",
+];
+
 // Blacklist of automated scraping tools, headless drivers, and CLI HTTP clients
 const SCRAPER_SIGNATURES = [
   "scrapy",
@@ -48,7 +62,6 @@ const SCRAPER_SIGNATURES = [
   "httpclient",
   "postmanruntime",
   "go-http-client",
-  "headlesschrome",
   "puppeteer",
   "playwright",
   "selenium",
@@ -84,6 +97,14 @@ export function proxy(request: NextRequest) {
   }
 
   const userAgent = (request.headers.get("user-agent") || "").toLowerCase().trim();
+
+  // 2. Allow legitimate search engine and performance audit tools immediately
+  if (SEARCH_AND_AUDIT_BOTS.some((bot) => userAgent.includes(bot))) {
+    const response = NextResponse.next();
+    response.headers.set("X-Content-Type-Options", "nosniff");
+    response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+    return response;
+  }
 
   // 2. Block requests with missing, blank, or suspiciously short User-Agents
   if (!userAgent || userAgent.length < 4) {

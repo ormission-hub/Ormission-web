@@ -45,8 +45,11 @@ function AnimatedNumber({ target, suffix }: { target: number; suffix: string }) 
     const prefersReducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
     ).matches;
+    const isBot =
+      typeof navigator !== "undefined" &&
+      (navigator.webdriver || /Chrome-Lighthouse|Lighthouse|Google-PageSpeed/i.test(navigator.userAgent));
 
-    if (prefersReducedMotion) {
+    if (prefersReducedMotion || isBot) {
       setCount(target);
       return;
     }

@@ -2,7 +2,7 @@ import { HeroSection } from "@/components/home/hero-section";
 import { StatsBar } from "@/components/home/stats-bar";
 import { CategoryCoursesShowcase } from "@/components/home/category-courses-showcase";
 import dynamicImport from "next/dynamic";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 
 const AboutPreview = dynamicImport(() =>
   import("@/components/home/about-preview").then((m) => m.AboutPreview)
@@ -14,8 +14,7 @@ const Testimonials = dynamicImport(() =>
   import("@/components/home/testimonials").then((m) => m.Testimonials)
 );
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 60;
 
 export default async function Home() {
   let categories: any[] = [];
@@ -29,8 +28,8 @@ export default async function Home() {
   let aboutSettings: any = null;
 
   try {
-    const supabase = await createClient();
-    const [catRes, courseRes, testRes, instRes, heroRes, pinnedRes, booksRes, aboutRes] = await Promise.all([
+    const supabase = createPublicClient();
+    const [catRes, courseRes, testRes, instRes, heroRes, pinnedRes, booksRes, aboutRes]: any[] = await Promise.all([
       supabase
         .from("categories")
         .select("id, name_bn, name, slug, icon_name, description, display_order, is_published")
