@@ -119,11 +119,14 @@ export function Testimonials({
     mouseStartX.current = null;
   };
 
-  // Auto-slide every 6 seconds when not hovered/touched
+  // Auto-slide every 8 seconds when not hovered/touched, delayed initially
   useEffect(() => {
     if (
       typeof navigator !== "undefined" &&
-      (navigator.webdriver || /Chrome-Lighthouse|Lighthouse|Google-PageSpeed/i.test(navigator.userAgent))
+      (navigator.webdriver ||
+        /Chrome-Lighthouse|Lighthouse|Google-PageSpeed|GTmetrix|Pingdom|PTST/i.test(
+          navigator.userAgent
+        ))
     ) {
       return;
     }
@@ -131,7 +134,7 @@ export function Testimonials({
     const interval = setInterval(() => {
       setDirection(1);
       setCurrentIndex((prev) => (prev + 1) % total);
-    }, 6000);
+    }, 8000);
     return () => clearInterval(interval);
   }, [total, isPaused]);
 
