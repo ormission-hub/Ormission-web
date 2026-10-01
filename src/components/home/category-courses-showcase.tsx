@@ -839,7 +839,7 @@ export function CategoryCoursesShowcase({
                               src={course.thumbnail_url}
                               alt={title}
                               fill
-                              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 380px"
+                              sizes="(max-width: 640px) 320px, 380px"
                               quality={75}
                               loading="lazy"
                               className="object-cover group-hover:scale-105 transition-transform duration-500"

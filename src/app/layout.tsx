@@ -15,14 +15,14 @@ const hindSiliguri = Hind_Siliguri({
   weight: ["400", "600"],
   variable: "--font-hind-siliguri",
   display: "swap",
-  preload: false,
+  preload: true,
 });
 
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
   display: "swap",
-  preload: true,
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -87,6 +87,8 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
+        <link rel="preconnect" href="https://oorovtqwyfrfjfwuufyi.supabase.co" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://oorovtqwyfrfjfwuufyi.supabase.co" />
         <script
           dangerouslySetInnerHTML={{
             __html: `

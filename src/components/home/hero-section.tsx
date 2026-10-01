@@ -301,24 +301,26 @@ export function HeroSection({
             >
               {slides.map((slide, idx) => (
                 <div key={slide.id || idx} className="relative w-full h-full shrink-0">
-                  <Image
-                    src={slide.url}
-                    alt={slide.title || "Ormission Hero Banner"}
-                    fill
-                    priority={idx === 0}
-                    fetchPriority={idx === 0 ? "high" : "low"}
-                    loading={idx === 0 ? "eager" : "lazy"}
-                    sizes="100vw"
-                    quality={75}
-                    className="object-cover object-top"
-                  />
+                  {(idx === 0 || idx === currentIndex) ? (
+                    <Image
+                      src={slide.url}
+                      alt={slide.title || "Ormission Hero Banner"}
+                      fill
+                      priority={idx === 0}
+                      fetchPriority={idx === 0 ? "high" : "low"}
+                      loading={idx === 0 ? "eager" : "lazy"}
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 1200px"
+                      quality={75}
+                      className="object-cover object-top"
+                    />
+                  ) : null}
                 </div>
               ))}
             </div>
 
             {/* Over-Image CTA Buttons (Bottom-Left) */}
             <div className="absolute bottom-3 sm:bottom-6 md:bottom-8 left-4 sm:left-8 md:left-12 lg:left-16 z-20 flex items-center gap-2 sm:gap-3.5 max-w-[calc(100%-85px)] sm:max-w-none">
-              <Link
+              <Link prefetch={false}
                 href={activeSlide.primary_cta_url || heroData.primary_cta_url || "/courses"}
                 className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-1.5 sm:py-3 rounded-full text-[11px] sm:text-sm font-bold text-white bg-primary hover:bg-primary-hover shadow-lg shadow-primary/35 hover:shadow-xl hover:shadow-primary/45 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer shrink-0"
               >
@@ -328,7 +330,7 @@ export function HeroSection({
                 </span>
               </Link>
 
-              <Link
+              <Link prefetch={false}
                 href={activeSlide.secondary_cta_url || heroData.secondary_cta_url || "/courses"}
                 className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-1.5 sm:py-3 rounded-full text-[11px] sm:text-sm font-bold text-white bg-black/55 hover:bg-black/75 border border-white/35 hover:border-white/60 backdrop-blur-md shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer shrink-0"
               >

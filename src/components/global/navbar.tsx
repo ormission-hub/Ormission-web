@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
   Sun,
@@ -252,7 +251,7 @@ export function Navbar() {
               {navItems.map((item) => {
                 const isActive = pathname === item.href;
                 return (
-                  <Link
+                  <Link prefetch={false}
                     key={item.href}
                     href={item.href}
                     className={cn(
@@ -312,15 +311,10 @@ export function Navbar() {
                   )}
                 </button>
 
-                <AnimatePresence>
-                  {isThemeMenuOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 8, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 8, scale: 0.95 }}
-                      transition={{ duration: 0.15 }}
-                      className="absolute right-0 top-full mt-2 w-48 rounded-2xl bg-surface/95 dark:bg-slate-900/95 backdrop-blur-xl border border-border shadow-xl p-1.5 z-50 font-bengali space-y-0.5"
-                    >
+                {isThemeMenuOpen && (
+                      <div
+                        className="animate-in fade-in zoom-in-95 duration-150 absolute right-0 top-full mt-2 w-48 rounded-2xl bg-surface/95 dark:bg-slate-900/95 backdrop-blur-xl border border-border shadow-xl p-1.5 z-50 font-bengali space-y-0.5"
+                      >
                       <button
                         type="button"
                         onClick={() => {
@@ -380,9 +374,8 @@ export function Navbar() {
                         </div>
                         {theme === "dark" && <Check className="w-3.5 h-3.5 text-primary" />}
                       </button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                    </div>
+                    )}
               </div>
 
               {/* Auth Buttons: Logged In User Pill vs Login/Register */}
@@ -429,15 +422,10 @@ export function Navbar() {
                   </button>
 
                   {/* Dropdown Menu */}
-                  <AnimatePresence>
-                    {isUserMenuOpen && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 8, scale: 0.96 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 6, scale: 0.96 }}
-                        transition={{ duration: 0.15 }}
-                        className="absolute right-0 mt-2 w-64 rounded-2xl bg-surface/98 backdrop-blur-md border border-border shadow-xl py-2 z-50 overflow-hidden font-bengali"
-                      >
+                  {isUserMenuOpen && (
+                        <div
+                          className="animate-in fade-in zoom-in-95 duration-150 absolute right-0 mt-2 w-64 rounded-2xl bg-surface/98 backdrop-blur-md border border-border shadow-xl py-2 z-50 overflow-hidden font-bengali"
+                        >
                         {/* Profile Header */}
                         <div className="px-4 py-3 bg-surface-secondary/50 border-b border-border/70">
                           <div className="flex items-center gap-3">
@@ -471,7 +459,7 @@ export function Navbar() {
 
                         {/* Links */}
                         <div className="p-1.5 space-y-0.5">
-                          <Link
+                          <Link prefetch={false}
                             href="/dashboard"
                             onClick={() => setIsUserMenuOpen(false)}
                             className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-xl text-text hover:bg-primary/10 hover:text-primary transition-colors"
@@ -480,7 +468,7 @@ export function Navbar() {
                             <span>আমার ড্যাশবোর্ড</span>
                           </Link>
 
-                          <Link
+                          <Link prefetch={false}
                             href="/dashboard/my-courses"
                             onClick={() => setIsUserMenuOpen(false)}
                             className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-xl text-text hover:bg-primary/10 hover:text-primary transition-colors"
@@ -489,7 +477,7 @@ export function Navbar() {
                             <span>আমার কোর্সসমূহ</span>
                           </Link>
 
-                          <Link
+                          <Link prefetch={false}
                             href="/dashboard/orders"
                             onClick={() => setIsUserMenuOpen(false)}
                             className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-xl text-text hover:bg-primary/10 hover:text-primary transition-colors"
@@ -498,7 +486,7 @@ export function Navbar() {
                             <span>পেমেন্ট ও অর্ডার হিস্ট্রি</span>
                           </Link>
 
-                          <Link
+                          <Link prefetch={false}
                             href="/dashboard/profile"
                             onClick={() => setIsUserMenuOpen(false)}
                             className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-xl text-text hover:bg-primary/10 hover:text-primary transition-colors"
@@ -573,14 +561,13 @@ export function Navbar() {
                             <span>{isLoggingOut ? "লগআউট হচ্ছে..." : "লগআউট"}</span>
                           </button>
                         </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                      </div>
+                      )}
                 </div>
               ) : (
                 <>
                   {/* Login - desktop clean link */}
-                  <Link
+                  <Link prefetch={false}
                     href="/login"
                     className={cn(
                       "hidden sm:inline-flex items-center px-3.5 py-1.5 text-xs font-bold rounded-xl transition-all duration-200 font-bengali",
@@ -591,7 +578,7 @@ export function Navbar() {
                   </Link>
 
                   {/* Register CTA - desktop high-contrast button */}
-                  <Link
+                  <Link prefetch={false}
                     href="/register"
                     className={cn(
                       "hidden sm:inline-flex items-center px-4 py-1.5 text-xs font-bold rounded-xl shadow-xs transition-all duration-200 font-bengali hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]",
@@ -602,7 +589,7 @@ export function Navbar() {
                   </Link>
 
                   {/* Mobile: Login icon when not logged in */}
-                  <Link
+                  <Link prefetch={false}
                     href="/login"
                     className="sm:hidden p-2 rounded-xl text-text-muted hover:text-text hover:bg-surface-secondary transition-colors border border-transparent"
                     aria-label="লগইন"
@@ -669,7 +656,7 @@ export function Navbar() {
                   : pathname === item.href || pathname?.startsWith(item.href);
 
               return (
-                <Link
+                <Link prefetch={false}
                   key={item.href}
                   href={item.href}
                   onClick={() => {
