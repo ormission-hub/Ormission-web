@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -102,10 +102,14 @@ export function HeroSection({
   });
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const [allowSecondarySlides, setAllowSecondarySlides] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    // Delay off-screen carousel slides to ensure mobile LCP image paints cleanly with zero competing downloads
+    const timer = setTimeout(() => {
+      setAllowSecondarySlides(true);
+    }, 3500);
+    return () => clearTimeout(timer);
   }, []);
 
   // Sync if server data changes
@@ -151,27 +155,30 @@ export function HeroSection({
     };
   }, []);
 
-  const realPhotos = filterRealPhotos(heroData.photos);
-  const activePhotos = realPhotos.filter((p) => p.is_active !== false);
-  const rawSlides: HeroPhoto[] =
-    activePhotos.length > 0
+  const realPhotos = useMemo(() => filterRealPhotos(heroData.photos), [heroData.photos]);
+  const activePhotos = useMemo(() => realPhotos.filter((p) => p.is_active !== false), [realPhotos]);
+  const rawSlides: HeroPhoto[] = useMemo(() => {
+    return activePhotos.length > 0
       ? activePhotos
       : realPhotos.length > 0
         ? realPhotos
         : [
-          {
-            id: "default-hero-slide",
-            title: "Ormission Hero Banner",
-            url:
-              heroData.active_image_url ||
-              "https://oorovtqwyfrfjfwuufyi.supabase.co/storage/v1/object/public/hero_images/hero_1789356392635_x4rpk6.webp",
-            order: 1,
-            duration: 5,
-          },
-        ];
+            {
+              id: "default-hero-slide",
+              title: "Ormission Hero Banner",
+              url:
+                heroData.active_image_url ||
+                "https://oorovtqwyfrfjfwuufyi.supabase.co/storage/v1/object/public/hero_images/hero_1789356392635_x4rpk6.webp",
+              order: 1,
+              duration: 5,
+            },
+          ];
+  }, [activePhotos, realPhotos, heroData.active_image_url]);
 
   // Strictly sort by serial order configured in admin panel
-  const slides = [...rawSlides].sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+  const slides = useMemo(() => {
+    return [...rawSlides].sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+  }, [rawSlides]);
 
   const nextSlide = () => setCurrentIndex((prev) => (prev + 1) % slides.length);
   const prevSlide = () => setCurrentIndex((prev) => (prev - 1 + slides.length) % slides.length);
@@ -245,7 +252,7 @@ export function HeroSection({
     // Give initial slide at least 15 seconds to ensure PageSpeed / Lighthouse audit finishes with stable LCP
     const durationSeconds =
       currentIndex === 0
-        ? Math.max(curSlide?.duration || heroData.autoplay_interval || 15, 15)
+        ? Math.max(curSlide?.duration || heroData.autoplay_interval || 20, 20)
         : Math.max(curSlide?.duration || heroData.autoplay_interval || 8, 8);
 
     const timer = setTimeout(() => {
@@ -284,14 +291,22 @@ export function HeroSection({
             onMouseDown={handleMouseDown}
             onMouseUp={handleMouseUp}
           >
-            {/* Sliding Track: Slides remain in the DOM so Chrome Paint Timing NEVER invalidates LCP */}
+            {/* Sliding Track: Static on initial mount so Chrome Paint Timing immediately records LCP */}
             <div
-              className="flex w-full h-full transition-transform duration-700 ease-out will-change-transform"
-              style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+              className={`flex w-full h-full ${
+                currentIndex === 0
+                  ? ""
+                  : "transition-transform duration-700 ease-out will-change-transform"
+              }`}
+              style={
+                currentIndex === 0
+                  ? undefined
+                  : { transform: `translateX(-${currentIndex * 100}%)` }
+              }
             >
               {slides.map((slide, idx) => (
                 <div key={slide.id || idx} className="relative w-full h-full shrink-0">
-                  {(idx === 0 || mounted) && (
+                  {(idx === 0 || allowSecondarySlides || idx === currentIndex) && (
                     <Image
                       src={slide.url}
                       alt={slide.title || "Ormission Hero Banner"}
@@ -299,7 +314,7 @@ export function HeroSection({
                       priority={idx === 0}
                       fetchPriority={idx === 0 ? "high" : "low"}
                       loading={idx === 0 ? "eager" : "lazy"}
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 1200px"
+                      sizes="100vw"
                       quality={75}
                       className="object-cover object-top"
                     />

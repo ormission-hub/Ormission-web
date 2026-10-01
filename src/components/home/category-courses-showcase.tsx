@@ -630,7 +630,7 @@ export function CategoryCoursesShowcase({
         >
           {/* Continuous rotating glowing border laser beam on ALL pills */}
           <div
-            className="border-beam-sharp"
+          className="hidden sm:block border-beam-sharp"
             style={{
               background:
                 "conic-gradient(from 0deg, transparent 0deg, transparent 255deg, rgba(255,95,0,0.7) 295deg, rgba(255,255,255,0.95) 335deg, transparent 360deg)",
@@ -702,9 +702,15 @@ export function CategoryCoursesShowcase({
             {illustration}
           </div>
 
-          <span className="relative z-10 text-sm xs:text-base sm:text-lg font-black tracking-tight text-text font-bengali">
-            {title}
-          </span>
+          {idx === 0 ? (
+            <h1 className="relative z-10 text-sm xs:text-base sm:text-lg font-black tracking-tight text-text font-bengali">
+              {title}
+            </h1>
+          ) : (
+            <h2 className="relative z-10 text-sm xs:text-base sm:text-lg font-black tracking-tight text-text font-bengali">
+              {title}
+            </h2>
+          )}
 
           <span className="hidden sm:inline-block relative z-10 px-2 py-0.5 rounded-full text-[10px] font-black bg-primary/15 text-primary border border-primary/20 ml-1">
             {tagText}
