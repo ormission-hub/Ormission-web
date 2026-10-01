@@ -623,9 +623,8 @@ export function CategoryCoursesShowcase({
         key={cat.id || cat.slug}
         className="w-full sm:w-auto min-w-0 flex-1 sm:flex-initial transition-transform duration-150 hover:-translate-y-0.5 hover:scale-[1.02] active:scale-[0.98]"
       >
-        <Link
+        <Link prefetch={false}
           href={`/category/${catSlug}`}
-          prefetch={true}
           className="group relative block p-[1.5px] sm:p-[2.5px] rounded-xl sm:rounded-2xl cursor-pointer select-none transition-all duration-200 overflow-hidden w-full sm:w-auto min-w-0 sm:min-w-[170px] min-h-[46px] sm:min-h-[56px] border border-border/80 bg-slate-200/60 dark:bg-slate-800/60 hover:border-primary/60 hover:shadow-[0_0_20px_rgba(255,95,0,0.3)] hover:bg-primary/10"
         >
           {/* Continuous rotating glowing border laser beam on ALL pills */}
@@ -702,15 +701,9 @@ export function CategoryCoursesShowcase({
             {illustration}
           </div>
 
-          {idx === 0 ? (
-            <h1 className="relative z-10 text-sm xs:text-base sm:text-lg font-black tracking-tight text-text font-bengali">
-              {title}
-            </h1>
-          ) : (
-            <h2 className="relative z-10 text-sm xs:text-base sm:text-lg font-black tracking-tight text-text font-bengali">
-              {title}
-            </h2>
-          )}
+          <h2 className="relative z-10 text-sm xs:text-base sm:text-lg font-black tracking-tight text-text font-bengali">
+            {title}
+          </h2>
 
           <span className="hidden sm:inline-block relative z-10 px-2 py-0.5 rounded-full text-[10px] font-black bg-primary/15 text-primary border border-primary/20 ml-1">
             {tagText}
@@ -769,7 +762,7 @@ export function CategoryCoursesShowcase({
 
                 {/* Slider Arrows & All Courses Link */}
                 <div className="flex items-center gap-2">
-                  <Link
+                  <Link prefetch={false}
                     href="/courses"
                     className="hidden md:inline-flex items-center gap-1 text-xs font-bold text-primary hover:text-primary-hover font-bengali mr-2"
                   >
@@ -811,7 +804,7 @@ export function CategoryCoursesShowcase({
                   <p className="text-xs text-text-muted font-bengali max-w-sm mb-4">
                     আমাদের শিক্ষকমণ্ডলী নতুন ও আকর্ষণীয় কোর্স প্রস্তুত করছেন।
                   </p>
-                  <Link
+                  <Link prefetch={false}
                     href="/courses"
                     className="px-4 py-2 rounded-xl bg-primary text-white text-xs font-bold font-bengali hover:bg-primary-hover transition-colors shadow-sm"
                   >
@@ -822,7 +815,7 @@ export function CategoryCoursesShowcase({
                 <div
                   ref={coursesScrollRef}
                   onScroll={handleCourseScroll}
-                  className="flex gap-5 sm:gap-6 overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar py-3 px-1 -mx-1"
+                  className="flex gap-5 sm:gap-6 overflow-x-auto snap-x no-scrollbar py-3 px-1 -mx-1"
                 >
                   {pinnedCourses.map((course, idx) => {
                     const title = course.title_bn || course.title;
@@ -837,7 +830,7 @@ export function CategoryCoursesShowcase({
                         className="w-[86vw] xs:w-[320px] sm:w-[360px] lg:w-[380px] shrink-0 snap-start group flex flex-col bg-surface border border-border/80 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:shadow-primary/15 hover:border-primary/50 hover:-translate-y-1 transition-all duration-300 h-full"
                       >
                         {/* Image Thumbnail with zoom hover */}
-                        <Link
+                        <Link prefetch={false}
                           href={`/course/${course.slug}`}
                           className="relative aspect-video w-full bg-slate-900 overflow-hidden block"
                         >
@@ -870,7 +863,7 @@ export function CategoryCoursesShowcase({
 
                   {/* Content */}
                   <div className="p-5 sm:p-6 flex flex-col flex-1">
-                    <Link href={`/course/${course.slug}`}>
+                    <Link prefetch={false} href={`/course/${course.slug}`}>
                       <h4 className="text-base sm:text-lg font-black text-text group-hover:text-primary transition-colors line-clamp-2 mb-2 font-bengali">
                         {title}
                       </h4>
@@ -938,7 +931,7 @@ export function CategoryCoursesShowcase({
                         )}
                       </div>
 
-                      <Link
+                      <Link prefetch={false}
                         href={`/course/${course.slug}`}
                         className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-primary hover:bg-primary-hover shadow-md shadow-primary/25 hover:shadow-lg hover:shadow-primary/35 transition-all duration-200 group-hover:scale-105 font-bengali"
                       >
@@ -990,7 +983,7 @@ export function CategoryCoursesShowcase({
 
             {/* Slider Arrows & All Books Link */}
             <div className="flex items-center gap-2">
-              <Link
+              <Link prefetch={false}
                 href="/books"
                 className="hidden md:inline-flex items-center gap-1 text-xs font-bold text-primary hover:text-primary-hover font-bengali mr-2"
               >
@@ -1020,7 +1013,7 @@ export function CategoryCoursesShowcase({
           <div
             ref={booksScrollRef}
             onScroll={handleBookScroll}
-            className="flex gap-5 sm:gap-6 overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar py-3 px-1 -mx-1"
+            className="flex gap-5 sm:gap-6 overflow-x-auto snap-x no-scrollbar py-3 px-1 -mx-1"
           >
             {pinnedBooks.map((book, idx) => {
               const discountPct =
@@ -1038,7 +1031,7 @@ export function CategoryCoursesShowcase({
                   className="w-[84vw] xs:w-[300px] sm:w-[320px] lg:w-[340px] shrink-0 snap-start group flex flex-col bg-surface border border-border/80 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:shadow-primary/15 hover:border-primary/50 hover:-translate-y-1 transition-all duration-300 h-full"
                 >
                   {/* Clean Book Image Cover Area (No background color gradients) */}
-                  <Link
+                  <Link prefetch={false}
                     href={`/books/${book.id}`}
                     className="relative h-52 sm:h-56 w-full bg-slate-50/80 dark:bg-slate-900/50 p-4 flex flex-col items-center justify-center overflow-hidden border-b border-border/60 group/cover"
                   >
@@ -1079,7 +1072,7 @@ export function CategoryCoursesShowcase({
 
                   {/* Book Details */}
                   <div className="p-4 sm:p-5 flex flex-col flex-1">
-                    <Link href={`/books/${book.id}`} className="block group/title">
+                    <Link prefetch={false} href={`/books/${book.id}`} className="block group/title">
                       <h4 className="text-base sm:text-lg font-black text-text group-hover/title:text-primary transition-colors line-clamp-1 mb-1 font-bengali">
                         {book.title}
                       </h4>
@@ -1133,7 +1126,7 @@ export function CategoryCoursesShowcase({
                         )}
                       </div>
 
-                      <Link
+                      <Link prefetch={false}
                         href={`/books/${book.id}`}
                         className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-primary hover:bg-primary-hover shadow-md shadow-primary/25 hover:shadow-lg hover:shadow-primary/35 transition-all duration-200 group-hover:scale-105 font-bengali"
                       >

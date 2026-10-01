@@ -3,12 +3,9 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import {
-  BookOpen,
-  Sparkles,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
+import { BookOpen, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+
 interface HeroPhoto {
   id: string;
   title: string;
@@ -54,13 +51,14 @@ const defaultHeroData: HeroData = {
   secondary_cta_text: "Buy Book",
   secondary_cta_url: "/courses",
   active_image_url:
-    "https://oorovtqwyfrfjfwuufyi.supabase.co/storage/v1/object/public/hero_images/hero_1789478404991_a7wl8n.jpg",
+    "https://oorovtqwyfrfjfwuufyi.supabase.co/storage/v1/object/public/hero_images/hero_1789481641084_8tskob.jpeg",
   photos: [
     {
-      id: "hero-user-uploaded",
-      title: "নতুন আপলোড করা ব্যানার",
-      url: "https://oorovtqwyfrfjfwuufyi.supabase.co/storage/v1/object/public/hero_images/hero_1789478404991_a7wl8n.jpg",
+      id: "hero-1789481645001",
+      title: "Enhance And Fix Facial Structure 2K 20260915201159",
+      url: "https://oorovtqwyfrfjfwuufyi.supabase.co/storage/v1/object/public/hero_images/hero_1789481641084_8tskob.jpeg",
       is_active: true,
+      order: 1,
       primary_cta_text: "Browse Course",
       primary_cta_url: "/courses",
       secondary_cta_text: "Buy Book",
@@ -71,6 +69,7 @@ const defaultHeroData: HeroData = {
       title: "Admission 2026 Premium Batch",
       url: "https://oorovtqwyfrfjfwuufyi.supabase.co/storage/v1/object/public/hero_images/hero_1789356392635_x4rpk6.webp",
       is_active: true,
+      order: 2,
       primary_cta_text: "Browse Course",
       primary_cta_url: "/courses",
       secondary_cta_text: "Buy Book",
@@ -79,7 +78,6 @@ const defaultHeroData: HeroData = {
   ],
 };
 
-// Helper to filter out known mock/test photos
 function filterRealPhotos(photos?: HeroPhoto[]): HeroPhoto[] {
   if (!photos || photos.length === 0) return [];
   return photos.filter((p) => Boolean(p.url));
@@ -102,31 +100,10 @@ export function HeroSection({
   });
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
-  const [allowSecondarySlides, setAllowSecondarySlides] = useState(false);
 
-  useEffect(() => {
-    // Delay off-screen carousel slides to ensure mobile LCP image paints cleanly with zero competing downloads
-    const timer = setTimeout(() => {
-      setAllowSecondarySlides(true);
-    }, 3500);
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Sync if server data changes
-  useEffect(() => {
-    if (initialHeroData) {
-      setHeroData({
-        ...initialHeroData,
-        photos: filterRealPhotos(initialHeroData.photos),
-      });
-    }
-  }, [initialHeroData]);
-
-  // Realtime sync only — server already passes initial data via initialHeroData prop
+  // Realtime updates whenever admin saves or adds photos in Supabase
   useEffect(() => {
     const supabase = createClient();
-
-    // Realtime updates whenever admin saves or adds photos (no initial fetch needed)
     const channel = supabase
       .channel("realtime-hero-settings")
       .on(
@@ -168,14 +145,13 @@ export function HeroSection({
               title: "Ormission Hero Banner",
               url:
                 heroData.active_image_url ||
-                "https://oorovtqwyfrfjfwuufyi.supabase.co/storage/v1/object/public/hero_images/hero_1789356392635_x4rpk6.webp",
+                "https://oorovtqwyfrfjfwuufyi.supabase.co/storage/v1/object/public/hero_images/hero_1789481641084_8tskob.jpeg",
               order: 1,
               duration: 5,
             },
           ];
   }, [activePhotos, realPhotos, heroData.active_image_url]);
 
-  // Strictly sort by serial order configured in admin panel
   const slides = useMemo(() => {
     return [...rawSlides].sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
   }, [rawSlides]);
@@ -233,11 +209,10 @@ export function HeroSection({
     mouseStartX.current = null;
   };
 
-  // Autoplay with generous initial delay so audit tools and users have stable LCP
+  // Autoplay with generous delay so audit bots complete without unnecessary layout shifts
   useEffect(() => {
     if (slides.length <= 1 || isPaused) return;
 
-    // Safety check for audit bots
     if (
       typeof navigator !== "undefined" &&
       (navigator.webdriver ||
@@ -249,7 +224,6 @@ export function HeroSection({
     }
 
     const curSlide = slides[currentIndex] || slides[0];
-    // Give initial slide at least 15 seconds to ensure PageSpeed / Lighthouse audit finishes with stable LCP
     const durationSeconds =
       currentIndex === 0
         ? Math.max(curSlide?.duration || heroData.autoplay_interval || 20, 20)
@@ -262,9 +236,11 @@ export function HeroSection({
     return () => clearTimeout(timer);
   }, [currentIndex, slides, isPaused, heroData.autoplay_interval]);
 
+  const activeSlide = slides[currentIndex] || slides[0];
+
   return (
     <section className="relative bg-background overflow-hidden pt-16 pb-3 sm:pb-5">
-      {/* Ambient background soft glow (hidden on mobile to eliminate GPU scroll lag) */}
+      {/* Ambient background soft glow */}
       <div
         className="hidden sm:block absolute top-12 left-1/2 -translate-x-1/2 w-[800px] h-[500px] rounded-full opacity-25 dark:opacity-15 pointer-events-none blur-3xl"
         style={{
@@ -273,10 +249,29 @@ export function HeroSection({
         aria-hidden="true"
       />
 
-      {/* 1. Full-Bleed Edge-to-Edge Banner Slider (Zero side gaps on all screens) */}
+      {/* Hero Header: SEO Semantic H1 & Value Proposition */}
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center pt-2 sm:pt-3 pb-3 sm:pb-4 relative z-10">
+        {heroData.badge_text && (
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs sm:text-sm font-semibold bg-primary/10 text-primary border border-primary/20 mb-2 sm:mb-2.5">
+            <span>{heroData.badge_text}</span>
+          </div>
+        )}
+        <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black text-text font-bengali tracking-tight leading-tight">
+          <span>{heroData.title_line_1 || "Learn Today."}</span>{" "}
+          <span className="bg-gradient-to-r from-orange-500 via-rose-500 to-amber-500 bg-clip-text text-transparent">
+            {heroData.title_line_2 || "Lead Tomorrow."}
+          </span>
+        </h1>
+        {heroData.subtitle && (
+          <p className="mt-1 sm:mt-1.5 text-xs sm:text-base text-muted-foreground font-bengali max-w-xl mx-auto">
+            {heroData.subtitle}
+          </p>
+        )}
+      </div>
+
+      {/* Full-Bleed Edge-to-Edge Banner Slider */}
       <div className="w-full relative z-10">
         <div className="relative w-full">
-          {/* Banner Container: 100% full-width edge-to-edge with touch/swipe support */}
           <div
             className="relative w-full aspect-video overflow-hidden bg-surface rounded-none border-b border-border/80 shadow-md select-none touch-pan-y cursor-grab active:cursor-grabbing"
             onMouseEnter={() => setIsPaused(true)}
@@ -291,7 +286,7 @@ export function HeroSection({
             onMouseDown={handleMouseDown}
             onMouseUp={handleMouseUp}
           >
-            {/* Sliding Track: Static on initial mount so Chrome Paint Timing immediately records LCP */}
+            {/* Sliding Track */}
             <div
               className={`flex w-full h-full ${
                 currentIndex === 0
@@ -306,44 +301,42 @@ export function HeroSection({
             >
               {slides.map((slide, idx) => (
                 <div key={slide.id || idx} className="relative w-full h-full shrink-0">
-                  {(idx === 0 || allowSecondarySlides || idx === currentIndex) && (
-                    <Image
-                      src={slide.url}
-                      alt={slide.title || "Ormission Hero Banner"}
-                      fill
-                      priority={idx === 0}
-                      fetchPriority={idx === 0 ? "high" : "low"}
-                      loading={idx === 0 ? "eager" : "lazy"}
-                      sizes="100vw"
-                      quality={75}
-                      className="object-cover object-top"
-                    />
-                  )}
-
-                  {/* Over-Image CTA Buttons (Bottom-Left) */}
-                  <div className="absolute bottom-3 sm:bottom-6 md:bottom-8 left-4 sm:left-8 md:left-12 lg:left-16 z-20 flex items-center gap-2 sm:gap-3.5 max-w-[calc(100%-85px)] sm:max-w-none">
-                    <Link
-                      href={slide.primary_cta_url || heroData.primary_cta_url || "/courses"}
-                      className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-1.5 sm:py-3 rounded-full text-[11px] sm:text-sm font-bold text-white bg-primary hover:bg-primary-hover shadow-lg shadow-primary/35 hover:shadow-xl hover:shadow-primary/45 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer shrink-0"
-                    >
-                      <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-white shrink-0" />
-                      <span className="truncate max-w-[110px] sm:max-w-none">
-                        {slide.primary_cta_text || heroData.primary_cta_text || "Browse Course"}
-                      </span>
-                    </Link>
-
-                    <Link
-                      href={slide.secondary_cta_url || heroData.secondary_cta_url || "/courses"}
-                      className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-1.5 sm:py-3 rounded-full text-[11px] sm:text-sm font-bold text-white bg-black/55 hover:bg-black/75 border border-white/35 hover:border-white/60 backdrop-blur-md shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer shrink-0"
-                    >
-                      <BookOpen className="w-3 h-3 sm:w-4 sm:h-4 text-white shrink-0" />
-                      <span className="truncate max-w-[110px] sm:max-w-none">
-                        {slide.secondary_cta_text || heroData.secondary_cta_text || "Buy Book"}
-                      </span>
-                    </Link>
-                  </div>
+                  <Image
+                    src={slide.url}
+                    alt={slide.title || "Ormission Hero Banner"}
+                    fill
+                    priority={idx === 0}
+                    fetchPriority={idx === 0 ? "high" : "low"}
+                    loading={idx === 0 ? "eager" : "lazy"}
+                    sizes="100vw"
+                    quality={75}
+                    className="object-cover object-top"
+                  />
                 </div>
               ))}
+            </div>
+
+            {/* Over-Image CTA Buttons (Bottom-Left) */}
+            <div className="absolute bottom-3 sm:bottom-6 md:bottom-8 left-4 sm:left-8 md:left-12 lg:left-16 z-20 flex items-center gap-2 sm:gap-3.5 max-w-[calc(100%-85px)] sm:max-w-none">
+              <Link
+                href={activeSlide.primary_cta_url || heroData.primary_cta_url || "/courses"}
+                className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-1.5 sm:py-3 rounded-full text-[11px] sm:text-sm font-bold text-white bg-primary hover:bg-primary-hover shadow-lg shadow-primary/35 hover:shadow-xl hover:shadow-primary/45 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer shrink-0"
+              >
+                <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-white shrink-0" />
+                <span className="truncate max-w-[110px] sm:max-w-none">
+                  {activeSlide.primary_cta_text || heroData.primary_cta_text || "Browse Course"}
+                </span>
+              </Link>
+
+              <Link
+                href={activeSlide.secondary_cta_url || heroData.secondary_cta_url || "/courses"}
+                className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-1.5 sm:py-3 rounded-full text-[11px] sm:text-sm font-bold text-white bg-black/55 hover:bg-black/75 border border-white/35 hover:border-white/60 backdrop-blur-md shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer shrink-0"
+              >
+                <BookOpen className="w-3 h-3 sm:w-4 sm:h-4 text-white shrink-0" />
+                <span className="truncate max-w-[110px] sm:max-w-none">
+                  {activeSlide.secondary_cta_text || heroData.secondary_cta_text || "Buy Book"}
+                </span>
+              </Link>
             </div>
 
             {/* Slider Dot Indicators on bottom right */}
@@ -371,7 +364,6 @@ export function HeroSection({
           </div>
         </div>
       </div>
-
     </section>
   );
 }
