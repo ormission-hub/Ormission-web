@@ -249,25 +249,10 @@ export function HeroSection({
         aria-hidden="true"
       />
 
-      {/* Hero Header: SEO Semantic H1 & Value Proposition */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center pt-2 sm:pt-3 pb-3 sm:pb-4 relative z-10">
-        {heroData.badge_text && (
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs sm:text-sm font-semibold bg-primary/10 text-primary border border-primary/20 mb-2 sm:mb-2.5">
-            <span>{heroData.badge_text}</span>
-          </div>
-        )}
-        <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black text-text font-bengali tracking-tight leading-tight">
-          <span>{heroData.title_line_1 || "Learn Today."}</span>{" "}
-          <span className="bg-gradient-to-r from-orange-500 via-rose-500 to-amber-500 bg-clip-text text-transparent">
-            {heroData.title_line_2 || "Lead Tomorrow."}
-          </span>
-        </h1>
-        {heroData.subtitle && (
-          <p className="mt-1 sm:mt-1.5 text-xs sm:text-base text-muted-foreground font-bengali max-w-xl mx-auto">
-            {heroData.subtitle}
-          </p>
-        )}
-      </div>
+      {/* Accessible SEO H1 for search engines & screen readers */}
+      <h1 className="sr-only">
+        {heroData.title_line_1 || "Learn Today."} {heroData.title_line_2 || "Lead Tomorrow."} - Ormission
+      </h1>
 
       {/* Full-Bleed Edge-to-Edge Banner Slider */}
       <div className="w-full relative z-10">
