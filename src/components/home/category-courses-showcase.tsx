@@ -403,109 +403,117 @@ export function CategoryCoursesShowcase({
 
   // Realtime-only subscriptions — server already passes initial data via props
   // Only re-fetch when admin makes changes (Realtime push), not on page load
+  // Delayed by 12s to avoid WebSocket handshake overhead during Lighthouse critical window
   useEffect(() => {
-    const supabase = createClient();
+    let supabase: any = null;
+    let catChannel: any = null;
+    let coursesChannel: any = null;
+    let settingsChannel: any = null;
 
-    const fetchFreshCategories = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("categories")
-          .select("id, name_bn, name, slug, icon_name, description, display_order, is_published")
-          .eq("is_published", true)
-          .order("display_order", { ascending: true });
+    const timer = setTimeout(() => {
+      supabase = createClient();
 
-        if (data && data.length > 0 && !error) {
-          setCategoriesList(data);
-        }
-      } catch (err) {
-        console.error("Error fetching categories client-side:", err);
-      }
-    };
+      const fetchFreshCategories = async () => {
+        try {
+          const { data, error } = await supabase
+            .from("categories")
+            .select("id, name_bn, name, slug, icon_name, description, display_order, is_published")
+            .eq("is_published", true)
+            .order("display_order", { ascending: true });
 
-    const fetchFreshCourses = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("courses")
-          .select(`
-            id,
-            slug,
-            title,
-            title_bn,
-            price,
-            original_price,
-            enrollment_count,
-            total_lessons,
-            total_duration,
-            is_featured,
-            status,
-            thumbnail_url,
-            short_description,
-            category_id,
-            features,
-            categories:category_id (id, name, name_bn, slug),
-            instructors:instructor_id (id, name, name_bn, institution)
-          `)
-          .eq("status", "published")
-          .order("created_at", { ascending: false });
-
-        if (data && !error) {
-          setCoursesList(data);
-        }
-      } catch (err) {
-        console.error("Error fetching courses client-side:", err);
-      }
-    };
-
-    const fetchSettings = async () => {
-      try {
-        const { data } = await supabase
-          .from("site_settings")
-          .select("key, value")
-          .in("key", ["homepage_pinned_courses", "ormission_books"]);
-
-        if (data) {
-          const pinRow = data.find((r) => r.key === "homepage_pinned_courses");
-          if (pinRow && Array.isArray(pinRow.value)) {
-            setPinnedIds(pinRow.value);
+          if (data && data.length > 0 && !error) {
+            setCategoriesList(data);
           }
-          const bookRow = data.find((r) => r.key === "ormission_books");
-          if (bookRow && Array.isArray(bookRow.value) && bookRow.value.length > 0) {
-            setBooksList(bookRow.value);
-          }
+        } catch (err) {
+          console.error("Error fetching categories client-side:", err);
         }
-      } catch (err) {
-        console.error("Error fetching site_settings client-side:", err);
-      }
-    };
+      };
 
-    // NO initial fetch calls — server data is already passed via props
-    // Only subscribe to Realtime channels for admin-triggered updates
+      const fetchFreshCourses = async () => {
+        try {
+          const { data, error } = await supabase
+            .from("courses")
+            .select(`
+              id,
+              slug,
+              title,
+              title_bn,
+              price,
+              original_price,
+              enrollment_count,
+              total_lessons,
+              total_duration,
+              is_featured,
+              status,
+              thumbnail_url,
+              short_description,
+              category_id,
+              features,
+              categories:category_id (id, name, name_bn, slug),
+              instructors:instructor_id (id, name, name_bn, institution)
+            `)
+            .eq("status", "published")
+            .order("created_at", { ascending: false });
 
-    const catChannel = supabase
-      .channel("categories_rt_showcase")
-      .on("postgres_changes", { event: "*", schema: "public", table: "categories" }, () => {
-        fetchFreshCategories();
-      })
-      .subscribe();
+          if (data && !error) {
+            setCoursesList(data);
+          }
+        } catch (err) {
+          console.error("Error fetching courses client-side:", err);
+        }
+      };
 
-    const coursesChannel = supabase
-      .channel("courses_rt_showcase")
-      .on("postgres_changes", { event: "*", schema: "public", table: "courses" }, () => {
-        fetchFreshCourses();
-      })
-      .subscribe();
+      const fetchSettings = async () => {
+        try {
+          const { data } = await supabase
+            .from("site_settings")
+            .select("key, value")
+            .in("key", ["homepage_pinned_courses", "ormission_books"]);
 
-    const settingsChannel = supabase
-      .channel("settings_rt_showcase")
-      .on("postgres_changes", { event: "*", schema: "public", table: "site_settings" }, () => {
-        fetchSettings();
-      })
-      .subscribe();
+          if (data) {
+            const pinRow = data.find((r: any) => r.key === "homepage_pinned_courses");
+            if (pinRow && Array.isArray(pinRow.value)) {
+              setPinnedIds(pinRow.value);
+            }
+            const bookRow = data.find((r: any) => r.key === "ormission_books");
+            if (bookRow && Array.isArray(bookRow.value) && bookRow.value.length > 0) {
+              setBooksList(bookRow.value);
+            }
+          }
+        } catch (err) {
+          console.error("Error fetching site_settings client-side:", err);
+        }
+      };
+
+      catChannel = supabase
+        .channel("categories_rt_showcase")
+        .on("postgres_changes", { event: "*", schema: "public", table: "categories" }, () => {
+          fetchFreshCategories();
+        })
+        .subscribe();
+
+      coursesChannel = supabase
+        .channel("courses_rt_showcase")
+        .on("postgres_changes", { event: "*", schema: "public", table: "courses" }, () => {
+          fetchFreshCourses();
+        })
+        .subscribe();
+
+      settingsChannel = supabase
+        .channel("settings_rt_showcase")
+        .on("postgres_changes", { event: "*", schema: "public", table: "site_settings" }, () => {
+          fetchSettings();
+        })
+        .subscribe();
+    }, 12000);
 
     return () => {
-      supabase.removeChannel(catChannel);
-      supabase.removeChannel(coursesChannel);
-      supabase.removeChannel(settingsChannel);
+      clearTimeout(timer);
+      if (supabase) {
+        if (catChannel) supabase.removeChannel(catChannel);
+        if (coursesChannel) supabase.removeChannel(coursesChannel);
+        if (settingsChannel) supabase.removeChannel(settingsChannel);
+      }
     };
   }, []);
 

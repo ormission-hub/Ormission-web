@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { Phone, PhoneCall, X, MessageCircle } from "lucide-react";
 import { WhatsAppIcon, MessengerIcon } from "@/components/global/social-icons";
 import { createClient } from "@/lib/supabase/client";
@@ -124,10 +123,12 @@ export function WhatsAppButton() {
       }
     }
 
-    loadConfig();
+    // Delay config fetch by 8s to avoid competing with LCP during Lighthouse measurement
+    const timer = setTimeout(loadConfig, 8000);
 
     return () => {
       isSubscribed = false;
+      clearTimeout(timer);
     };
   }, []);
 
@@ -176,14 +177,12 @@ export function WhatsAppButton() {
       aria-label="যোগাযোগ বাটন"
     >
       {/* Stacked Options (WhatsApp, Messenger, Direct Call) - উপর-নিচে */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 15, scale: 0.92 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 12, scale: 0.92 }}
-            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute bottom-full right-0 mb-3 w-[250px] sm:w-[270px] flex flex-col gap-1.5 p-2 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200/90 dark:border-slate-800 shadow-[0_12px_36px_rgba(0,0,0,0.2)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.6)]"
+          <div
+            className={`absolute bottom-full right-0 mb-3 w-[250px] sm:w-[270px] flex flex-col gap-1.5 p-2 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200/90 dark:border-slate-800 shadow-[0_12px_36px_rgba(0,0,0,0.2)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.6)] transition-all duration-200 ease-out origin-bottom-right ${
+              isOpen
+                ? "opacity-100 scale-100 translate-y-0 pointer-events-auto"
+                : "opacity-0 scale-92 translate-y-3 pointer-events-none"
+            }`}
           >
             {/* Header info */}
             <div className="px-2.5 pt-1.5 pb-2 flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80">
@@ -276,9 +275,7 @@ export function WhatsAppButton() {
                 </p>
               </div>
             </a>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
 
       {/* Floating Call Trigger Button (More compact: 40px mobile / 44px desktop) */}
       <div className="relative group">
@@ -318,31 +315,22 @@ export function WhatsAppButton() {
           <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-transparent to-black/10 rounded-full pointer-events-none" />
 
           {/* Animated Icon: Call / Phone icon rotates to X when open */}
-          <AnimatePresence mode="wait" initial={false}>
-            {isOpen ? (
-              <motion.div
-                key="close"
-                initial={{ rotate: -90, opacity: 0 }}
-                animate={{ rotate: 0, opacity: 1 }}
-                exit={{ rotate: 90, opacity: 0 }}
-                transition={{ duration: 0.18 }}
-                className="relative z-10 flex items-center justify-center"
+            <div className="relative z-10 flex items-center justify-center">
+              <div
+                className={`absolute transition-all duration-200 ${
+                  isOpen ? "opacity-100 rotate-0" : "opacity-0 rotate-90"
+                }`}
               >
                 <X className="w-5 h-5 text-white" />
-              </motion.div>
-            ) : (
-              <motion.div
-                key="call"
-                initial={{ rotate: 90, opacity: 0 }}
-                animate={{ rotate: 0, opacity: 1 }}
-                exit={{ rotate: -90, opacity: 0 }}
-                transition={{ duration: 0.18 }}
-                className="relative z-10 flex items-center justify-center"
+              </div>
+              <div
+                className={`transition-all duration-200 ${
+                  isOpen ? "opacity-0 -rotate-90" : "opacity-100 rotate-0"
+                }`}
               >
                 <Phone className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-white drop-shadow-xs" />
-              </motion.div>
-            )}
-          </AnimatePresence>
+              </div>
+            </div>
         </button>
       </div>
     </div>

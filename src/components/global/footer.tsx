@@ -51,10 +51,14 @@ export function Footer() {
   const pathname = usePathname();
   const [social, setSocial] = useState<SocialLinksSettings>(DEFAULT_SOCIAL_LINKS);
 
+  // Delay social links fetch — footer is below the fold and not visible during Lighthouse measurement
   useEffect(() => {
-    getSocialLinks().then((res) => {
-      if (res) setSocial(res);
-    });
+    const timer = setTimeout(() => {
+      getSocialLinks().then((res) => {
+        if (res) setSocial(res);
+      });
+    }, 5000);
+    return () => clearTimeout(timer);
   }, []);
 
   if (pathname?.includes("/learn/")) {

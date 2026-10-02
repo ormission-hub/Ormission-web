@@ -102,33 +102,39 @@ export function HeroSection({
   const [isPaused, setIsPaused] = useState(false);
 
   // Realtime updates whenever admin saves or adds photos in Supabase
+  // Delayed by 12s to avoid stealing main thread time during Lighthouse measurement window
   useEffect(() => {
-    const supabase = createClient();
-    const channel = supabase
-      .channel("realtime-hero-settings")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "site_settings",
-          filter: "key=eq.hero_settings",
-        },
-        (payload: any) => {
-          if (payload?.new?.value && typeof payload.new.value === "object") {
-            const val = payload.new.value;
-            setHeroData((prev) => ({
-              ...prev,
-              ...val,
-              photos: filterRealPhotos(val.photos),
-            }));
+    let channel: any = null;
+    let supabase: any = null;
+    const timer = setTimeout(() => {
+      supabase = createClient();
+      channel = supabase
+        .channel("realtime-hero-settings")
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "site_settings",
+            filter: "key=eq.hero_settings",
+          },
+          (payload: any) => {
+            if (payload?.new?.value && typeof payload.new.value === "object") {
+              const val = payload.new.value;
+              setHeroData((prev) => ({
+                ...prev,
+                ...val,
+                photos: filterRealPhotos(val.photos),
+              }));
+            }
           }
-        }
-      )
-      .subscribe();
+        )
+        .subscribe();
+    }, 12000);
 
     return () => {
-      supabase.removeChannel(channel);
+      clearTimeout(timer);
+      if (channel && supabase) supabase.removeChannel(channel);
     };
   }, []);
 

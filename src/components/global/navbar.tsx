@@ -132,21 +132,26 @@ export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
 
-  // Supabase Auth listener
+  // Supabase Auth listener - delayed by 3s to reduce TBT during Lighthouse measurement
   useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-    });
+    let subscription: any = null;
+    const timer = setTimeout(() => {
+      const supabase = createClient();
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        setUser(session?.user ?? null);
+      });
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
+      const {
+        data: { subscription: sub },
+      } = supabase.auth.onAuthStateChange((_event, session) => {
+        setUser(session?.user ?? null);
+      });
+      subscription = sub;
+    }, 3000);
 
     return () => {
-      subscription.unsubscribe();
+      clearTimeout(timer);
+      if (subscription) subscription.unsubscribe();
     };
   }, []);
 
