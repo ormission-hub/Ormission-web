@@ -300,8 +300,8 @@ export function HeroSection({
                       priority={idx === 0}
                       fetchPriority={idx === 0 ? "high" : "low"}
                       loading={idx === 0 ? "eager" : "lazy"}
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 1200px"
-                      quality={70}
+                      sizes="(max-width: 640px) 70vw, (max-width: 1024px) 90vw, 1200px"
+                      quality={75}
                       className="object-cover object-top"
                     />
                   ) : null}

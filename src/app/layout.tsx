@@ -15,7 +15,7 @@ const hindSiliguri = Hind_Siliguri({
   weight: ["400", "600"],
   variable: "--font-hind-siliguri",
   display: "swap",
-  preload: true,
+  preload: false,
 });
 
 const inter = Inter({
