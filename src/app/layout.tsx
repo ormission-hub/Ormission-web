@@ -89,13 +89,7 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://oorovtqwyfrfjfwuufyi.supabase.co" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://oorovtqwyfrfjfwuufyi.supabase.co" />
-        {/* Preload hero LCP image — tells browser to start download before JS evaluates */}
-        <link
-          rel="preload"
-          as="image"
-          href="https://oorovtqwyfrfjfwuufyi.supabase.co/storage/v1/object/public/hero_images/hero_1789481641084_8tskob.jpeg"
-          fetchPriority="high"
-        />
+
         <script
           dangerouslySetInnerHTML={{
             __html: `

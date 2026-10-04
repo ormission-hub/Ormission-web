@@ -51,12 +51,12 @@ const defaultHeroData: HeroData = {
   secondary_cta_text: "Buy Book",
   secondary_cta_url: "/courses",
   active_image_url:
-    "https://oorovtqwyfrfjfwuufyi.supabase.co/storage/v1/object/public/hero_images/hero_1789481641084_8tskob.jpeg",
+    "/images/hero-banner-main.webp",
   photos: [
     {
       id: "hero-1789481645001",
       title: "Enhance And Fix Facial Structure 2K 20260915201159",
-      url: "https://oorovtqwyfrfjfwuufyi.supabase.co/storage/v1/object/public/hero_images/hero_1789481641084_8tskob.jpeg",
+      url: "/images/hero-banner-main.webp",
       is_active: true,
       order: 1,
       primary_cta_text: "Browse Course",
@@ -151,7 +151,7 @@ export function HeroSection({
               title: "Ormission Hero Banner",
               url:
                 heroData.active_image_url ||
-                "https://oorovtqwyfrfjfwuufyi.supabase.co/storage/v1/object/public/hero_images/hero_1789481641084_8tskob.jpeg",
+                "/images/hero-banner-main.webp",
               order: 1,
               duration: 5,
             },
@@ -301,7 +301,7 @@ export function HeroSection({
                       fetchPriority={idx === 0 ? "high" : "low"}
                       loading={idx === 0 ? "eager" : "lazy"}
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 1200px"
-                      quality={75}
+                      quality={70}
                       className="object-cover object-top"
                     />
                   ) : null}
