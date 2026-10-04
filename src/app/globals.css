@@ -488,6 +488,7 @@ h1, h2, h3, h4, h5, h6, p, span, a, button, input, select, textarea {
   pointer-events: none;
   transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
+  will-change: transform;
   contain: strict;
 }
 
@@ -545,21 +546,8 @@ h1, h2, h3, h4, h5, h6, p, span, a, button, input, select, textarea {
     -webkit-backdrop-filter: blur(4px) !important;
   }
 
-  /* Kill infinite border-beam rotation animations on mobile —
-     conic-gradient + 300% oversize elements running at 60fps are the primary
-     cause of scroll jank on low-end phones */
-  .border-beam-sharp {
-    display: none !important;
-  }
-
-  /* Disable continuous glass shimmer sweep on mobile */
+  /* Disable continuous glass shimmer sweep on mobile to save GPU battery */
   .animate-glass-shimmer {
-    animation: none !important;
-  }
-
-  /* Pause all infinite animations during scroll to prevent GPU stalls */
-  .animate-border-rotate,
-  .animate-border-rotate-fast {
     animation: none !important;
   }
 
@@ -572,6 +560,16 @@ h1, h2, h3, h4, h5, h6, p, span, a, button, input, select, textarea {
   /* Remove will-change hints on mobile to prevent excessive GPU layer promotion */
   .anim-hover-lift {
     will-change: auto;
+  }
+}
+
+/* Accessible reduced motion: pause continuous rotations for users who request it */
+@media (prefers-reduced-motion: reduce) {
+  .border-beam-sharp,
+  .animate-border-rotate,
+  .animate-border-rotate-fast,
+  .animate-glass-shimmer {
+    animation: none !important;
   }
 }
 

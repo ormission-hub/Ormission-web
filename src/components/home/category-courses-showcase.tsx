@@ -635,9 +635,9 @@ export function CategoryCoursesShowcase({
           href={`/category/${catSlug}`}
           className="group relative block p-[1.5px] sm:p-[2.5px] rounded-xl sm:rounded-2xl cursor-pointer select-none transition-all duration-200 overflow-hidden w-full sm:w-auto min-w-0 sm:min-w-[170px] min-h-[46px] sm:min-h-[56px] border border-border/80 bg-slate-200/60 dark:bg-slate-800/60 hover:border-primary/60 hover:shadow-[0_0_20px_rgba(255,95,0,0.3)] hover:bg-primary/10"
         >
-          {/* Continuous rotating glowing border laser beam on ALL pills */}
+          {/* Continuous rotating glowing border laser beam on ALL category pills (SSC, HSC, etc.) */}
           <div
-          className="hidden sm:block border-beam-sharp"
+            className="border-beam-sharp"
             style={{
               background:
                 "conic-gradient(from 0deg, transparent 0deg, transparent 255deg, rgba(255,95,0,0.7) 295deg, rgba(255,255,255,0.95) 335deg, transparent 360deg)",
