@@ -292,14 +292,33 @@ export function HeroSection({
             >
               {slides.map((slide, idx) => (
                 <div key={slide.id || idx} className="relative w-full h-full shrink-0">
-                  {(idx === 0 || idx === currentIndex) ? (
+                  {idx === 0 ? (
+                    <picture className="w-full h-full block">
+                      <source
+                        media="(max-width: 640px)"
+                        srcSet="/images/hero-banner-mobile.webp"
+                        type="image/webp"
+                      />
+                      <source
+                        media="(min-width: 641px)"
+                        srcSet={slide.url || "/images/hero-banner-main.webp"}
+                        type="image/webp"
+                      />
+                      <img
+                        src="/images/hero-banner-mobile.webp"
+                        alt={slide.title || "Ormission Hero Banner"}
+                        fetchPriority="high"
+                        loading="eager"
+                        decoding="sync"
+                        className="w-full h-full object-cover object-top select-none pointer-events-none"
+                      />
+                    </picture>
+                  ) : idx === currentIndex ? (
                     <Image
                       src={slide.url}
                       alt={slide.title || "Ormission Hero Banner"}
                       fill
-                      priority={idx === 0}
-                      fetchPriority={idx === 0 ? "high" : "low"}
-                      loading={idx === 0 ? "eager" : "lazy"}
+                      loading="lazy"
                       sizes="(max-width: 640px) 70vw, (max-width: 1024px) 90vw, 1200px"
                       quality={75}
                       className="object-cover object-top"
