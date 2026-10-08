@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import { mapDbCourseToAppCourse } from "@/lib/supabase/course-mapper";
 import { CoursesClient, type DbCategoryItem } from "@/components/courses/courses-client";
 import { type Course } from "@/lib/data/courses";
@@ -11,19 +11,32 @@ export const metadata: Metadata = {
     "আপনার অ্যাকাডেমিক ও ক্যারিয়ার লক্ষ্য অর্জনে সেরা অনলাইন কোর্সসমূহ। দেশসেরা শিক্ষক ও মেন্টরদের তত্ত্বাবধানে প্রস্তুত।",
 };
 
-export const revalidate = 0;
+export const revalidate = 120;
 
 export default async function CoursesPage() {
   let initialCourses: Course[] = [];
   let initialCategories: DbCategoryItem[] = [];
 
   try {
-    const supabase = await createClient();
+    const supabase = createPublicClient();
     const [courseRes, catRes] = await Promise.all([
       supabase
         .from("courses")
         .select(`
-          *,
+          id,
+          slug,
+          title,
+          title_bn,
+          price,
+          original_price,
+          enrollment_count,
+          total_lessons,
+          total_duration,
+          is_featured,
+          status,
+          thumbnail_url,
+          short_description,
+          category_id,
           categories:category_id (id, name, name_bn, slug),
           instructors:instructor_id (id, name, name_bn, institution)
         `)
@@ -41,7 +54,7 @@ export default async function CoursesPage() {
     }
 
     if (catRes.data) {
-      initialCategories = catRes.data.map((c) => ({
+      initialCategories = catRes.data.map((c: any) => ({
         id: c.id,
         slug: c.slug,
         nameBn: c.name_bn || c.name,

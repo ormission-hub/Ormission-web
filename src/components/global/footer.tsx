@@ -26,6 +26,7 @@ const footerLinks = {
     title: "শিক্ষা",
     links: [
       { label: "সকল কোর্স", href: "/courses" },
+      { label: "বই ও বুকলেট", href: "/books" },
       { label: "ক্যাটেগরি", href: "/categories" },
       { label: "ফ্রি রিসোর্স", href: "/free-resources" },
     ],

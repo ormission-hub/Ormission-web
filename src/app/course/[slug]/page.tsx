@@ -19,7 +19,7 @@ import { CurriculumAccordion } from "@/components/courses/curriculum-accordion";
 import { StickyPurchasePanel } from "@/components/courses/sticky-purchase-panel";
 import { CourseCard } from "@/components/courses/course-card";
 import { CourseDescriptionView } from "@/components/courses/course-description-view";
-import { getLiveCourseBySlug, getLiveCourses } from "@/lib/supabase/course-fetcher";
+import { getLiveCourseBySlug, getRelatedCourses } from "@/lib/supabase/course-fetcher";
 
 // 3D Boy Student Avatar Component matching Home UI
 function StudentAvatar3D() {
@@ -52,7 +52,30 @@ function StudentAvatar3D() {
   );
 }
 
-export const dynamic = "force-dynamic";
+import { COURSES } from "@/lib/data/courses";
+import { createPublicClient } from "@/lib/supabase/public";
+
+// ISR: Cache course details for 120s for fast page transitions
+export const revalidate = 120;
+export const dynamicParams = true;
+
+export async function generateStaticParams() {
+  const slugs = new Set<string>();
+  COURSES.forEach((c) => slugs.add(c.slug));
+  try {
+    const supabase = createPublicClient();
+    const { data } = await supabase
+      .from("courses")
+      .select("slug")
+      .eq("status", "published");
+    if (data) {
+      data.forEach((c: { slug: string }) => slugs.add(c.slug));
+    }
+  } catch (err) {
+    console.warn("generateStaticParams courses error:", err);
+  }
+  return Array.from(slugs).map((slug) => ({ slug }));
+}
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -86,10 +109,7 @@ export default async function CourseDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  const allCourses = await getLiveCourses();
-  const relatedCourses = allCourses
-    .filter((c) => c.categorySlug === course.categorySlug && c.id !== course.id)
-    .slice(0, 3);
+  const relatedCourses = await getRelatedCourses(course.categorySlug, course.id, 3);
 
   const title = course.titleBn || course.title;
   const subtitle =

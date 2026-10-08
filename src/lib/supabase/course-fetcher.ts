@@ -1,5 +1,5 @@
 import { cache } from "react";
-import { createClient as createServerClient } from "./server";
+import { createPublicClient } from "./public";
 import { Course, COURSES } from "../data/courses";
 import { Instructor, INSTRUCTORS } from "../data/instructors";
 import { CATEGORIES } from "../data/categories";
@@ -39,13 +39,15 @@ export interface CategoryBook {
 }
 
 /**
- * Fetch a single course by slug (checks Supabase server client first, falls back to static COURSES)
+ * Fetch a single course by slug (checks Supabase public client first, falls back to static COURSES).
+ * Wrapped in React cache() so generateMetadata and page render share the exact same response.
  */
-export async function getLiveCourseBySlug(
-  slug: string
-): Promise<{ course: Course | null; instructor: Instructor | null; instructors: Instructor[] }> {
-  try {
-    const supabase = await createServerClient();
+export const getLiveCourseBySlug = cache(
+  async (
+    slug: string
+  ): Promise<{ course: Course | null; instructor: Instructor | null; instructors: Instructor[] }> => {
+    try {
+      const supabase = createPublicClient();
     const { data: dbCourse, error } = await supabase
       .from("courses")
       .select(`
@@ -149,51 +151,33 @@ export async function getLiveCourseBySlug(
   }
 
   return { course: null, instructor: null, instructors: [] };
-}
+});
 
-export async function getLiveCourses(): Promise<Course[]> {
+/**
+ * Fetch all published courses with lightweight card data (cached, public client)
+ */
+export const getLiveCourses = cache(async (): Promise<Course[]> => {
   try {
-    const supabase = await createServerClient();
+    const supabase = createPublicClient();
     const { data, error } = await supabase
       .from("courses")
       .select(`
-        *,
-        categories:category_id (*),
-        instructors:instructor_id (*),
-        course_sections (
-          id,
-          title,
-          title_bn,
-          sort_order,
-          lessons (
-            id,
-            title,
-            title_bn,
-            type,
-            content,
-            video_url,
-            video_duration,
-            is_preview,
-            is_published,
-            sort_order,
-            lesson_servers (
-              id,
-              server_name,
-              server_type,
-              video_url,
-              is_enabled,
-              sort_order
-            ),
-            lesson_resources (
-              id,
-              title,
-              file_url,
-              file_type,
-              file_size,
-              sort_order
-            )
-          )
-        )
+        id,
+        slug,
+        title,
+        title_bn,
+        price,
+        original_price,
+        enrollment_count,
+        total_lessons,
+        total_duration,
+        is_featured,
+        status,
+        thumbnail_url,
+        short_description,
+        category_id,
+        categories:category_id (id, name, name_bn, slug),
+        instructors:instructor_id (id, name, name_bn, institution)
       `)
       .eq("status", "published")
       .order("created_at", { ascending: false });
@@ -206,18 +190,78 @@ export async function getLiveCourses(): Promise<Course[]> {
   }
 
   return [];
-}
+});
+
+/**
+ * Targeted query for related courses — avoids downloading entire platform's video servers and curriculum
+ */
+export const getRelatedCourses = cache(
+  async (
+    categorySlug?: string,
+    currentCourseId?: string,
+    limit = 3
+  ): Promise<Course[]> => {
+    try {
+      const supabase = createPublicClient();
+      const { data, error } = await supabase
+        .from("courses")
+        .select(`
+          id,
+          slug,
+          title,
+          title_bn,
+          price,
+          original_price,
+          enrollment_count,
+          total_lessons,
+          total_duration,
+          is_featured,
+          status,
+          thumbnail_url,
+          short_description,
+          category_id,
+          categories:category_id (id, name, name_bn, slug),
+          instructors:instructor_id (id, name, name_bn, institution)
+        `)
+        .eq("status", "published")
+        .order("created_at", { ascending: false })
+        .limit(limit + 5);
+
+      if (!error && data && data.length > 0) {
+        const mapped: Course[] = data.map((d: any) => mapDbCourseToAppCourse(d));
+        return mapped
+          .filter((c: Course) => {
+            const matchesCat =
+              !categorySlug ||
+              (c.categorySlug || "").toLowerCase() === categorySlug.toLowerCase();
+            const notCurrent =
+              !currentCourseId || String(c.id) !== String(currentCourseId);
+            return matchesCat && notCurrent;
+          })
+          .slice(0, limit);
+      }
+    } catch (err) {
+      console.warn("Failed to load related courses:", err);
+    }
+
+    return COURSES.filter(
+      (c) =>
+        (!categorySlug || c.categorySlug === categorySlug) &&
+        (!currentCourseId || String(c.id) !== String(currentCourseId))
+    ).slice(0, limit);
+  }
+);
 
 /**
  * Fetch a category, all its courses, and all its books (Supabase first, fallback to static)
- * Wrapped in React cache() to deduplicate requests across generateMetadata and Page render.
+ * Uses public client without cookies to enable Next.js ISR full-route caching.
  */
 export const getCategoryWithCourses = cache(
   async (
     slug: string
   ): Promise<{ category: any; courses: Course[]; books: CategoryBook[] }> => {
     try {
-      const supabase = await createServerClient();
+      const supabase = createPublicClient();
       const normalizedSlug = decodeURIComponent(slug).toLowerCase().trim();
       const slugCandidates = [normalizedSlug];
       if (normalizedSlug === "school") slugCandidates.push("ssc");
@@ -241,25 +285,36 @@ export const getCategoryWithCourses = cache(
         if (catByName) dbCat = catByName;
       }
 
-      // Concurrently query courses and books
+      // Concurrently query lightweight course cards and books
+      const cardSelect = `
+        id,
+        slug,
+        title,
+        title_bn,
+        price,
+        original_price,
+        enrollment_count,
+        total_lessons,
+        total_duration,
+        is_featured,
+        status,
+        thumbnail_url,
+        short_description,
+        category_id,
+        categories:category_id (id, name, name_bn, slug),
+        instructors:instructor_id (id, name, name_bn, institution)
+      `;
+
       const coursesPromise = dbCat
         ? supabase
             .from("courses")
-            .select(`
-              *,
-              categories:category_id (*),
-              instructors:instructor_id (*)
-            `)
+            .select(cardSelect)
             .eq("status", "published")
             .eq("category_id", dbCat.id)
             .order("created_at", { ascending: false })
         : supabase
             .from("courses")
-            .select(`
-              *,
-              categories:category_id (*),
-              instructors:instructor_id (*)
-            `)
+            .select(cardSelect)
             .eq("status", "published")
             .order("created_at", { ascending: false });
 

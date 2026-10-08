@@ -49,7 +49,7 @@ const defaultHeroData: HeroData = {
   primary_cta_text: "Browse Course",
   primary_cta_url: "/courses",
   secondary_cta_text: "Buy Book",
-  secondary_cta_url: "/courses",
+  secondary_cta_url: "/books",
   active_image_url:
     "/images/hero-banner-main.webp",
   photos: [
@@ -62,7 +62,7 @@ const defaultHeroData: HeroData = {
       primary_cta_text: "Browse Course",
       primary_cta_url: "/courses",
       secondary_cta_text: "Buy Book",
-      secondary_cta_url: "/courses",
+      secondary_cta_url: "/books",
     },
     {
       id: "hero-admission-2026",
@@ -73,7 +73,7 @@ const defaultHeroData: HeroData = {
       primary_cta_text: "Browse Course",
       primary_cta_url: "/courses",
       secondary_cta_text: "Buy Book",
-      secondary_cta_url: "/courses",
+      secondary_cta_url: "/books",
     },
   ],
 };
@@ -341,7 +341,16 @@ export function HeroSection({
               </Link>
 
               <Link prefetch={false}
-                href={activeSlide.secondary_cta_url || heroData.secondary_cta_url || "/courses"}
+                href={
+                  (() => {
+                    const secUrl = activeSlide.secondary_cta_url || heroData.secondary_cta_url || "/books";
+                    const secTxt = activeSlide.secondary_cta_text || heroData.secondary_cta_text || "Buy Book";
+                    if ((secTxt.toLowerCase().includes("book") || secTxt.includes("বই")) && (secUrl === "/courses" || !secUrl)) {
+                      return "/books";
+                    }
+                    return secUrl;
+                  })()
+                }
                 className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-1.5 sm:py-3 rounded-full text-[11px] sm:text-sm font-bold text-white bg-black/55 hover:bg-black/75 border border-white/35 hover:border-white/60 backdrop-blur-md shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer shrink-0"
               >
                 <BookOpen className="w-3 h-3 sm:w-4 sm:h-4 text-white shrink-0" />

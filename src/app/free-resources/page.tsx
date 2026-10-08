@@ -1,10 +1,10 @@
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import {
   FreeResourcesClient,
   type RealResourceItem,
 } from "@/components/resources/free-resources-client";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export const metadata = {
   title: "ফ্রি স্টাডি রিসোর্স — হ্যান্ডনোট ও ফর্মুলা বুকলেট | Ormission",
@@ -16,7 +16,7 @@ export default async function FreeResourcesPage() {
   let resources: RealResourceItem[] = [];
 
   try {
-    const supabase = await createClient();
+    const supabase = createPublicClient();
     const { data, error } = await supabase
       .from("resources")
       .select("*")

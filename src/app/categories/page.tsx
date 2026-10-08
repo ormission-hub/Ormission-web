@@ -1,10 +1,10 @@
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import {
   CategoryDirectoryClient,
   type RealCategoryItem,
 } from "@/components/categories/category-directory-client";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export const metadata = {
   title: "কোর্স ক্যাটাগরি — বিষয়ভিত্তিক শিক্ষা বিভাগসমূহ | Ormission",
@@ -18,7 +18,7 @@ export default async function CategoriesPage() {
   let totalStudentsCount = 0;
 
   try {
-    const supabase = await createClient();
+    const supabase = createPublicClient();
 
     const { data: rawCategories, error } = await supabase
       .from("categories")
@@ -53,7 +53,7 @@ export default async function CategoriesPage() {
     }
 
     if (rawCategories) {
-      categories = rawCategories.map((cat) => {
+      categories = rawCategories.map((cat: any) => {
         const publishedCourses = (cat.courses || []).filter(
           (c: any) => c.status === "published"
         );

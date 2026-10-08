@@ -1,4 +1,6 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { createPublicClient } from "@/lib/supabase/public";
 
 export interface BookItem {
   id: string;
@@ -86,9 +88,16 @@ export function normalizeBookItem(raw: any, index = 0): BookItem {
   };
 }
 
-export async function fetchAllBooks(): Promise<BookItem[]> {
+function getBooksClient() {
+  if (typeof window === "undefined") {
+    return createPublicClient();
+  }
+  return createClient();
+}
+
+export const fetchAllBooks = cache(async (): Promise<BookItem[]> => {
   try {
-    const supabase = createClient();
+    const supabase = getBooksClient();
     const { data, error } = await supabase
       .from("site_settings")
       .select("value")
@@ -102,12 +111,12 @@ export async function fetchAllBooks(): Promise<BookItem[]> {
     console.warn("Could not fetch books from DB:", e);
   }
   return [];
-}
+});
 
-export async function fetchBookById(id: string): Promise<BookItem | null> {
+export const fetchBookById = cache(async (id: string): Promise<BookItem | null> => {
   const books = await fetchAllBooks();
   const found = books.find(
     (b) => String(b.id).toLowerCase() === String(id).toLowerCase()
   );
   return found || null;
-}
+});

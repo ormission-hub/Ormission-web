@@ -89,22 +89,6 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://oorovtqwyfrfjfwuufyi.supabase.co" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://oorovtqwyfrfjfwuufyi.supabase.co" />
-        <link
-          rel="preload"
-          as="image"
-          href="/images/hero-banner-mobile.webp"
-          type="image/webp"
-          media="(max-width: 640px)"
-          fetchPriority="high"
-        />
-        <link
-          rel="preload"
-          as="image"
-          href="/images/hero-banner-main.webp"
-          type="image/webp"
-          media="(min-width: 641px)"
-          fetchPriority="high"
-        />
 
         <script
           dangerouslySetInnerHTML={{

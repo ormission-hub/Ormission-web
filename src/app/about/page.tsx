@@ -1,10 +1,10 @@
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import {
   AboutPageClient,
   type AboutInstructor,
 } from "@/components/about/about-page-client";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export const metadata = {
   title: "আমাদের সম্পর্কে | Ormission — Learn · Build · Grow",
@@ -19,7 +19,7 @@ export default async function AboutPage() {
   let totalInstructors = 0;
 
   try {
-    const supabase = await createClient();
+    const supabase = createPublicClient();
 
     const [instRes, courseRes, enrollRes] = await Promise.all([
       // Fetch published instructors
@@ -59,7 +59,7 @@ export default async function AboutPage() {
 
     if (enrollRes.data) {
       totalStudents = enrollRes.data.reduce(
-        (sum, c) => sum + Number(c.enrollment_count || 0),
+        (sum: number, c: any) => sum + Number(c.enrollment_count || 0),
         0
       );
     }

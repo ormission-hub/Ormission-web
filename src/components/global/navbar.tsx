@@ -29,6 +29,7 @@ import { createClient } from "@/lib/supabase/client";
 
 const navItems = [
   { label: "কোর্স সমূহ", href: "/courses", icon: BookOpen },
+  { label: "বই সমূহ", href: "/books", icon: BookOpen },
   { label: "ক্যাটেগরি", href: "/categories", icon: Layers },
   { label: "ফ্রি রিসোর্স", href: "/free-resources", icon: Sparkles, badge: "ফ্রি" },
   { label: "আমাদের সম্পর্কে", href: "/about", icon: Users },
@@ -109,12 +110,26 @@ const InfoIcon = ({ className, active }: { className?: string; active?: boolean 
   </svg>
 );
 
+const BookNavIcon = ({ className, active }: { className?: string; active?: boolean }) => (
+  <svg className={className} viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth={active ? "0" : "1.8"} strokeLinecap="round" strokeLinejoin="round">
+    {active ? (
+      <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z" />
+    ) : (
+      <>
+        <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z" />
+        <path d="M8 6h8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+        <path d="M8 10h8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      </>
+    )}
+  </svg>
+);
+
 const bottomNavItems = [
   { label: "হোম", href: "/", icon: HomeIcon },
   { label: "কোর্স", href: "/courses", icon: CoursesIcon },
+  { label: "বই", href: "/books", icon: BookNavIcon },
   { label: "ক্যাটেগরি", href: "/categories", icon: CategoryIcon },
   { label: "রিসোর্স", href: "/free-resources", icon: ResourceIcon },
-  { label: "সম্পর্কে", href: "/about", icon: InfoIcon },
 ];
 
 export function Navbar() {
@@ -654,6 +669,8 @@ export function Navbar() {
                   ? pathname === "/"
                   : item.href === "/courses"
                   ? pathname === "/courses" || pathname?.startsWith("/course/")
+                  : item.href === "/books"
+                  ? pathname === "/books" || pathname?.startsWith("/books/") || pathname?.startsWith("/book/")
                   : item.href === "/categories"
                   ? pathname === "/categories" || pathname?.startsWith("/category/")
                   : item.href === "/free-resources"

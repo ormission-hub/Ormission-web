@@ -4,8 +4,15 @@ import { ChevronRight, Sparkles } from "lucide-react";
 import { getCategoryWithCourses } from "@/lib/supabase/course-fetcher";
 import { CategoryDetailContent } from "@/components/categories/category-detail-content";
 
-// ISR: Cache page HTML/RSC for 60 seconds for ultra-fast response (<10ms)
-export const revalidate = 60;
+import { CATEGORIES } from "@/lib/data/categories";
+
+// ISR: Cache page HTML/RSC for 120 seconds for ultra-fast response (<15ms)
+export const revalidate = 120;
+export const dynamicParams = true;
+
+export function generateStaticParams() {
+  return CATEGORIES.map((cat) => ({ slug: cat.slug }));
+}
 
 interface PageProps {
   params: Promise<{ slug: string }>;

@@ -92,10 +92,6 @@ export default async function Home() {
 
     if (catRes.data) {
       categories = catRes.data;
-      console.log("SERVER FETCHED CATEGORIES (" + categories.length + "):", categories.map(c => c.name));
-    }
-    if (catRes.error) {
-      console.error("CAT RES ERROR:", catRes.error);
     }
     if (courseRes.data) featuredCourses = courseRes.data;
     if (testRes.data) testimonials = testRes.data;
