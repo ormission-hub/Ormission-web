@@ -25,7 +25,13 @@ export function GoogleSignInButton({
       const supabase = createClient();
       const origin = typeof window !== "undefined" ? window.location.origin : "";
       const targetRedirect = redirectUrl.startsWith("/") ? redirectUrl : `/${redirectUrl}`;
-      const callbackUrl = `${origin}/auth/callback?redirect=${encodeURIComponent(targetRedirect)}`;
+      const isApp =
+        typeof navigator !== "undefined" &&
+        (navigator.userAgent.includes("OrmissionApp") ||
+          navigator.userAgent.includes("; wv") ||
+          (typeof window !== "undefined" && window.location.search.includes("app=true")));
+      const appParam = isApp ? "&is_app=true" : "";
+      const callbackUrl = `${origin}/auth/callback?redirect=${encodeURIComponent(targetRedirect)}${appParam}`;
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",

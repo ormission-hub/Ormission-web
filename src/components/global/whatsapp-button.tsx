@@ -173,7 +173,7 @@ export function WhatsAppButton() {
   return (
     <div
       ref={containerRef}
-      className="fixed bottom-[4.75rem] right-3 sm:bottom-24 sm:right-5 lg:bottom-6 lg:right-6 z-[55] select-none"
+      className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom,0px))] right-3.5 sm:bottom-24 sm:right-5 lg:bottom-6 lg:right-6 z-[55] select-none"
       aria-label="যোগাযোগ বাটন"
     >
       {/* Stacked Options (WhatsApp, Messenger, Direct Call) - উপর-নিচে */}
