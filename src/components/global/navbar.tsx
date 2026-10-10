@@ -21,16 +21,19 @@ import {
   LogOut,
   Laptop,
   Check,
+  Bell,
 } from "lucide-react";
 import { BrandLogo } from "@/components/global/brand-logo";
 import { useTheme } from "@/components/global/theme-provider";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { NotificationBell } from "@/components/global/notification-bell";
 
 const navItems = [
   { label: "কোর্স সমূহ", href: "/courses", icon: BookOpen },
   { label: "বই সমূহ", href: "/books", icon: BookOpen },
   { label: "ক্যাটেগরি", href: "/categories", icon: Layers },
+  { label: "নোটিশ", href: "/notices", icon: Bell },
   { label: "ফ্রি রিসোর্স", href: "/free-resources", icon: Sparkles, badge: "ফ্রি" },
   { label: "আমাদের সম্পর্কে", href: "/about", icon: Users },
 ];
@@ -301,6 +304,9 @@ export function Navbar() {
               >
                 <Search className="w-4.5 h-4.5" />
               </button>
+
+              {/* Notification Bell Dropdown */}
+              <NotificationBell />
 
               {/* Theme Mode Selector (Auto / Light / Dark) */}
               <div className="relative" ref={themeMenuRef}>
