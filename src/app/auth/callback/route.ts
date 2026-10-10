@@ -166,7 +166,7 @@ export async function GET(request: Request) {
 </body>
 </html>`;
 
-        return new Response(bridgeHtml, {
+        return new NextResponse(bridgeHtml, {
           headers: {
             "Content-Type": "text/html; charset=utf-8",
           },
