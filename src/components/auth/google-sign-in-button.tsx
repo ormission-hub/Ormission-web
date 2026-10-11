@@ -25,14 +25,84 @@ export function GoogleSignInButton({
       const supabase = createClient();
       const origin = typeof window !== "undefined" ? window.location.origin : "";
       const targetRedirect = redirectUrl.startsWith("/") ? redirectUrl : `/${redirectUrl}`;
-      const isApp =
+
+      // Check if running inside Android Native App with Google Sign-In SDK support
+      const isNativeApp =
+        typeof window !== "undefined" &&
+        Boolean((window as any).OrmissionNative?.launchGoogleSignIn);
+
+      if (isNativeApp) {
+        // Industry-Standard: Native Google 1-Tap bottom sheet without leaving app
+        (window as any).onNativeGoogleSuccess = async (idToken: string) => {
+          try {
+            const { data, error } = await supabase.auth.signInWithIdToken({
+              provider: "google",
+              token: idToken,
+            });
+
+            if (error) {
+              throw error;
+            }
+
+            // Sync user profile
+            if (data?.user) {
+              try {
+                const metadata = data.user.user_metadata || {};
+                await supabase.from("profiles").upsert(
+                  {
+                    id: data.user.id,
+                    full_name:
+                      metadata.full_name ||
+                      metadata.name ||
+                      data.user.email?.split("@")[0] ||
+                      "শিক্ষার্থী",
+                    avatar_url: metadata.avatar_url || metadata.picture || null,
+                    phone: metadata.phone || null,
+                    role: "student",
+                    is_active: true,
+                    updated_at: new Date().toISOString(),
+                  },
+                  { onConflict: "id" }
+                );
+              } catch (profileErr) {
+                console.error("Profile sync error on native auth:", profileErr);
+              }
+            }
+
+            // Successfully authenticated, navigate directly to dashboard
+            window.location.href = targetRedirect;
+          } catch (err: unknown) {
+            setLoading(false);
+            const msg =
+              err instanceof Error ? err.message : "গুগল সাইন-ইন সম্পন্ন করতে ব্যর্থ হয়েছে";
+            if (onError) {
+              onError(msg);
+            }
+          }
+        };
+
+        (window as any).onNativeGoogleError = (errMsg: string) => {
+          setLoading(false);
+          // If user cancelled, don't show an intrusive error alert
+          if (errMsg && !errMsg.toLowerCase().includes("cancel") && !errMsg.includes("12501")) {
+            if (onError) {
+              onError(errMsg);
+            }
+          }
+        };
+
+        (window as any).OrmissionNative.launchGoogleSignIn();
+        return;
+      }
+
+      // Fallback for app or browser without OrmissionNative
+      const isLegacyApp =
         typeof navigator !== "undefined" &&
         (navigator.userAgent.includes("OrmissionApp") ||
           navigator.userAgent.includes("; wv") ||
           (typeof window !== "undefined" && window.location.search.includes("app=true")));
 
-      if (isApp) {
-        // For mobile app, initiate OAuth via server endpoint so Chrome receives the PKCE verifier cookie
+      if (isLegacyApp) {
         window.location.href = `${origin}/api/auth/google?redirect=${encodeURIComponent(targetRedirect)}&is_app=true`;
         return;
       }
