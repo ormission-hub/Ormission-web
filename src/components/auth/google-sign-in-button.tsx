@@ -30,8 +30,14 @@ export function GoogleSignInButton({
         (navigator.userAgent.includes("OrmissionApp") ||
           navigator.userAgent.includes("; wv") ||
           (typeof window !== "undefined" && window.location.search.includes("app=true")));
-      const appParam = isApp ? "&is_app=true" : "";
-      const callbackUrl = `${origin}/auth/callback?redirect=${encodeURIComponent(targetRedirect)}${appParam}`;
+
+      if (isApp) {
+        // For mobile app, initiate OAuth via server endpoint so Chrome receives the PKCE verifier cookie
+        window.location.href = `${origin}/api/auth/google?redirect=${encodeURIComponent(targetRedirect)}&is_app=true`;
+        return;
+      }
+
+      const callbackUrl = `${origin}/auth/callback?redirect=${encodeURIComponent(targetRedirect)}`;
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",

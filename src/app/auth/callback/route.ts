@@ -71,11 +71,19 @@ export async function GET(request: Request) {
         const intentUri = `intent://auth/callback?access_token=${encodeURIComponent(accessToken)}&refresh_token=${encodeURIComponent(refreshToken)}&redirect=${encodeURIComponent(targetPath)}#Intent;scheme=ormission;package=com.ormission.app;end`;
         const fallbackUrl = `${origin}${targetPath}${separator}verified=true`;
 
+        // Industry Standard: If explicitly initiated by the Android app, use HTTP 307 Location header
+        // Chrome automatically switches back to the Android app on 307 Location header to custom schemes!
+        if (isAppExplicit) {
+          const res = NextResponse.redirect(deepLink, 307);
+          return res;
+        }
+
         const bridgeHtml = `<!DOCTYPE html>
 <html lang="bn">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="refresh" content="0; url=${deepLink}">
   <title>লগইন সফল - Ormission</title>
   <style>
     body {
