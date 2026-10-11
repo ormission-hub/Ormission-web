@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Bell, ExternalLink, Sparkles, AlertCircle, Clock, ArrowRight, Check } from "lucide-react";
+import { Bell, Clock, ArrowRight } from "lucide-react";
 import { type NoticeItem, FALLBACK_NOTICES } from "@/lib/data/notices";
 import { createPublicClient } from "@/lib/supabase/public";
 
@@ -33,14 +33,16 @@ export function NotificationBell() {
     fetchNotices();
 
     // Check last read timestamp
-    const lastRead = localStorage.getItem("ormission_notices_last_read");
-    if (lastRead) {
-      const readTime = new Date(lastRead).getTime();
-      const hasNewer = notices.some(
-        (n) => n.isActive && new Date(n.createdAt).getTime() > readTime
-      );
-      setHasUnread(hasNewer);
-    }
+    try {
+      const lastRead = localStorage.getItem("ormission_notices_last_read");
+      if (lastRead) {
+        const readTime = new Date(lastRead).getTime();
+        const hasNewer = notices.some(
+          (n) => n.isActive && new Date(n.createdAt).getTime() > readTime
+        );
+        setHasUnread(hasNewer);
+      }
+    } catch {}
   }, []);
 
   // Close on outside click
@@ -59,7 +61,9 @@ export function NotificationBell() {
     setIsOpen(nextState);
     if (nextState) {
       setHasUnread(false);
-      localStorage.setItem("ormission_notices_last_read", new Date().toISOString());
+      try {
+        localStorage.setItem("ormission_notices_last_read", new Date().toISOString());
+      } catch {}
     }
   };
 
@@ -69,13 +73,29 @@ export function NotificationBell() {
   const getTypeBadge = (type: NoticeItem["type"]) => {
     switch (type) {
       case "emergency":
-        return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/15 text-rose-500">জরুরি</span>;
+        return (
+          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/15 text-rose-500">
+            জরুরি
+          </span>
+        );
       case "offer":
-        return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/15 text-amber-500">অফার</span>;
+        return (
+          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/15 text-amber-500">
+            অফার
+          </span>
+        );
       case "exam":
-        return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/15 text-blue-500">পরীক্ষা</span>;
+        return (
+          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/15 text-blue-500">
+            পরীক্ষা
+          </span>
+        );
       default:
-        return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/15 text-emerald-500">ঘোষণা</span>;
+        return (
+          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/15 text-emerald-500">
+            ঘোষণা
+          </span>
+        );
     }
   };
 
@@ -105,51 +125,42 @@ export function NotificationBell() {
                 <Bell className="w-3.5 h-3.5" />
               </div>
               <div>
-                <h3 className="text-xs font-bold text-text">নোটিফিকেশন ও নোটিশ</h3>
+                <h3 className="text-xs font-bold text-text">নোটিফিকেশন ও ঘোষণা</h3>
                 <p className="text-[10px] text-text-muted">সর্বশেষ একাডেমিক ও কোর্স আপডেট</p>
               </div>
             </div>
-
-            <Link
-              href="/notices"
-              onClick={() => setIsOpen(false)}
-              className="text-[11px] font-bold text-primary hover:underline flex items-center gap-0.5"
-            >
-              <span>সকল নোটিশ</span>
-              <ArrowRight className="w-3 h-3" />
-            </Link>
+            {badgeCount > 0 && (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                {badgeCount}টি সক্রিয়
+              </span>
+            )}
           </div>
 
           {/* List */}
           <div className="space-y-2 max-h-80 overflow-y-auto no-scrollbar">
             {activeNotices.length === 0 ? (
-              <p className="py-6 text-center text-xs text-text-muted font-bengali">
-                কোনো নতুন নোটিফিকেশন নেই।
-              </p>
+              <div className="py-6 text-center text-xs text-text-muted">
+                নতুন কোনো নোটিফিকেশন নেই
+              </div>
             ) : (
-              activeNotices.slice(0, 4).map((notice) => (
+              activeNotices.map((notice) => (
                 <div
                   key={notice.id}
-                  className="p-3 rounded-xl bg-surface-secondary/40 hover:bg-surface-secondary border border-border/50 transition-colors space-y-1.5"
+                  className="p-2.5 rounded-xl bg-surface-secondary/50 hover:bg-surface-secondary border border-border/40 transition-colors space-y-1.5"
                 >
-                  <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center justify-between gap-1.5">
                     {getTypeBadge(notice.type)}
-                    <span className="text-[10px] text-text-muted flex items-center gap-1 font-sans">
+                    <span className="text-[10px] text-text-muted flex items-center gap-1">
                       <Clock className="w-2.5 h-2.5" />
                       {new Date(notice.createdAt).toLocaleDateString("bn-BD")}
                     </span>
                   </div>
-
-                  <h4 className="text-xs font-bold text-text leading-snug">
-                    {notice.title}
-                  </h4>
-
+                  <h4 className="text-xs font-bold text-text line-clamp-1">{notice.title}</h4>
                   {notice.content && (
                     <p className="text-[11px] text-text-muted line-clamp-2 leading-relaxed">
                       {notice.content}
                     </p>
                   )}
-
                   {notice.actionUrl && (
                     <div className="pt-1">
                       <Link
@@ -165,17 +176,6 @@ export function NotificationBell() {
                 </div>
               ))
             )}
-          </div>
-
-          {/* Footer */}
-          <div className="pt-2 border-t border-border/60 text-center">
-            <Link
-              href="/notices"
-              onClick={() => setIsOpen(false)}
-              className="text-xs font-bold text-text-muted hover:text-primary transition-colors block py-1"
-            >
-              অফিশিয়াল নোটিশ বোর্ড দেখুন →
-            </Link>
           </div>
         </div>
       )}

@@ -8,8 +8,11 @@ export interface NoticeItem {
   content: string;
   contentBn?: string;
   type: "emergency" | "offer" | "exam" | "general";
-  showTopBanner: boolean;
-  showNoticeBoard: boolean;
+  displayType?: "popup" | "top_bar" | "bottom_bar";
+  targetPage?: string; // "*", "/", "/courses", "/checkout", etc.
+  imageUrl?: string;
+  showTopBanner?: boolean;
+  showNoticeBoard?: boolean;
   actionText?: string;
   actionUrl?: string;
   isActive: boolean;
@@ -25,8 +28,8 @@ export const FALLBACK_NOTICES: NoticeItem[] = [
     content: "সকল একাডেমিক ও ভর্তি কোর্সে সীমিত সময়ের জন্য বিশেষ ছাড় চলছে। সেরা মেন্টরদের সাথে এখনই যুক্ত হোন।",
     contentBn: "সকল একাডেমিক ও ভর্তি কোর্সে সীমিত সময়ের জন্য বিশেষ ছাড় চলছে। সেরা মেন্টরদের সাথে এখনই যুক্ত হোন।",
     type: "offer",
-    showTopBanner: true,
-    showNoticeBoard: true,
+    displayType: "popup",
+    targetPage: "*",
     actionText: "কোর্সগুলো দেখুন",
     actionUrl: "/courses",
     isActive: true,
@@ -40,8 +43,8 @@ export const FALLBACK_NOTICES: NoticeItem[] = [
     content: "বোর্ড স্ট্যান্ডার্ড প্রশ্নপত্রে অধ্যায়ভিত্তিক ও ফাইনাল মডেল টেস্টের বিস্তারিত সময়সূচী ডাউনলোড করুন।",
     contentBn: "বোর্ড স্ট্যান্ডার্ড প্রশ্নপত্রে অধ্যায়ভিত্তিক ও ফাইনাল মডেল টেস্টের বিস্তারিত সময়সূচী ডাউনলোড করুন।",
     type: "exam",
-    showTopBanner: false,
-    showNoticeBoard: true,
+    displayType: "top_bar",
+    targetPage: "*",
     actionText: "এসএসসি কোর্স দেখুন",
     actionUrl: "/category/ssc",
     isActive: true,

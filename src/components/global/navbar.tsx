@@ -33,7 +33,6 @@ const navItems = [
   { label: "কোর্স সমূহ", href: "/courses", icon: BookOpen },
   { label: "বই সমূহ", href: "/books", icon: BookOpen },
   { label: "ক্যাটেগরি", href: "/categories", icon: Layers },
-  { label: "নোটিশ", href: "/notices", icon: Bell },
   { label: "ফ্রি রিসোর্স", href: "/free-resources", icon: Sparkles, badge: "ফ্রি" },
   { label: "আমাদের সম্পর্কে", href: "/about", icon: Users },
 ];
