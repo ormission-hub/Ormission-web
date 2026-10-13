@@ -255,12 +255,14 @@ export function Testimonials({
 
                   const reviewImageUrl = isImageReview
                     ? (rawReview.startsWith("[IMAGE]:")
-                        ? rawReview.replace("[IMAGE]:", "").split("||")[0].trim()
-                        : rawReview.split("||")[0].trim())
+                        ? rawReview.replace("[IMAGE]:", "").split("||")[0].split("|")[0].trim()
+                        : rawReview.split("||")[0].split("|")[0].trim())
                     : "";
 
                   const optionalCaption = rawReview.includes("||")
                     ? rawReview.split("||")[1].trim()
+                    : rawReview.includes("|") && isImageReview
+                    ? rawReview.substring(rawReview.indexOf("|") + 1).trim()
                     : (!isImageReview ? rawReview : "");
 
                   if (isImageReview && reviewImageUrl) {
