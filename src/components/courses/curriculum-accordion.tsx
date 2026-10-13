@@ -406,14 +406,14 @@ export function CurriculumAccordion({ curriculum, courseSlug }: CurriculumAccord
       <div key={lesson.id} className="transition-colors">
         <div
           onClick={handleRowClick}
-          className={`flex items-center justify-between px-4 sm:px-6 py-3.5 text-xs sm:text-sm transition-all group ${
+          className={`flex items-center justify-between px-3 sm:px-6 py-3 sm:py-3.5 text-xs sm:text-sm transition-all group ${
             isFree
               ? "hover:bg-emerald-500/[0.04] bg-emerald-500/[0.015] cursor-pointer"
               : "hover:bg-surface-secondary/40 cursor-pointer"
           }`}
         >
           {/* Left: Icon + Index + Title + Type Badge */}
-          <div className="flex items-center gap-3 min-w-0 pr-3 flex-1">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 pr-2 sm:pr-3 flex-1">
             {/* Icon based on itemType */}
             {itemType === "video" && (
               isFree ? (
@@ -477,8 +477,8 @@ export function CurriculumAccordion({ curriculum, courseSlug }: CurriculumAccord
 
             {/* Title and Metadata */}
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[11px] font-mono text-text-muted/80 shrink-0">
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                <span className="text-[11px] font-mono text-text-muted/80 shrink-0 whitespace-nowrap">
                   {lIdx + 1 < 10 ? `০${lIdx + 1}.` : `${lIdx + 1}.`}
                 </span>
                 <span
@@ -493,30 +493,30 @@ export function CurriculumAccordion({ curriculum, courseSlug }: CurriculumAccord
 
                 {/* Item Type Badge */}
                 {itemType === "exam" && (
-                  <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-bengali shrink-0">
+                  <span className="px-1.5 sm:px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-bengali whitespace-nowrap shrink-0">
                     পরীক্ষা
                   </span>
                 )}
                 {itemType === "material" && (
-                  <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20 font-bengali shrink-0">
+                  <span className="px-1.5 sm:px-2 py-0.5 rounded-md text-[10px] font-bold bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20 font-bengali whitespace-nowrap shrink-0">
                     লেকচার শিট
                   </span>
                 )}
                 {itemType === "live" && (
-                  <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 font-bengali inline-flex items-center gap-1 shrink-0">
+                  <span className="px-1.5 sm:px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 font-bengali inline-flex items-center gap-1 whitespace-nowrap shrink-0">
                     <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
                     <span>লাইভ</span>
                   </span>
                 )}
                 {itemType === "resource" && (
-                  <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 font-bengali shrink-0">
+                  <span className="px-1.5 sm:px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 font-bengali whitespace-nowrap shrink-0">
                     রিসোর্স
                   </span>
                 )}
 
                 {/* Free Demo Chip */}
                 {isFree && (
-                  <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 font-bengali inline-flex items-center gap-1 shrink-0">
+                  <span className="px-1.5 sm:px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 font-bengali inline-flex items-center gap-1 whitespace-nowrap shrink-0">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                     <span>ফ্রি ডেমো</span>
                   </span>
@@ -524,30 +524,30 @@ export function CurriculumAccordion({ curriculum, courseSlug }: CurriculumAccord
               </div>
 
               {/* Rich Subtitle Pills: Questions, Marks, Schedule, File size */}
-              <div className="flex items-center gap-2 flex-wrap pl-4.5 mt-0.5">
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap pl-3 sm:pl-4.5 mt-0.5">
                 {lesson.title && lesson.title !== lesson.titleBn && (
                   <span className="text-[11px] text-text-muted font-sans truncate mr-1">
                     {lesson.title}
                   </span>
                 )}
                 {itemType === "exam" && lesson.questionsCount && (
-                  <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.2 rounded font-sans">
+                  <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.2 rounded font-sans whitespace-nowrap shrink-0">
                     {lesson.questionsCount} Questions
                   </span>
                 )}
                 {itemType === "exam" && lesson.marks && (
-                  <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.2 rounded font-sans">
+                  <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.2 rounded font-sans whitespace-nowrap shrink-0">
                     {lesson.marks} Marks
                   </span>
                 )}
                 {itemType === "live" && lesson.liveTime && (
-                  <span className="text-[10px] font-semibold text-rose-600 dark:text-rose-400 bg-rose-500/10 px-1.5 py-0.2 rounded font-bengali flex items-center gap-1">
+                  <span className="text-[10px] font-semibold text-rose-600 dark:text-rose-400 bg-rose-500/10 px-1.5 py-0.2 rounded font-bengali flex items-center gap-1 whitespace-nowrap shrink-0">
                     <Clock className="w-2.5 h-2.5" />
                     <span>{lesson.liveTime}</span>
                   </span>
                 )}
                 {itemType === "material" && lesson.fileSize && (
-                  <span className="text-[10px] font-semibold text-sky-600 dark:text-sky-400 bg-sky-500/10 px-1.5 py-0.2 rounded font-mono">
+                  <span className="text-[10px] font-semibold text-sky-600 dark:text-sky-400 bg-sky-500/10 px-1.5 py-0.2 rounded font-mono whitespace-nowrap shrink-0">
                     {lesson.fileSize}
                   </span>
                 )}
@@ -556,9 +556,9 @@ export function CurriculumAccordion({ curriculum, courseSlug }: CurriculumAccord
           </div>
 
           {/* Right: Duration + Action Pill */}
-          <div className="flex items-center gap-2.5 shrink-0 ml-2">
+          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 ml-1.5 sm:ml-2">
             {lesson.duration && (
-              <span className="text-[11px] sm:text-xs font-semibold text-text-muted font-mono tabular-nums">
+              <span className="text-[10.5px] sm:text-xs font-semibold text-text-muted font-mono tabular-nums whitespace-nowrap">
                 {lesson.duration}
               </span>
             )}
@@ -571,7 +571,7 @@ export function CurriculumAccordion({ curriculum, courseSlug }: CurriculumAccord
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}
-                    className="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white font-bengali shadow-xs flex items-center gap-1 cursor-pointer transition-colors"
+                    className="px-2 sm:px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white font-bengali shadow-xs flex items-center gap-1 cursor-pointer transition-colors whitespace-nowrap shrink-0"
                   >
                     <Eye className="w-3 h-3" />
                     <span>পরীক্ষা দিন</span>
@@ -580,13 +580,13 @@ export function CurriculumAccordion({ curriculum, courseSlug }: CurriculumAccord
                   <Link
                     href={`/course/${courseSlug}/learn/${lesson.id}`}
                     onClick={(e) => e.stopPropagation()}
-                    className="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white font-bengali shadow-xs flex items-center gap-1 cursor-pointer transition-colors"
+                    className="px-2 sm:px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white font-bengali shadow-xs flex items-center gap-1 cursor-pointer transition-colors whitespace-nowrap shrink-0"
                   >
                     <Eye className="w-3 h-3" />
                     <span>পরীক্ষা দিন</span>
                   </Link>
                 ) : (
-                  <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-600 text-white font-bengali shadow-xs">
+                  <span className="px-2 sm:px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-600 text-white font-bengali shadow-xs whitespace-nowrap shrink-0">
                     ফ্রি
                   </span>
                 )
@@ -597,13 +597,13 @@ export function CurriculumAccordion({ curriculum, courseSlug }: CurriculumAccord
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}
-                    className="px-2.5 py-1 rounded-lg text-xs font-bold bg-sky-600 hover:bg-sky-700 text-white font-bengali shadow-xs flex items-center gap-1 cursor-pointer transition-colors"
+                    className="px-2 sm:px-2.5 py-1 rounded-lg text-xs font-bold bg-sky-600 hover:bg-sky-700 text-white font-bengali shadow-xs flex items-center gap-1 cursor-pointer transition-colors whitespace-nowrap shrink-0"
                   >
                     <ExternalLink className="w-3 h-3" />
                     <span>শিট দেখুন</span>
                   </a>
                 ) : (
-                  <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-sky-600 text-white font-bengali shadow-xs">
+                  <span className="px-2 sm:px-2.5 py-1 rounded-lg text-xs font-bold bg-sky-600 text-white font-bengali shadow-xs whitespace-nowrap shrink-0">
                     ফ্রি নোট
                   </span>
                 )
@@ -614,13 +614,13 @@ export function CurriculumAccordion({ curriculum, courseSlug }: CurriculumAccord
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}
-                    className="px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white font-bengali shadow-xs flex items-center gap-1 cursor-pointer transition-colors"
+                    className="px-2 sm:px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white font-bengali shadow-xs flex items-center gap-1 cursor-pointer transition-colors whitespace-nowrap shrink-0"
                   >
                     <Radio className="w-3 h-3" />
                     <span>লাইভে যান</span>
                   </a>
                 ) : (
-                  <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-600 text-white font-bengali shadow-xs">
+                  <span className="px-2 sm:px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-600 text-white font-bengali shadow-xs whitespace-nowrap shrink-0">
                     লাইভ
                   </span>
                 )
@@ -631,13 +631,13 @@ export function CurriculumAccordion({ curriculum, courseSlug }: CurriculumAccord
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}
-                    className="px-2.5 py-1 rounded-lg text-xs font-bold bg-purple-600 hover:bg-purple-700 text-white font-bengali shadow-xs flex items-center gap-1 cursor-pointer transition-colors"
+                    className="px-2 sm:px-2.5 py-1 rounded-lg text-xs font-bold bg-purple-600 hover:bg-purple-700 text-white font-bengali shadow-xs flex items-center gap-1 cursor-pointer transition-colors whitespace-nowrap shrink-0"
                   >
                     <ExternalLink className="w-3 h-3" />
                     <span>লিংক</span>
                   </a>
                 ) : (
-                  <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-purple-600 text-white font-bengali shadow-xs">
+                  <span className="px-2 sm:px-2.5 py-1 rounded-lg text-xs font-bold bg-purple-600 text-white font-bengali shadow-xs whitespace-nowrap shrink-0">
                     রিসোর্স
                   </span>
                 )
@@ -645,18 +645,18 @@ export function CurriculumAccordion({ curriculum, courseSlug }: CurriculumAccord
                 <Link
                   href={`/course/${courseSlug}/learn/${lesson.id}`}
                   onClick={(e) => e.stopPropagation()}
-                  className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white font-bengali shadow-xs transition-colors cursor-pointer"
+                  className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white font-bengali shadow-xs transition-colors cursor-pointer whitespace-nowrap shrink-0"
                 >
                   <Eye className="w-3 h-3" />
                   <span>দেখুন</span>
                 </Link>
               ) : (
-                <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-600 text-white font-bengali shadow-xs">
+                <span className="px-2 sm:px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-600 text-white font-bengali shadow-xs whitespace-nowrap shrink-0">
                   ফ্রি
                 </span>
               )
             ) : (
-              <span className="text-[10px] text-text-muted font-bold font-bengali bg-surface-secondary px-2 py-1 rounded-md border border-border/60">
+              <span className="text-[10px] text-text-muted font-bold font-bengali bg-surface-secondary px-2 py-1 rounded-md border border-border/60 whitespace-nowrap shrink-0">
                 লক করা
               </span>
             )}
@@ -667,18 +667,18 @@ export function CurriculumAccordion({ curriculum, courseSlug }: CurriculumAccord
         {freeMaterials.map((mat) => (
           <div
             key={mat.id}
-            className="ml-6 sm:ml-12 mr-3 sm:mr-6 my-2 p-2.5 sm:p-3 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-between gap-3 text-xs shadow-2xs group/mat transition-all hover:border-emerald-500/40"
+            className="ml-3 sm:ml-12 mr-2 sm:mr-6 my-2 p-2 sm:p-3 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-between gap-2.5 sm:gap-3 text-xs shadow-2xs group/mat transition-all hover:border-emerald-500/40"
           >
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 shadow-xs">
-                <FileText className="w-4 h-4" />
+            <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 flex-1">
+              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 shadow-xs">
+                <FileText className="w-3.5 h-3.5" />
               </div>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="font-bold text-text font-bengali truncate text-[11.5px] sm:text-xs">
+                  <span className="font-bold text-text font-bengali truncate text-[11px] sm:text-xs">
                     {mat.title}
                   </span>
-                  <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-emerald-500/25 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 font-bengali flex items-center gap-0.5">
+                  <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-emerald-500/25 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 font-bengali flex items-center gap-0.5 whitespace-nowrap shrink-0">
                     <Sparkles className="w-2.5 h-2.5 text-emerald-500" />
                     <span>ফ্রি স্টাডি নোট</span>
                   </span>
@@ -696,7 +696,7 @@ export function CurriculumAccordion({ curriculum, courseSlug }: CurriculumAccord
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="px-2.5 sm:px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bengali font-bold text-[11px] flex items-center gap-1 shrink-0 transition-all shadow-xs hover:shadow-sm active:scale-95 cursor-pointer"
+              className="px-2 sm:px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bengali font-bold text-[10.5px] sm:text-[11px] flex items-center gap-1 shrink-0 transition-all shadow-xs hover:shadow-sm active:scale-95 cursor-pointer whitespace-nowrap"
               title="ফ্রি স্টাডি নোট ওপেন বা ডাউনলোড করুন"
             >
               <ExternalLink className="w-3 h-3" />
@@ -710,7 +710,7 @@ export function CurriculumAccordion({ curriculum, courseSlug }: CurriculumAccord
         {paidMaterials.length > 0 && (
           <div
             onClick={() => handleLockedClick(lesson)}
-            className="ml-6 sm:ml-12 mr-3 sm:mr-6 my-1.5 p-2 rounded-xl bg-surface-secondary/40 border border-border/50 flex items-center justify-between gap-2 text-[11px] text-text-muted hover:border-border transition-colors cursor-pointer"
+            className="ml-3 sm:ml-12 mr-2 sm:mr-6 my-1.5 p-2 rounded-xl bg-surface-secondary/40 border border-border/50 flex items-center justify-between gap-2 text-[11px] text-text-muted hover:border-border transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-2 truncate">
               <Lock className="w-3 h-3 text-rose-500/70 shrink-0" />
@@ -718,7 +718,7 @@ export function CurriculumAccordion({ curriculum, courseSlug }: CurriculumAccord
                 {paidMaterials.length}টি লক লেকচার শিট ও রিসোর্স
               </span>
             </div>
-            <span className="text-[9.5px] text-rose-500 dark:text-rose-400 font-bold font-bengali bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/20 shrink-0">
+            <span className="text-[9.5px] text-rose-500 dark:text-rose-400 font-bold font-bengali bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/20 shrink-0 whitespace-nowrap">
               ভর্তির পর অ্যাক্সেস
             </span>
           </div>
@@ -754,26 +754,27 @@ export function CurriculumAccordion({ curriculum, courseSlug }: CurriculumAccord
         <button
           type="button"
           onClick={() => toggleSection(section.id)}
-          className="w-full flex items-center justify-between p-4 sm:p-5 text-left hover:bg-surface-secondary/40 transition-colors cursor-pointer gap-3"
+          className="w-full flex items-start sm:items-center justify-between p-3 sm:p-5 text-left hover:bg-surface-secondary/40 transition-colors cursor-pointer gap-2.5 sm:gap-3"
         >
-          <div className="flex items-center gap-3 min-w-0 flex-1">
-            <span className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs font-black font-mono shrink-0 shadow-2xs">
+          <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+            <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs font-black font-mono shrink-0 shadow-2xs mt-0.5 sm:mt-0">
               {idx + 1 < 10 ? `০${idx + 1}` : idx + 1}
             </span>
 
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h4 className="font-bold text-sm sm:text-base text-text font-bengali leading-snug">
-                  {section.titleBn}
-                </h4>
+              <h4 className="font-bold text-sm sm:text-base text-text font-bengali leading-snug break-words">
+                {section.titleBn}
+              </h4>
+
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap mt-1.5">
                 {section.subject && (
-                  <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 font-bengali">
+                  <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 font-bengali whitespace-nowrap shrink-0">
                     {section.subject}
                   </span>
                 )}
                 {activeTab === "all" && secType && secType !== "academic" && secType !== "content" && (
                   <span
-                    className={`px-2 py-0.5 rounded-md text-[10px] font-bold font-bengali border ${
+                    className={`px-2 py-0.5 rounded-md text-[10px] font-bold font-bengali border whitespace-nowrap shrink-0 ${
                       secType === "demo"
                         ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
                         : secType === "exam"
@@ -788,23 +789,34 @@ export function CurriculumAccordion({ curriculum, courseSlug }: CurriculumAccord
                     {typeLabel}
                   </span>
                 )}
+                {/* On mobile screens, show lessons count & free badge here so they never squash the title */}
+                <span className="sm:hidden text-[10px] font-bold text-text-muted font-bengali bg-surface-secondary px-2 py-0.5 rounded-md border border-border/60 whitespace-nowrap shrink-0">
+                  {section.lessons?.length || 0}টি ক্লাস/আইটেম
+                </span>
+                {hasFreeLesson && (
+                  <span className="sm:hidden inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/15 px-1.5 py-0.5 rounded-md border border-emerald-500/25 font-bengali whitespace-nowrap shrink-0">
+                    <Sparkles className="w-2.5 h-2.5 text-emerald-500" />
+                    <span>{freeLessons.length}টি ফ্রি</span>
+                  </span>
+                )}
               </div>
+
               {section.title && section.title !== section.titleBn && (
-                <p className="text-[11px] text-text-muted font-sans truncate mt-0.5">
+                <p className="text-[11px] text-text-muted font-sans truncate mt-1">
                   {section.title}
                 </p>
               )}
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 mt-0.5 sm:mt-0">
             {hasFreeLesson && (
-              <span className="hidden xs:inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/15 px-2 py-0.5 rounded-lg border border-emerald-500/25 font-bengali">
+              <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/15 px-2 py-0.5 rounded-lg border border-emerald-500/25 font-bengali whitespace-nowrap shrink-0">
                 <Sparkles className="w-3 h-3 text-emerald-500" />
                 <span>{freeLessons.length}টি ফ্রি</span>
               </span>
             )}
-            <span className="text-xs font-bold text-text-muted font-bengali bg-surface-secondary px-2.5 py-1 rounded-lg border border-border/60">
+            <span className="hidden sm:inline-block text-xs font-bold text-text-muted font-bengali bg-surface-secondary px-2.5 py-1 rounded-lg border border-border/60 whitespace-nowrap shrink-0">
               {section.lessons?.length || 0}টি ক্লাস/আইটেম
             </span>
             <div
@@ -857,24 +869,27 @@ export function CurriculumAccordion({ curriculum, courseSlug }: CurriculumAccord
         <button
           type="button"
           onClick={() => toggleSubject(subjectGroup.subject)}
-          className="w-full flex items-center justify-between p-4 sm:p-4.5 text-left hover:bg-surface-secondary/40 transition-colors cursor-pointer gap-3 bg-surface"
+          className="w-full flex items-start sm:items-center justify-between p-3 sm:p-4.5 text-left hover:bg-surface-secondary/40 transition-colors cursor-pointer gap-2.5 sm:gap-3 bg-surface"
         >
-          <div className="flex items-center gap-3 min-w-0 flex-1">
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 shadow-2xs">
+          <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 shadow-2xs mt-0.5 sm:mt-0">
               <BookOpen className="w-4 h-4" />
             </div>
 
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h4 className="font-black text-sm sm:text-base text-text font-bengali leading-snug">
-                  {subjectGroup.subject}
-                </h4>
-                <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-surface-secondary text-text-muted border border-border/60 font-bengali">
+              <h4 className="font-black text-sm sm:text-base text-text font-bengali leading-snug break-words">
+                {subjectGroup.subject}
+              </h4>
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap mt-1">
+                <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-surface-secondary text-text-muted border border-border/60 font-bengali whitespace-nowrap shrink-0">
                   {subjectGroup.sections.length}টি অধ্যায়
                 </span>
+                <span className="sm:hidden text-[10px] font-bold text-emerald-600 dark:text-emerald-400 font-mono bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20 tabular-nums whitespace-nowrap shrink-0">
+                  {subjectGroup.totalLessons} Items
+                </span>
                 {totalFree > 0 && (
-                  <span className="hidden xs:inline-flex items-center gap-1 text-[10.5px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/15 px-2 py-0.5 rounded-lg border border-emerald-500/25 font-bengali">
-                    <Sparkles className="w-3 h-3 text-emerald-500" />
+                  <span className="inline-flex items-center gap-1 text-[10px] sm:text-[10.5px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/15 px-1.5 sm:px-2 py-0.5 rounded-md sm:rounded-lg border border-emerald-500/25 font-bengali whitespace-nowrap shrink-0">
+                    <Sparkles className="w-2.5 h-2.5 text-emerald-500" />
                     <span>{totalFree}টি ফ্রি</span>
                   </span>
                 )}
@@ -882,8 +897,8 @@ export function CurriculumAccordion({ curriculum, courseSlug }: CurriculumAccord
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5 shrink-0">
-            <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 font-mono bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20 tabular-nums">
+          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 mt-0.5 sm:mt-0">
+            <span className="hidden sm:inline-block text-xs font-bold text-emerald-600 dark:text-emerald-400 font-mono bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20 tabular-nums whitespace-nowrap">
               {subjectGroup.totalLessons} Items
             </span>
             <div

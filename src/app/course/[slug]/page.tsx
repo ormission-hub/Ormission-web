@@ -222,7 +222,7 @@ export default async function CourseDetailPage({ params }: PageProps) {
           {/* Main Content (Left 8 Cols) */}
           <div className="lg:col-span-8 space-y-8 sm:space-y-10">
             {/* Course Description */}
-            <div className="bg-surface rounded-2xl sm:rounded-3xl border border-border/80 p-6 sm:p-8 shadow-sm">
+            <div className="bg-surface rounded-2xl sm:rounded-3xl border border-border/80 p-4 sm:p-6 lg:p-8 shadow-sm">
               <h2 className="text-lg sm:text-xl font-black text-text font-bengali mb-5 flex items-center gap-2.5">
                 <BookOpen className="w-5 h-5 text-primary" />
                 <span>কোর্স বিবরণী ও বিষয়সমূহ</span>
@@ -237,7 +237,7 @@ export default async function CourseDetailPage({ params }: PageProps) {
 
             {/* Prerequisites */}
             {course.prerequisites && course.prerequisites.length > 0 && (
-              <div className="bg-surface rounded-2xl sm:rounded-3xl border border-border/80 p-6 sm:p-8 shadow-sm">
+              <div className="bg-surface rounded-2xl sm:rounded-3xl border border-border/80 p-4 sm:p-6 lg:p-8 shadow-sm">
                 <h3 className="text-base sm:text-lg font-bold text-text font-bengali mb-3 flex items-center gap-2">
                   <GraduationCap className="w-5 h-5 text-amber-500" />
                   <span>কোর্সটি শুরুর পূর্বশর্ত:</span>
@@ -254,8 +254,8 @@ export default async function CourseDetailPage({ params }: PageProps) {
             )}
 
             {/* Curriculum Accordion */}
-            <div className="bg-surface rounded-2xl sm:rounded-3xl border border-border/80 p-6 sm:p-8 shadow-sm">
-              <div className="flex items-center justify-between mb-6">
+            <div className="bg-surface rounded-2xl sm:rounded-3xl border border-border/80 p-3.5 sm:p-6 lg:p-8 shadow-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4 mb-4 sm:mb-6">
                 <h2 className="text-lg sm:text-xl font-black text-text font-bengali">
                   কোর্স কারিকুলাম ও সিলেবাস
                 </h2>
@@ -268,7 +268,7 @@ export default async function CourseDetailPage({ params }: PageProps) {
 
             {/* Instructor Bio Profile (Single or Multiple) */}
             {((instructors && instructors.length > 0) || instructor) && (
-              <div className="bg-surface rounded-2xl sm:rounded-3xl border border-border/80 p-6 sm:p-8 shadow-sm">
+              <div className="bg-surface rounded-2xl sm:rounded-3xl border border-border/80 p-4 sm:p-6 lg:p-8 shadow-sm">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-lg sm:text-xl font-black text-text font-bengali flex items-center gap-2">
                     <Award className="w-5 h-5 text-primary" />
@@ -398,7 +398,7 @@ export default async function CourseDetailPage({ params }: PageProps) {
 
             {/* FAQs */}
             {course.faqs && course.faqs.length > 0 && (
-              <div className="bg-surface rounded-2xl sm:rounded-3xl border border-border/80 p-6 sm:p-8 shadow-sm">
+              <div className="bg-surface rounded-2xl sm:rounded-3xl border border-border/80 p-4 sm:p-6 lg:p-8 shadow-sm">
                 <h2 className="text-lg sm:text-xl font-black text-text font-bengali mb-5">
                   সাধারণ জিজ্ঞাসা (FAQ)
                 </h2>
