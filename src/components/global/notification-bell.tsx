@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Bell, Clock, ArrowRight } from "lucide-react";
+import { Bell, Clock, ArrowRight, X } from "lucide-react";
 import { type NoticeItem, FALLBACK_NOTICES } from "@/lib/data/notices";
 import { createPublicClient } from "@/lib/supabase/public";
 
@@ -45,15 +45,26 @@ export function NotificationBell() {
     } catch {}
   }, []);
 
-  // Close on outside click
+  // Close on outside click or escape key
   useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
+    function handleClickOutside(e: MouseEvent | TouchEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setIsOpen(false);
       }
     }
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setIsOpen(false);
+      }
+    }
     window.addEventListener("mousedown", handleClickOutside);
-    return () => window.removeEventListener("mousedown", handleClickOutside);
+    window.addEventListener("touchstart", handleClickOutside);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("touchstart", handleClickOutside);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
   }, []);
 
   const handleToggle = () => {
@@ -115,9 +126,17 @@ export function NotificationBell() {
         )}
       </button>
 
+      {/* Mobile Dimmed Backdrop */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/45 backdrop-blur-2xs z-40 sm:hidden animate-in fade-in duration-150"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
       {/* Dropdown Card */}
       {isOpen && (
-        <div className="animate-in fade-in zoom-in-95 duration-150 absolute right-0 top-full mt-2 w-80 sm:w-96 rounded-2xl bg-surface/95 dark:bg-slate-900/95 backdrop-blur-xl border border-border shadow-2xl p-4 z-50 font-bengali space-y-3">
+        <div className="animate-in fade-in zoom-in-95 duration-150 fixed left-3 right-3 top-[68px] max-w-sm mx-auto sm:max-w-none sm:mx-0 sm:left-auto sm:right-0 sm:absolute sm:top-full sm:mt-2 sm:w-96 rounded-2xl bg-surface/98 dark:bg-slate-900/98 backdrop-blur-xl border border-border shadow-2xl p-4 z-50 font-bengali space-y-3">
           {/* Header */}
           <div className="flex items-center justify-between pb-2.5 border-b border-border">
             <div className="flex items-center gap-2">
@@ -129,15 +148,26 @@ export function NotificationBell() {
                 <p className="text-[10px] text-text-muted">সর্বশেষ একাডেমিক ও কোর্স আপডেট</p>
               </div>
             </div>
-            {badgeCount > 0 && (
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-                {badgeCount}টি সক্রিয়
-              </span>
-            )}
+            <div className="flex items-center gap-1.5">
+              {badgeCount > 0 && (
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                  {badgeCount}টি সক্রিয়
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                className="p-1 rounded-lg text-text-muted hover:text-text hover:bg-surface-secondary transition-colors cursor-pointer"
+                title="বন্ধ করুন"
+                aria-label="নোটিফিকেশন বন্ধ করুন"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
           {/* List */}
-          <div className="space-y-2 max-h-80 overflow-y-auto no-scrollbar">
+          <div className="space-y-2 max-h-[60vh] sm:max-h-80 overflow-y-auto no-scrollbar">
             {activeNotices.length === 0 ? (
               <div className="py-6 text-center text-xs text-text-muted">
                 নতুন কোনো নোটিফিকেশন নেই
