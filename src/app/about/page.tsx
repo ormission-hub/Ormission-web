@@ -4,7 +4,8 @@ import {
   type AboutInstructor,
 } from "@/components/about/about-page-client";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export const metadata = {
   title: "আমাদের সম্পর্কে | Ormission — Learn · Build · Grow",

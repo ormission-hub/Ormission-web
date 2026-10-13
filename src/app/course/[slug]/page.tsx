@@ -55,27 +55,8 @@ function StudentAvatar3D() {
 import { COURSES } from "@/lib/data/courses";
 import { createPublicClient } from "@/lib/supabase/public";
 
-// ISR: Cache course details for 120s for fast page transitions
-export const revalidate = 120;
-export const dynamicParams = true;
-
-export async function generateStaticParams() {
-  const slugs = new Set<string>();
-  COURSES.forEach((c) => slugs.add(c.slug));
-  try {
-    const supabase = createPublicClient();
-    const { data } = await supabase
-      .from("courses")
-      .select("slug")
-      .eq("status", "published");
-    if (data) {
-      data.forEach((c: { slug: string }) => slugs.add(c.slug));
-    }
-  } catch (err) {
-    console.warn("generateStaticParams courses error:", err);
-  }
-  return Array.from(slugs).map((slug) => ({ slug }));
-}
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 interface PageProps {
   params: Promise<{ slug: string }>;

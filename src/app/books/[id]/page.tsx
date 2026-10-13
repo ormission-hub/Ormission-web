@@ -8,19 +8,8 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-// ISR: Cache book details for 5 minutes
-export const revalidate = 300;
-export const dynamicParams = true;
-
-export async function generateStaticParams() {
-  try {
-    const books = await fetchAllBooks();
-    return books.map((b) => ({ id: b.id }));
-  } catch (err) {
-    console.warn("generateStaticParams books error:", err);
-    return [{ id: "book-1" }];
-  }
-}
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id } = await params;

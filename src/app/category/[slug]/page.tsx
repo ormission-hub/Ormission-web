@@ -6,13 +6,8 @@ import { CategoryDetailContent } from "@/components/categories/category-detail-c
 
 import { CATEGORIES } from "@/lib/data/categories";
 
-// ISR: Cache page HTML/RSC for 120 seconds for ultra-fast response (<15ms)
-export const revalidate = 120;
-export const dynamicParams = true;
-
-export function generateStaticParams() {
-  return CATEGORIES.map((cat) => ({ slug: cat.slug }));
-}
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 interface PageProps {
   params: Promise<{ slug: string }>;

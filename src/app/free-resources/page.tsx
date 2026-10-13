@@ -4,7 +4,8 @@ import {
   type RealResourceItem,
 } from "@/components/resources/free-resources-client";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export const metadata = {
   title: "ফ্রি স্টাডি রিসোর্স — হ্যান্ডনোট ও ফর্মুলা বুকলেট | Ormission",
