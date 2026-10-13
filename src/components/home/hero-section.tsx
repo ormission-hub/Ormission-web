@@ -330,7 +330,7 @@ export function HeroSection({
 
             {/* Over-Image CTA Buttons (Bottom-Left) */}
             <div className="absolute bottom-3 sm:bottom-6 md:bottom-8 left-4 sm:left-8 md:left-12 lg:left-16 z-20 flex items-center gap-2 sm:gap-3.5 max-w-[calc(100%-85px)] sm:max-w-none">
-              <Link prefetch={false}
+              <Link prefetch={true}
                 href={activeSlide.primary_cta_url || heroData.primary_cta_url || "/courses"}
                 className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-1.5 sm:py-3 rounded-full text-[11px] sm:text-sm font-bold text-white bg-primary hover:bg-primary-hover shadow-lg shadow-primary/35 hover:shadow-xl hover:shadow-primary/45 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer shrink-0"
               >
@@ -340,7 +340,7 @@ export function HeroSection({
                 </span>
               </Link>
 
-              <Link prefetch={false}
+              <Link prefetch={true}
                 href={
                   (() => {
                     const secUrl = activeSlide.secondary_cta_url || heroData.secondary_cta_url || "/books";

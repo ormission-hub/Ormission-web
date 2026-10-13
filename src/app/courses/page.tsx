@@ -11,8 +11,7 @@ export const metadata: Metadata = {
     "আপনার অ্যাকাডেমিক ও ক্যারিয়ার লক্ষ্য অর্জনে সেরা অনলাইন কোর্সসমূহ। দেশসেরা শিক্ষক ও মেন্টরদের তত্ত্বাবধানে প্রস্তুত।",
 };
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 30;
 
 export default async function CoursesPage() {
   let initialCourses: Course[] = [];

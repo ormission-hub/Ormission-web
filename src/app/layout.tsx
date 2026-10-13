@@ -1,10 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import dynamic from "next/dynamic";
 import { Hind_Siliguri, Inter } from "next/font/google";
+import { Suspense } from "react";
 import { Navbar } from "@/components/global/navbar";
 import { Footer } from "@/components/global/footer";
 import { ThemeProvider } from "@/components/global/theme-provider";
 import { SiteNotices } from "@/components/global/site-notices";
+import { NavigationProgressBar } from "@/components/global/navigation-progress-bar";
 import "./globals.css";
 
 const WhatsAppButton = dynamic(() =>
@@ -135,6 +137,9 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen bg-background text-text antialiased font-sans">
         <ThemeProvider>
+          <Suspense fallback={null}>
+            <NavigationProgressBar />
+          </Suspense>
           <SiteNotices />
           <Navbar />
           <main className="pb-24 lg:pb-0">{children}</main>

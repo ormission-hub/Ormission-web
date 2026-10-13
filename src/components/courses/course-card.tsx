@@ -107,6 +107,7 @@ export function CourseCard({ course }: CourseCardProps) {
     <div className="w-full group flex flex-col bg-surface border border-border/80 rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-primary/15 hover:border-primary/50 hover:-translate-y-1.5 transition-all duration-300 h-full relative">
       {/* Image Thumbnail with zoom hover */}
       <Link
+        prefetch={true}
         href={`/course/${course.slug}`}
         className="relative aspect-video w-full bg-slate-950 overflow-hidden block"
       >
@@ -162,7 +163,7 @@ export function CourseCard({ course }: CourseCardProps) {
         </div>
 
         {/* Course Title */}
-        <Link href={`/course/${course.slug}`} className="block mb-2 group/title">
+        <Link prefetch={true} href={`/course/${course.slug}`} className="block mb-2 group/title">
           <h3 className="text-base sm:text-lg font-black text-text group-hover/title:text-primary transition-colors line-clamp-2 font-bengali leading-snug">
             {title}
           </h3>
@@ -210,6 +211,7 @@ export function CourseCard({ course }: CourseCardProps) {
           </div>
 
           <Link
+            prefetch={true}
             href={`/course/${course.slug}`}
             className="inline-flex items-center gap-1.5 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black text-white bg-gradient-to-r from-primary via-orange-600 to-rose-600 hover:opacity-95 shadow-md shadow-primary/25 hover:shadow-lg hover:shadow-primary/35 transition-all duration-200 group-hover:scale-105 font-bengali"
           >

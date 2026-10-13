@@ -4,8 +4,7 @@ import {
   type RealCategoryItem,
 } from "@/components/categories/category-directory-client";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 30;
 
 export const metadata = {
   title: "কোর্স ক্যাটাগরি — বিষয়ভিত্তিক শিক্ষা বিভাগসমূহ | Ormission",

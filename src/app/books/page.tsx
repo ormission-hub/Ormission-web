@@ -9,8 +9,7 @@ export const metadata: Metadata = {
     "এইচএসসি, এসএসসি ও বিশ্ববিদ্যালয় ভর্তি পরীক্ষার সেরা ফর্মুলা বুক ও প্রশ্নব্যাংক সংগ্রহ করুন সরাসরি ঘরে বসেই।",
 };
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 30;
 
 export default async function BooksPage() {
   const books = await fetchAllBooks();

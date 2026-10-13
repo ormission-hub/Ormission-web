@@ -14,8 +14,7 @@ const Testimonials = dynamicImport(() =>
   import("@/components/home/testimonials").then((m) => m.Testimonials)
 );
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 30;
 
 export default async function Home() {
   let categories: any[] = [];

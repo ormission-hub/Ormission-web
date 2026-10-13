@@ -55,8 +55,7 @@ function StudentAvatar3D() {
 import { COURSES } from "@/lib/data/courses";
 import { createPublicClient } from "@/lib/supabase/public";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 30;
 
 interface PageProps {
   params: Promise<{ slug: string }>;

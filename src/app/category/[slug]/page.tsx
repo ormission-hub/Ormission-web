@@ -6,8 +6,7 @@ import { CategoryDetailContent } from "@/components/categories/category-detail-c
 
 import { CATEGORIES } from "@/lib/data/categories";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 30;
 
 interface PageProps {
   params: Promise<{ slug: string }>;

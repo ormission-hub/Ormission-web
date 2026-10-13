@@ -274,6 +274,7 @@ export function Navbar() {
                 const isActive = pathname === item.href;
                 return (
                   <Link
+                    prefetch={true}
                     key={item.href}
                     href={item.href}
                     className={cn(
@@ -593,6 +594,7 @@ export function Navbar() {
                 <>
                   {/* Login - desktop clean link */}
                   <Link
+                    prefetch={true}
                     href="/login"
                     className={cn(
                       "hidden sm:inline-flex items-center px-3.5 py-1.5 text-xs font-bold rounded-xl transition-all duration-200 font-bengali",
@@ -604,6 +606,7 @@ export function Navbar() {
 
                   {/* Register CTA - desktop high-contrast button */}
                   <Link
+                    prefetch={true}
                     href="/register"
                     className={cn(
                       "hidden sm:inline-flex items-center px-4 py-1.5 text-xs font-bold rounded-xl shadow-xs transition-all duration-200 font-bengali hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]",
@@ -615,6 +618,7 @@ export function Navbar() {
 
                   {/* Mobile: Login icon when not logged in */}
                   <Link
+                    prefetch={true}
                     href="/login"
                     className="sm:hidden p-2 rounded-xl text-text-muted hover:text-text hover:bg-surface-secondary transition-colors border border-transparent"
                     aria-label="লগইন"
@@ -684,6 +688,7 @@ export function Navbar() {
 
               return (
                 <Link
+                  prefetch={true}
                   key={item.href}
                   href={item.href}
                   onClick={() => {
