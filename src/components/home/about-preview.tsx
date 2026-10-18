@@ -222,8 +222,8 @@ export function AboutPreview({
   return (
     <SectionWrapper className="!pt-1 !pb-2 sm:!pt-2 sm:!pb-4">
       {/* Top Section Heading: আমাদের সম্পর্কে */}
-      <div className="text-center mb-3 sm:mb-4">
-        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black font-bengali tracking-tight">
+      <div className="text-center mb-2.5 sm:mb-4">
+        <h2 className="text-xl sm:text-3xl lg:text-4xl font-black font-bengali tracking-tight">
           <span className="bg-gradient-to-r from-orange-500 via-rose-500 to-amber-500 bg-clip-text text-transparent">
             আমাদের
           </span>{" "}
@@ -232,7 +232,7 @@ export function AboutPreview({
       </div>
 
       {/* Main Outer Card Container */}
-      <div className="relative rounded-3xl bg-surface border border-border/80 shadow-sm p-4 sm:p-6 lg:p-9 overflow-hidden">
+      <div className="relative rounded-2xl sm:rounded-3xl bg-surface border border-border/80 shadow-sm p-3 sm:p-6 lg:p-8 overflow-hidden">
         {/* Soft background ambient gradient blobs */}
         <div className="absolute top-0 left-0 w-72 h-72 bg-gradient-to-br from-orange-200/30 via-rose-100/20 to-transparent dark:from-orange-950/20 rounded-full blur-2xl pointer-events-none" />
         <div className="absolute bottom-0 right-0 w-80 h-80 bg-gradient-to-tl from-indigo-200/30 via-purple-100/20 to-transparent dark:from-indigo-950/20 rounded-full blur-2xl pointer-events-none" />
@@ -279,17 +279,11 @@ export function AboutPreview({
               initial="enter"
               animate="center"
               exit="exit"
-              className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-10 items-center"
+              className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 sm:gap-6 lg:gap-10 items-center"
             >
               {/* Left Column: Mentor / Teacher Showcase Card */}
               <div className="lg:col-span-5 flex flex-col items-center">
-                <div className="w-full max-w-sm lg:max-w-none rounded-3xl bg-gradient-to-b from-orange-50/80 via-rose-50/40 to-slate-50/60 dark:from-slate-800/80 dark:to-slate-900/80 border border-orange-100/80 dark:border-slate-700/60 p-5 sm:p-7 flex flex-col items-center justify-center relative overflow-hidden shadow-xs select-none">
-                  {/* Top Left Badge: 🔴 ওরমিশন / প্রতিষ্ঠান */}
-                  <div className="absolute top-3.5 left-3.5 sm:top-4 sm:left-4 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/95 dark:bg-slate-800/95 border border-slate-200/80 dark:border-slate-700 shadow-2xs text-[11px] font-bold text-slate-700 dark:text-slate-200 font-bengali z-10">
-                    <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
-                    <span>{currentInstructor.institution || "ওরমিশন এডুকেশন"}</span>
-                  </div>
-
+                <div className="w-full max-w-[270px] sm:max-w-sm lg:max-w-none rounded-2xl sm:rounded-3xl bg-gradient-to-b from-orange-50/80 via-rose-50/40 to-slate-50/60 dark:from-slate-800/80 dark:to-slate-900/80 border border-orange-100/80 dark:border-slate-700/60 p-3.5 sm:p-6 flex flex-col items-center justify-center relative overflow-hidden shadow-xs select-none">
                   {/* Prev / Next Slider Arrows (Only if multiple teachers) */}
                   {activeList.length > 1 && (
                     <>
@@ -297,28 +291,28 @@ export function AboutPreview({
                         type="button"
                         onClick={handlePrev}
                         aria-label="Previous Instructor"
-                        className="absolute left-2.5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white/90 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-center text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-700 hover:scale-105 active:scale-95 transition-all"
+                        className="absolute left-2 sm:left-2.5 top-1/2 -translate-y-1/2 z-20 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/90 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-center text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-700 hover:scale-105 active:scale-95 transition-all"
                       >
-                        <ChevronLeft className="w-4 h-4" />
+                        <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                       </button>
                       <button
                         type="button"
                         onClick={handleNext}
                         aria-label="Next Instructor"
-                        className="absolute right-2.5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white/90 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-center text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-700 hover:scale-105 active:scale-95 transition-all"
+                        className="absolute right-2 sm:right-2.5 top-1/2 -translate-y-1/2 z-20 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/90 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-center text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-700 hover:scale-105 active:scale-95 transition-all"
                       >
-                        <ChevronRight className="w-4 h-4" />
+                        <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                       </button>
                     </>
                   )}
 
                   {/* Central Circular Avatar Container with Real Portrait */}
-                  <div className="relative w-48 h-48 sm:w-56 sm:h-56 lg:w-60 lg:h-60 rounded-full bg-slate-900 flex items-center justify-center overflow-hidden shadow-md ring-4 ring-white/80 dark:ring-slate-700/60 mt-4 sm:mt-3">
+                  <div className="relative w-32 h-32 sm:w-48 sm:h-48 lg:w-56 lg:h-56 rounded-full bg-slate-900 flex items-center justify-center overflow-hidden shadow-md ring-3 sm:ring-4 ring-white/80 dark:ring-slate-700/60">
                     <Image
                       src={photoSrc}
                       alt={currentInstructor.name_bn || currentInstructor.name}
                       fill
-                      sizes="(max-width: 640px) 192px, (max-width: 1024px) 224px, 240px"
+                      sizes="(max-width: 640px) 128px, (max-width: 1024px) 192px, 224px"
                       quality={80}
                       className="object-cover object-top"
                       loading="lazy"
@@ -326,16 +320,16 @@ export function AboutPreview({
                   </div>
 
                   {/* Floating Bottom Name & Designation Plate */}
-                  <div className="relative z-10 -mt-6 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/90 dark:border-slate-700 rounded-2xl px-5 sm:px-6 py-2.5 shadow-md text-center min-w-[200px] max-w-[92%] transition-all">
-                    <h4 className="text-base sm:text-lg font-black text-text font-bengali tracking-tight">
+                  <div className="relative z-10 -mt-4 sm:-mt-5 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/90 dark:border-slate-700 rounded-xl sm:rounded-2xl px-3.5 sm:px-5 py-1.5 sm:py-2.5 shadow-md text-center min-w-[160px] sm:min-w-[200px] max-w-[92%] transition-all">
+                    <h4 className="text-sm sm:text-lg font-black text-text font-bengali tracking-tight leading-snug">
                       {currentInstructor.name_bn || currentInstructor.name}
                     </h4>
                     {/* Unique Teacher Title / Designation */}
-                    <div className="inline-block mt-0.5 px-2.5 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-xs font-bold text-primary font-bengali">
+                    <div className="inline-block mt-0.5 px-2 sm:px-2.5 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-[10px] sm:text-xs font-bold text-primary font-bengali">
                       {currentInstructor.designation || "শিক্ষক ও মেন্টর"}
                     </div>
                     {currentInstructor.institution && (
-                      <p className="text-[10px] font-bold text-text-muted uppercase tracking-wider font-sans mt-1">
+                      <p className="text-[9px] sm:text-[10px] font-bold text-text-muted uppercase tracking-wider font-sans mt-0.5 sm:mt-1">
                         {currentInstructor.institution}
                       </p>
                     )}
@@ -343,7 +337,7 @@ export function AboutPreview({
 
                   {/* Carousel Indicators / Dots */}
                   {activeList.length > 1 && (
-                    <div className="flex items-center justify-center gap-1.5 mt-3.5 z-10">
+                    <div className="flex items-center justify-center gap-1.5 mt-2.5 sm:mt-3.5 z-10">
                       {activeList.map((inst, idx) => (
                         <button
                           key={inst.id}
@@ -351,7 +345,7 @@ export function AboutPreview({
                           onClick={() => handleSelectInstructor(idx)}
                           className={`transition-all duration-300 rounded-full ${
                             idx === safeIndex
-                              ? "w-6 h-1.5 bg-primary shadow-xs"
+                              ? "w-5 sm:w-6 h-1.5 bg-primary shadow-xs"
                               : "w-1.5 h-1.5 bg-slate-300 dark:bg-slate-600 hover:bg-primary/60"
                           }`}
                           aria-label={inst.name_bn || inst.name}
@@ -365,48 +359,48 @@ export function AboutPreview({
               {/* Right Column: Teacher Narrative, Custom Tag, Headline & Bio */}
               <div className="lg:col-span-7 flex flex-col items-start justify-center">
                 {/* Top Tag Pill (Specific to active teacher or default) */}
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 dark:bg-rose-950/40 border border-rose-200/70 dark:border-rose-800/50 text-[11px] sm:text-xs font-bold text-rose-600 dark:text-rose-400 font-bengali mb-3 sm:mb-4 shadow-2xs">
+                <div className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full bg-rose-50 dark:bg-rose-950/40 border border-rose-200/70 dark:border-rose-800/50 text-[10px] sm:text-xs font-bold text-rose-600 dark:text-rose-400 font-bengali mb-2 sm:mb-3.5 shadow-2xs">
                   <span>{activeBadge}</span>
                 </div>
 
                 {/* Big Headline / Motto */}
-                <h3 className="text-xl sm:text-2xl lg:text-3xl xl:text-[32px] font-black text-text font-bengali leading-snug lg:leading-[1.35] mb-3 sm:mb-4">
+                <h3 className="text-base sm:text-2xl lg:text-3xl xl:text-[32px] font-black text-text font-bengali leading-snug lg:leading-[1.35] mb-2 sm:mb-4">
                   {activeHeadline}
                 </h3>
 
                 {/* Detailed Bio / Narrative */}
-                <div className="relative mb-5 sm:mb-7 w-full">
-                  <div className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-medium font-bengali leading-relaxed whitespace-pre-line bg-slate-50/60 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/50 rounded-2xl p-4 sm:p-5 relative">
-                    <Quote className="w-5 h-5 text-primary/30 absolute top-3.5 right-3.5 pointer-events-none" />
+                <div className="relative mb-3 sm:mb-6 w-full">
+                  <div className="text-[11px] sm:text-sm text-slate-600 dark:text-slate-300 font-medium font-bengali leading-relaxed whitespace-pre-line bg-slate-50/60 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/50 rounded-xl sm:rounded-2xl p-3 sm:p-5 relative">
+                    <Quote className="w-4 h-4 sm:w-5 sm:h-5 text-primary/30 absolute top-2.5 right-2.5 sm:top-3.5 sm:right-3.5 pointer-events-none" />
                     {activeBio}
                   </div>
                 </div>
 
                 {/* 3 Stats Cards: Editable from Admin Settings */}
-                <div className="grid grid-cols-3 gap-2.5 sm:gap-4 w-full">
-                  <div className="bg-slate-50/90 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/60 rounded-2xl p-2.5 sm:p-4 text-center transition-all duration-200 hover:border-primary/40 hover:shadow-xs">
-                    <div className="text-lg sm:text-2xl lg:text-3xl font-black text-text font-sans tracking-tight">
+                <div className="grid grid-cols-3 gap-2 sm:gap-4 w-full">
+                  <div className="bg-slate-50/90 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/60 rounded-xl sm:rounded-2xl p-2 sm:p-4 text-center transition-all duration-200 hover:border-primary/40 hover:shadow-xs">
+                    <div className="text-base sm:text-2xl lg:text-3xl font-black text-text font-sans tracking-tight">
                       {stat1Val}
                     </div>
-                    <div className="text-[10px] sm:text-xs font-semibold text-text-muted font-sans mt-0.5">
+                    <div className="text-[9px] sm:text-xs font-semibold text-text-muted font-sans mt-0.5">
                       {stat1Lbl}
                     </div>
                   </div>
 
-                  <div className="bg-slate-50/90 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/60 rounded-2xl p-2.5 sm:p-4 text-center transition-all duration-200 hover:border-primary/40 hover:shadow-xs">
-                    <div className="text-lg sm:text-2xl lg:text-3xl font-black text-text font-sans tracking-tight">
+                  <div className="bg-slate-50/90 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/60 rounded-xl sm:rounded-2xl p-2 sm:p-4 text-center transition-all duration-200 hover:border-primary/40 hover:shadow-xs">
+                    <div className="text-base sm:text-2xl lg:text-3xl font-black text-text font-sans tracking-tight">
                       {stat2Val}
                     </div>
-                    <div className="text-[10px] sm:text-xs font-semibold text-text-muted font-sans mt-0.5">
+                    <div className="text-[9px] sm:text-xs font-semibold text-text-muted font-sans mt-0.5">
                       {stat2Lbl}
                     </div>
                   </div>
 
-                  <div className="bg-slate-50/90 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/60 rounded-2xl p-2.5 sm:p-4 text-center transition-all duration-200 hover:border-primary/40 hover:shadow-xs">
-                    <div className="text-lg sm:text-2xl lg:text-3xl font-black text-text font-sans tracking-tight">
+                  <div className="bg-slate-50/90 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/60 rounded-xl sm:rounded-2xl p-2 sm:p-4 text-center transition-all duration-200 hover:border-primary/40 hover:shadow-xs">
+                    <div className="text-base sm:text-2xl lg:text-3xl font-black text-text font-sans tracking-tight">
                       {stat3Val}
                     </div>
-                    <div className="text-[10px] sm:text-xs font-semibold text-text-muted font-sans mt-0.5">
+                    <div className="text-[9px] sm:text-xs font-semibold text-text-muted font-sans mt-0.5">
                       {stat3Lbl}
                     </div>
                   </div>
@@ -418,8 +412,8 @@ export function AboutPreview({
 
         {/* Quick Switcher Teacher Chips below showcase (If 2+ teachers exist) */}
         {activeList.length > 1 && (
-          <div className="relative z-10 pt-4 mt-4 border-t border-border/60 flex items-center justify-center gap-2 sm:gap-3 flex-wrap">
-            <span className="text-xs font-bold text-text-muted font-bengali mr-1">
+          <div className="relative z-10 pt-3 mt-3 sm:pt-4 sm:mt-4 border-t border-border/60 flex items-center justify-center gap-1.5 sm:gap-3 flex-wrap">
+            <span className="text-[11px] sm:text-xs font-bold text-text-muted font-bengali mr-1">
               শিক্ষক নির্বাচন করুন:
             </span>
             {activeList.map((inst, idx) => (
@@ -427,13 +421,13 @@ export function AboutPreview({
                 key={inst.id}
                 type="button"
                 onClick={() => handleSelectInstructor(idx)}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-bengali transition-all ${
+                className={`flex items-center gap-1.5 sm:gap-2 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full border text-[11px] sm:text-xs font-bengali transition-all ${
                   idx === safeIndex
                     ? "bg-primary/10 border-primary text-primary font-bold shadow-xs scale-105"
                     : "bg-surface border-border text-text-muted hover:border-primary/40 hover:text-text"
                 }`}
               >
-                <span className="w-5 h-5 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-700 flex-shrink-0 flex items-center justify-center text-[10px] font-bold">
+                <span className="w-4 h-4 sm:w-5 sm:h-5 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-700 flex-shrink-0 flex items-center justify-center text-[9px] sm:text-[10px] font-bold">
                   {inst.photo_url ? (
                     <Image
                       src={inst.photo_url}
